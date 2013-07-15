@@ -445,7 +445,7 @@ FastMeter::vertical_expose (GdkEventExpose* ev)
 
 		cairo_set_source (cr, fgpattern->cobj());
 		cairo_rectangle (cr, 1, last_peak_rect.y, pixwidth, last_peak_rect.height);
-		if (bright_hold) {
+		if (bright_hold && !::getenv("NO_METER_SHADE")) {
 			cairo_fill_preserve (cr);
 			cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.3);
 		}

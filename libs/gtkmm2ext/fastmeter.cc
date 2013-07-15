@@ -413,7 +413,7 @@ FastMeter::vertical_expose (GdkEventExpose* ev)
 		last_peak_rect.x = 1;
 		last_peak_rect.width = pixwidth;
 		last_peak_rect.y = max(1, 1 + pixheight - (gint) floor (pixheight * current_peak));
-		if (bright_hold && !no_rgba_overlay) {
+		if (bright_hold) {
 			last_peak_rect.height = max(0, min(4, pixheight - last_peak_rect.y -1 ));
 		} else {
 			last_peak_rect.height = max(0, min(2, pixheight - last_peak_rect.y -1 ));
@@ -422,13 +422,9 @@ FastMeter::vertical_expose (GdkEventExpose* ev)
 		cairo_set_source (cr, fgpattern->cobj());
 		cairo_rectangle (cr, 1, last_peak_rect.y, pixwidth, last_peak_rect.height);
 
-		if (bright_hold) {
-			if (no_rgba_overlay) {
-				cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
-			} else {
-				cairo_fill_preserve (cr);
-				cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.3);
-			}
+		if (bright_hold && !no_rgba_overlay) {
+			cairo_fill_preserve (cr);
+			cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.3);
 		}
 		cairo_fill (cr);
 

@@ -102,8 +102,13 @@ FastMeter::FastMeter (long hold, unsigned long dimen, Orientation o, int len,
 	pixrect.width = pixwidth;
 	pixrect.height = pixheight;
 
-	request_width = pixrect.width + 2;
-	request_height= pixrect.height + 2;
+	if (!::getenv("NO_METER_PADDING")) {
+		request_width = pixrect.width + 2;
+		request_height= pixrect.height + 2;
+	} else {
+		request_width = pixrect.width;
+		request_height= pixrect.height;
+	}
 
 	queue_draw ();
 }
@@ -340,7 +345,10 @@ FastMeter::on_size_request (GtkRequisition* req)
 	req->height = request_height;
 	req->height = max(req->height, min_pattern_metric_size);
 	req->height = min(req->height, max_pattern_metric_size);
-	req->height += 2;
+
+	if (!::getenv("NO_METER_PADDING")) {
+		req->height += 2;
+	}
 
 	req->width  = request_width;
 }
@@ -353,18 +361,29 @@ FastMeter::on_size_allocate (Gtk::Allocation &alloc)
 	}
 
 	int h = alloc.get_height();
-	h = max (h, min_pattern_metric_size + 2);
-	h = min (h, max_pattern_metric_size + 2);
 
-	if (h != alloc.get_height()) {
+	if (!::getenv("NO_METER_PADDING")) {
+		h = max (h, min_pattern_metric_size + 2);
+		h = min (h, max_pattern_metric_size + 2);
+	} else {
+		h = max (h, min_pattern_metric_size);
+		h = min (h, max_pattern_metric_size);
+	}
+
+	if (h != alloc.get_height() || ::getenv("NO_METER_PADDING")) {
 		alloc.set_height (h);
 	}
 
-	if (pixheight != h) {
+	if (pixheight != h || ::getenv("NO_METER_PADDING")) {
 		fgpattern = request_vertical_meter (request_width, h, _clr, _stp, true);
 		bgpattern = request_vertical_background (request_width, h, highlight ? _bgh : _bgc, highlight);
-		pixheight = h - 2;
-		pixwidth  = request_width - 2;
+		if (!::getenv("NO_METER_PADDING")) {
+			pixheight = h - 2;
+			pixwidth  = request_width - 2;
+		} else {
+			pixheight = h;
+			pixwidth  = request_width;
+		}
 	}
 
 	DrawingArea::on_size_allocate (alloc);
@@ -401,10 +420,16 @@ FastMeter::vertical_expose (GdkEventExpose* ev)
 	 */
 
 	pixrect.height = top_of_meter;
-	pixrect.y = 1 + pixheight - top_of_meter;
 
-	background.x = 1;
-	background.y = 1;
+	if (!::getenv("NO_METER_PADDING")) {
+		pixrect.y = 1 + pixheight - top_of_meter;
+		background.x = 1;
+		background.y = 1;
+	} else {
+		pixrect.y = pixheight - top_of_meter;
+		background.x = 0;
+		background.y = 0;
+	}
 	background.width = pixrect.width;
 	background.height = pixheight - top_of_meter;
 
@@ -424,17 +449,34 @@ FastMeter::vertical_expose (GdkEventExpose* ev)
 	// draw peak bar
 
 	if (hold_state) {
-		last_peak_rect.x = 1;
-		last_peak_rect.width = pixwidth;
-		last_peak_rect.y = max(1, 1 + pixheight - (gint) floor (pixheight * current_peak));
-		if (bright_hold) {
-			last_peak_rect.height = max(0, min(4, pixheight - last_peak_rect.y -1 ));
+		if (!::getenv("NO_METER_PADDING")) {
+			last_peak_rect.x = 1;
+			last_peak_rect.y = max(1, 1 + pixheight - (gint) floor (pixheight * current_peak));
 		} else {
-			last_peak_rect.height = max(0, min(2, pixheight - last_peak_rect.y -1 ));
+			last_peak_rect.x = 0;
+			last_peak_rect.y = max(0, pixheight - (gint) floor (pixheight * current_peak));
+		}
+		last_peak_rect.width = pixwidth;
+		if (bright_hold) {
+			if (!::getenv("NO_METER_PADDING")) {
+				last_peak_rect.height = max(0, min(4, pixheight - last_peak_rect.y -1 ));
+			} else {
+				last_peak_rect.height = max(0, min(4, pixheight - last_peak_rect.y));
+			}
+		} else {
+			if (!::getenv("NO_METER_PADDING")) {
+				last_peak_rect.height = max(0, min(2, pixheight - last_peak_rect.y -1 ));
+			} else {
+				last_peak_rect.height = max(0, min(2, pixheight - last_peak_rect.y));
+			}
 		}
 
 		cairo_set_source (cr, fgpattern->cobj());
-		cairo_rectangle (cr, 1, last_peak_rect.y, pixwidth, last_peak_rect.height);
+		if (!::getenv("NO_METER_PADDING")) {
+			cairo_rectangle (cr, 1, last_peak_rect.y, pixwidth, last_peak_rect.height);
+		} else {
+			cairo_rectangle (cr, 0, last_peak_rect.y, pixwidth, last_peak_rect.height);
+		}
 		if (bright_hold) {
 			cairo_fill_preserve (cr);
 			cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.3);
@@ -498,10 +540,15 @@ FastMeter::queue_vertical_redraw (const Glib::RefPtr<Gdk::Window>& win, float ol
 
 	gint new_top = (gint) floor (pixheight * current_level);
 
-	rect.x = 1;
+	if (!::getenv("NO_METER_PADDING")) {
+		rect.x = 1;
+		rect.y = 1 + pixheight - new_top;
+	} else {
+		rect.x = 0;
+		rect.y = 0 + pixheight - new_top;
+	}
 	rect.width = pixwidth;
 	rect.height = new_top;
-	rect.y = 1 + pixheight - new_top;
 
 	if (current_level > old_level) {
 		/* colored/pixbuf got larger, just draw the new section */
@@ -549,12 +596,26 @@ FastMeter::queue_vertical_redraw (const Glib::RefPtr<Gdk::Window>& win, float ol
 			region = gdk_region_new ();
 			queue = true;
 		}
-		rect.x = 1;
-		rect.y = max(1, 1 + pixheight - (gint) floor (pixheight * current_peak));
-		if (bright_hold) {
-			rect.height = max(0, min(4, pixheight - last_peak_rect.y -1 ));
+
+		if (!::getenv("NO_METER_PADDING")) {
+			rect.x = 1;
+			rect.y = max(1, 1 + pixheight - (gint) floor (pixheight * current_peak));
 		} else {
-			rect.height = max(0, min(2, pixheight - last_peak_rect.y -1 ));
+			rect.x = 0;
+			rect.y = max(1, pixheight - (gint) floor (pixheight * current_peak));
+		}
+		if (bright_hold) {
+			if (!::getenv("NO_METER_PADDING")) {
+				rect.height = max(0, min(4, pixheight - last_peak_rect.y -1 ));
+			} else {
+				rect.height = max(0, min(4, pixheight - last_peak_rect.y));
+			}
+		} else {
+			if (!::getenv("NO_METER_PADDING")) {
+				rect.height = max(0, min(2, pixheight - last_peak_rect.y -1 ));
+			} else {
+				rect.height = max(0, min(2, pixheight - last_peak_rect.y));
+			}
 		}
 		rect.width = pixwidth;
 		gdk_region_union_with_rect (region, &rect);

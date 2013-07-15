@@ -23,6 +23,8 @@
 #include <algorithm>
 #include <cstring>
 
+#include <stdlib.h>
+
 #include <gdkmm/rectangle.h>
 #include <gtkmm2ext/fastmeter.h>
 #include <gtkmm2ext/utils.h>
@@ -119,6 +121,20 @@ FastMeter::generate_meter_pattern (
 	double soft = 1.5 / (double) height;
 
 	cairo_pattern_t* pat = cairo_pattern_create_linear (0.0, 0.0, 0.0, height);
+
+	if (::getenv("SIMPLE_METER_PATTERN")) {
+		UINT_TO_RGBA (clr[9], &r, &g, &b, &a); // top/clip
+		cairo_pattern_add_color_stop_rgb (pat, 0.0,
+																			r/255.0, g/255.0, b/255.0);
+
+		UINT_TO_RGBA (clr[0], &r, &g, &b, &a); // bottom
+		cairo_pattern_add_color_stop_rgb (pat, 1.0,
+																			r/255.0, g/255.0, b/255.0);
+
+		Cairo::RefPtr<Cairo::Pattern> p (new Cairo::Pattern (pat, false));
+
+		return p;
+	}
 
 	/*
 	  Cairo coordinate space goes downwards as y value goes up, so invert
@@ -221,7 +237,7 @@ FastMeter::generate_meter_background (
 	cairo_pattern_add_color_stop_rgb (pat, 1.0,
 	                                  r0/255.0, g0/255.0, b0/255.0);
 
-	if (shade) {
+	if (shade && ! ::getenv("SIMPLE_METER_PATTERN")) {
 		cairo_pattern_t* shade_pattern = cairo_pattern_create_linear (0.0, 0.0, width, 0.0);
 		cairo_pattern_add_color_stop_rgba (shade_pattern, 0.0, 1.0, 1.0, 1.0, 0.15);
 		cairo_pattern_add_color_stop_rgba (shade_pattern, 0.6, 0.0, 0.0, 0.0, 0.10);
@@ -373,9 +389,11 @@ FastMeter::vertical_expose (GdkEventExpose* ev)
 	cairo_rectangle (cr, ev->area.x, ev->area.y, ev->area.width, ev->area.height);
 	cairo_clip (cr);
 
-	cairo_set_source_rgb (cr, 0, 0, 0); // black
-	rounded_rectangle (cr, 0, 0, pixrect.width + 2, pixheight + 2, 2);
-	cairo_stroke (cr);
+	if (!::getenv("NO_METER_BORDER")) {
+		cairo_set_source_rgb (cr, 0, 0, 0); // black
+		rounded_rectangle (cr, 0, 0, pixrect.width + 2, pixheight + 2, 2);
+		cairo_stroke (cr);
+	}
 
 	top_of_meter = (gint) floor (pixheight * current_level);
 

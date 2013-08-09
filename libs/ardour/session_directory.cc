@@ -50,7 +50,7 @@ SessionDirectory::operator= (const std::string& newpath)
 }
 
 bool
-SessionDirectory::create ()
+SessionDirectory::create () const
 {
 	vector<std::string> sub_dirs = sub_directories ();
 	for (vector<std::string>::const_iterator i = sub_dirs.begin(); i != sub_dirs.end(); ++i)

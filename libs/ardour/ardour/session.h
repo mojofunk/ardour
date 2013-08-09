@@ -204,8 +204,6 @@ class LIBARDOUR_API Session : public PBD::StatefulDestructible, public PBD::Scop
 	PBD::Signal0<void> BatchUpdateStart;
 	PBD::Signal0<void> BatchUpdateEnd;
 
-	int ensure_subdirs ();
-
 	std::string automation_dir () const;  ///< Automation data
 	std::string analysis_dir () const;    ///< Analysis data
 	std::string plugins_dir () const;     ///< Plugin state

@@ -37,6 +37,7 @@
 #include "ardour/debug.h"
 #include "ardour/profile.h"
 #include "ardour/session.h"
+#include "ardour/session_directory.h"
 #include "ardour/source.h"
 #include "ardour/transient_detector.h"
 
@@ -218,7 +219,7 @@ Source::get_transients_path () const
 
 	/* old sessions may not have the analysis directory */
 
-	_session.ensure_subdirs ();
+	_session.session_directory().create ();
 
 	s = _session.analysis_dir ();
 	parts.push_back (s);

@@ -456,82 +456,16 @@ Session::path_is_within_session (const std::string& path)
 	return false;
 }
 
-int
-Session::ensure_subdirs ()
-{
-	string dir;
-
-	dir = session_directory().peak_path();
-
-	if (g_mkdir_with_parents (dir.c_str(), 0755) < 0) {
-		error << string_compose(_("Session: cannot create session peakfile folder \"%1\" (%2)"), dir, strerror (errno)) << endmsg;
-		return -1;
-	}
-
-	dir = session_directory().sound_path();
-
-	if (g_mkdir_with_parents (dir.c_str(), 0755) < 0) {
-		error << string_compose(_("Session: cannot create session sounds dir \"%1\" (%2)"), dir, strerror (errno)) << endmsg;
-		return -1;
-	}
-
-	dir = session_directory().midi_path();
-
-	if (g_mkdir_with_parents (dir.c_str(), 0755) < 0) {
-		error << string_compose(_("Session: cannot create session midi dir \"%1\" (%2)"), dir, strerror (errno)) << endmsg;
-		return -1;
-	}
-
-	dir = session_directory().dead_path();
-
-	if (g_mkdir_with_parents (dir.c_str(), 0755) < 0) {
-		error << string_compose(_("Session: cannot create session dead sounds folder \"%1\" (%2)"), dir, strerror (errno)) << endmsg;
-		return -1;
-	}
-
-	dir = session_directory().export_path();
-
-	if (g_mkdir_with_parents (dir.c_str(), 0755) < 0) {
-		error << string_compose(_("Session: cannot create session export folder \"%1\" (%2)"), dir, strerror (errno)) << endmsg;
-		return -1;
-	}
-
-	dir = analysis_dir ();
-
-	if (g_mkdir_with_parents (dir.c_str(), 0755) < 0) {
-		error << string_compose(_("Session: cannot create session analysis folder \"%1\" (%2)"), dir, strerror (errno)) << endmsg;
-		return -1;
-	}
-
-	dir = plugins_dir ();
-
-	if (g_mkdir_with_parents (dir.c_str(), 0755) < 0) {
-		error << string_compose(_("Session: cannot create session plugins folder \"%1\" (%2)"), dir, strerror (errno)) << endmsg;
-		return -1;
-	}
-
-	dir = externals_dir ();
-
-	if (g_mkdir_with_parents (dir.c_str(), 0755) < 0) {
-		error << string_compose(_("Session: cannot create session externals folder \"%1\" (%2)"), dir, strerror (errno)) << endmsg;
-		return -1;
-	}
-
-	return 0;
-}
-
 /** @param session_template directory containing session template, or empty.
  *  Caller must not hold process lock.
  */
 int
 Session::create (const string& session_template, BusProfile* bus_profile)
 {
-	if (g_mkdir_with_parents (_path.c_str(), 0755) < 0) {
-		error << string_compose(_("Session: cannot create session folder \"%1\" (%2)"), _path, strerror (errno)) << endmsg;
-		return -1;
-	}
+	SessionDirectory sdir(_path);
 
-	if (ensure_subdirs ()) {
+	if (!sdir.create ()) {
+		error << string_compose(_("Session: cannot create session folder \"%1\" (%2)"), _path, strerror (errno)) << endmsg;
 		return -1;
 	}
 

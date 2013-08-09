@@ -144,7 +144,7 @@ public:
 	 *
 	 * @post is_valid ()
 	 */
-	bool create ();
+	bool create () const;
 
 	/**
 	 * @return The path to the directory under which source directories

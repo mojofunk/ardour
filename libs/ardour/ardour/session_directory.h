@@ -83,6 +83,30 @@ public:
 
 	/**
 	 * @return The absolute path to the directory in which all
+	 * automation data files are stored for a session.
+	 */
+	const std::string automation_path () const;
+
+	/**
+	 * @return The absolute path to the directory in which all
+	 * analysis data files are stored for a session.
+	 */
+	const std::string analysis_path () const;
+
+	/**
+	 * @return The absolute path to the directory in which all
+	 * plugin data files are stored for a session.
+	 */
+	const std::string plugins_path () const;
+
+	/**
+	 * @return The absolute path to the directory in which all
+	 * links to external files are stored for a session.
+	 */
+	const std::string externals_path () const;
+
+	/**
+	 * @return The absolute path to the directory in which all
 	 * peak files are stored for a session.
 	 */
 	const std::string peak_path () const;

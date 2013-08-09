@@ -152,6 +152,30 @@ SessionDirectory::video_path () const
 }
 
 const std::string
+SessionDirectory::automation_path () const
+{
+	return Glib::build_filename (m_root_path, automation_dir_name);
+}
+
+const std::string
+SessionDirectory::analysis_path () const
+{
+	return Glib::build_filename (m_root_path, analysis_dir_name);
+}
+
+const std::string
+SessionDirectory::plugins_path () const
+{
+	return Glib::build_filename (m_root_path, plugins_dir_name);
+}
+
+const std::string
+SessionDirectory::externals_path () const
+{
+	return Glib::build_filename (m_root_path, externals_dir_name);
+}
+
+const std::string
 SessionDirectory::peak_path () const
 {
 	return Glib::build_filename (m_root_path, peak_dir_name);
@@ -177,6 +201,10 @@ SessionDirectory::sub_directories () const
 	tmp_paths.push_back (sound_path ());
 	tmp_paths.push_back (midi_path ());
 	tmp_paths.push_back (video_path ());
+	tmp_paths.push_back (automation_path ());
+	tmp_paths.push_back (analysis_path ());
+	tmp_paths.push_back (plugins_path ());
+	tmp_paths.push_back (externals_path ());
 	tmp_paths.push_back (peak_path ());
 	tmp_paths.push_back (dead_path ());
 	tmp_paths.push_back (export_path ());

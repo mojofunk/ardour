@@ -35,11 +35,10 @@ struct TransportControllable : public PBD::Controllable {
 		PlaySelection,
 	};
 
-	TransportControllable (std::string name, ARDOUR_UI&, ToggleType);
+	TransportControllable (std::string name, ToggleType);
 	void set_value (double);
 	double get_value (void) const;
 
-	ARDOUR_UI& ui;
 	ToggleType type;
 };
 

@@ -25,8 +25,8 @@
 
 using namespace Gtk;
 
-TransportControllable::TransportControllable (std::string name, ARDOUR_UI& u, ToggleType tp)
-	: Controllable (name), ui (u), type(tp)
+TransportControllable::TransportControllable (std::string name, ToggleType tp)
+	: Controllable (name), type(tp)
 {
 
 }

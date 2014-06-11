@@ -177,13 +177,13 @@ ARDOUR_UI::ARDOUR_UI (int *argcp, char **argvp[], const char* localedir)
 
 	  /* transport */
 
-	, roll_controllable (new TransportControllable ("transport roll", *this, TransportControllable::Roll))
-	, stop_controllable (new TransportControllable ("transport stop", *this, TransportControllable::Stop))
-	, goto_start_controllable (new TransportControllable ("transport goto start", *this, TransportControllable::GotoStart))
-	, goto_end_controllable (new TransportControllable ("transport goto end", *this, TransportControllable::GotoEnd))
-	, auto_loop_controllable (new TransportControllable ("transport auto loop", *this, TransportControllable::AutoLoop))
-	, play_selection_controllable (new TransportControllable ("transport play selection", *this, TransportControllable::PlaySelection))
-	, rec_controllable (new TransportControllable ("transport rec-enable", *this, TransportControllable::RecordEnable))
+	, roll_controllable (new TransportControllable ("transport roll", TransportControllable::Roll))
+	, stop_controllable (new TransportControllable ("transport stop", TransportControllable::Stop))
+	, goto_start_controllable (new TransportControllable ("transport goto start", TransportControllable::GotoStart))
+	, goto_end_controllable (new TransportControllable ("transport goto end", TransportControllable::GotoEnd))
+	, auto_loop_controllable (new TransportControllable ("transport auto loop", TransportControllable::AutoLoop))
+	, play_selection_controllable (new TransportControllable ("transport play selection", TransportControllable::PlaySelection))
+	, rec_controllable (new TransportControllable ("transport rec-enable", TransportControllable::RecordEnable))
 
 	, auto_return_button (ArdourButton::led_default_elements)
 	, follow_edits_button (ArdourButton::led_default_elements)

@@ -37,7 +37,6 @@
 
 
 #include "pbd/xml++.h"
-#include "pbd/controllable.h"
 #include <gtkmm/box.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/label.h>
@@ -91,6 +90,7 @@
 #include "session_option_editor.h"
 #include "speaker_dialog.h"
 #include "theme_manager.h"
+#include "transport_controllable.h"
 
 class VideoTimeLine;
 class ArdourKeyboard;
@@ -396,25 +396,6 @@ class ARDOUR_UI : public Gtkmm2ext::UI, public ARDOUR::SessionHandlePtr
 	Gtk::VBox                transport_clock_vbox;
 	Gtk::HBox                primary_clock_hbox;
 	Gtk::HBox                secondary_clock_hbox;
-
-	struct TransportControllable : public PBD::Controllable {
-	    enum ToggleType {
-		    Roll = 0,
-		    Stop,
-		    RecordEnable,
-		    GotoStart,
-		    GotoEnd,
-		    AutoLoop,
-		    PlaySelection,
-	    };
-
-	    TransportControllable (std::string name, ARDOUR_UI&, ToggleType);
-	    void set_value (double);
-	    double get_value (void) const;
-
-	    ARDOUR_UI& ui;
-	    ToggleType type;
-	};
 
 	boost::shared_ptr<TransportControllable> roll_controllable;
 	boost::shared_ptr<TransportControllable> stop_controllable;

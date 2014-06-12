@@ -20,7 +20,7 @@
 #include "pbd/file_utils.h"
 #include "pbd/convert.h"
 #include "gui_thread.h"
-#include "ardour_ui.h"
+#include "timers.h"
 #include "utils.h"
 
 #include <stdio.h>
@@ -158,7 +158,7 @@ VideoMonitor::open (std::string filename)
 		querystate();
 		state_clk_divide = 0;
 		/* TODO once every two second or so -- state_clk_divide hack below */
-		state_connection = ARDOUR_UI::RapidScreenUpdate.connect (sigc::mem_fun (*this, &VideoMonitor::querystate));
+		state_connection = Timers::rapid_connect (sigc::mem_fun (*this, &VideoMonitor::querystate));
 	}
 	xjadeo_sync_setup();
 }
@@ -567,7 +567,7 @@ VideoMonitor::xjadeo_sync_setup ()
 			process->write_to_stdin("jack connect\n");
 		} else {
 			process->write_to_stdin("jack disconnect\n");
-			clock_connection = ARDOUR_UI::SuperRapidScreenUpdate.connect (sigc::mem_fun (*this, &VideoMonitor::srsupdate));
+			clock_connection = Timers::super_rapid_connect (sigc::mem_fun (*this, &VideoMonitor::srsupdate));
 		}
 		sync_by_manual_seek = my_manual_seek;
 	}

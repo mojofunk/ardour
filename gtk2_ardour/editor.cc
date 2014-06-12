@@ -120,6 +120,7 @@
 #include "sfdb_ui.h"
 #include "tempo_lines.h"
 #include "time_axis_view.h"
+#include "timers.h"
 #include "utils.h"
 
 #include "i18n.h"
@@ -1336,7 +1337,7 @@ Editor::set_session (Session *t)
 		(static_cast<TimeAxisView*>(*i))->set_samples_per_pixel (samples_per_pixel);
 	}
 
-	super_rapid_screen_update_connection = ARDOUR_UI::instance()->SuperRapidScreenUpdate.connect (
+	super_rapid_screen_update_connection = Timers::super_rapid_connect (
 		sigc::mem_fun (*this, &Editor::super_rapid_screen_update)
 		);
 

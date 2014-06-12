@@ -46,6 +46,7 @@
 #include "region_view.h"
 #include "rgb_macros.h"
 #include "selection.h"
+#include "timers.h"
 #include "utils.h"
 
 #include "i18n.h"
@@ -516,7 +517,7 @@ MidiStreamView::setup_rec_box ()
 			rec_rects.push_back (recbox);
 
 			screen_update_connection.disconnect();
-			screen_update_connection = ARDOUR_UI::instance()->SuperRapidScreenUpdate.connect (
+			screen_update_connection = Timers::super_rapid_connect (
 				sigc::mem_fun (*this, &MidiStreamView::update_rec_box));
 			rec_updating = true;
 			rec_active = true;

@@ -46,6 +46,7 @@
 #include "ardour_ui.h"
 #include "rgb_macros.h"
 #include "gui_thread.h"
+#include "timers.h"
 
 #include "i18n.h"
 
@@ -301,7 +302,7 @@ AudioStreamView::setup_rec_box ()
 			rec_rects.push_back (recbox);
 
 			screen_update_connection.disconnect();
-			screen_update_connection = ARDOUR_UI::instance()->SuperRapidScreenUpdate.connect (
+			screen_update_connection = Timers::super_rapid_connect (
 					sigc::mem_fun (*this, &AudioStreamView::update_rec_box));
 			rec_updating = true;
 			rec_active = true;

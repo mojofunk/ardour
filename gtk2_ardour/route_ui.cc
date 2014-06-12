@@ -45,6 +45,7 @@
 #include "automation_time_axis.h"
 #include "route_time_axis.h"
 #include "group_tabs.h"
+#include "timers.h"
 
 #include "ardour/audio_track.h"
 #include "ardour/audioengine.h"
@@ -2036,7 +2037,7 @@ RouteUI::bus_send_display_changed (boost::shared_ptr<Route> send_to)
 {
 	if (_route == send_to) {
 		show_sends_button->set_active (true);
-		send_blink_connection = ARDOUR_UI::instance()->Blink.connect (sigc::mem_fun (*this, &RouteUI::send_blink));
+		send_blink_connection = Timers::blink_connect (sigc::mem_fun (*this, &RouteUI::send_blink));
 	} else {
 		show_sends_button->set_active (false);
 		send_blink_connection.disconnect ();

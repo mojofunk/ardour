@@ -37,6 +37,7 @@
 #include "gui_thread.h"
 #include "public_editor.h"
 #include "main_clock.h"
+#include "status_bar.h"
 
 #include "i18n.h"
 
@@ -431,7 +432,7 @@ void
 ARDOUR_UI::session_parameter_changed (std::string p)
 {
 	if (p == "native-file-data-format" || p == "native-file-header-format") {
-		update_format ();
+		status_bar->update_format ();
 	}
 }
 

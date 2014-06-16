@@ -106,6 +106,7 @@ class SessionDialog;
 class SessionOptionEditor;
 class ShuttleControl;
 class Splash;
+class StatusBar;
 class TimeInfoBox;
 class MidiTracer;
 class NSM_Client;
@@ -488,27 +489,8 @@ class ARDOUR_UI : public Gtkmm2ext::UI, public ARDOUR::SessionHandlePtr
 	void use_menubar_as_top_menubar ();
 	void build_menu_bar ();
 
-	Gtk::Label   wall_clock_label;
-	gint update_wall_clock ();
+	StatusBar*    status_bar;
 
-	Gtk::Label   disk_space_label;
-	void update_disk_space ();
-
-	Gtk::Label   timecode_format_label;
-	void update_timecode_format ();
-
-	Gtk::Label   cpu_load_label;
-	void update_cpu_load ();
-
-	Gtk::Label   buffer_load_label;
-	void update_buffer_load ();
-
-	Gtk::Label   sample_rate_label;
-	void update_sample_rate (ARDOUR::framecnt_t);
-
-	Gtk::Label    format_label;
-	void update_format ();
-	
 	void every_second ();
 	void every_point_one_seconds ();
 	void every_point_zero_something_seconds ();
@@ -609,9 +591,6 @@ class ARDOUR_UI : public Gtkmm2ext::UI, public ARDOUR::SessionHandlePtr
 
 	void toggle_record_enable (uint32_t);
 
-	uint32_t rec_enabled_streams;
-	void count_recenabled_streams (ARDOUR::Route&);
-
 	Splash* splash;
 
 	void pop_back_splash (Gtk::Window&);
@@ -704,8 +683,6 @@ class ARDOUR_UI : public Gtkmm2ext::UI, public ARDOUR::SessionHandlePtr
 
 	bool click_button_clicked (GdkEventButton *);
 
-	VisibilityGroup _status_bar_visibility;
-
 	/** A ProcessThread so that we have some thread-local buffers for use by
 	 *  PluginEqGui::impulse_analysis ().
 	 */
@@ -718,8 +695,6 @@ class ARDOUR_UI : public Gtkmm2ext::UI, public ARDOUR::SessionHandlePtr
 
 	void successful_graph_sort ();
 	bool _feedback_exists;
-
-	void resize_text_widgets ();
 
         std::string _announce_string;
         void check_announcements ();

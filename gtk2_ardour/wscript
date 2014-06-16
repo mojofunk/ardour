@@ -207,6 +207,7 @@ gtk2_ardour_sources = [
         'splash.cc',
         'speaker_dialog.cc',
         'startup.cc',
+        'status_bar.cc',
         'step_editor.cc',
         'step_entry.cc',
         'stereo_panner.cc',

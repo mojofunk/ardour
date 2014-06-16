@@ -36,6 +36,7 @@
 #include "mixer_ui.h"
 #include "keyboard.h"
 #include "splash.h"
+#include "status_bar.h"
 #include "route_params_ui.h"
 #include "opts.h"
 #include "i18n.h"
@@ -71,6 +72,7 @@ ARDOUR_UI::connect_dependents_to_session (ARDOUR::Session *s)
 	BootMessage (_("Setup Mixer"));
 	mixer->set_session (s);
 	meterbridge->set_session (s);
+	status_bar->set_session (s);
 
 	/* its safe to do this now */
 

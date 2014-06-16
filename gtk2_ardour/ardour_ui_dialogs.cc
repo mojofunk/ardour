@@ -51,6 +51,7 @@
 #include "speaker_dialog.h"
 #include "splash.h"
 #include "sfdb_ui.h"
+#include "status_bar.h"
 #include "theme_manager.h"
 #include "time_info_box.h"
 #include "timers.h"
@@ -180,8 +181,6 @@ ARDOUR_UI::set_session (Session *s)
 	point_one_second_connection = Timers::rapid_connect (sigc::mem_fun(*this, &ARDOUR_UI::every_point_one_seconds));
 	point_zero_something_second_connection = Timers::super_rapid_connect (sigc::mem_fun(*this, &ARDOUR_UI::every_point_zero_something_seconds));
 
-	update_format ();
-
 	if (meter_box.get_parent()) {
 		transport_tearoff_hbox.remove (meter_box);
 		transport_tearoff_hbox.remove (editor_meter_peak_display);
@@ -300,7 +299,7 @@ ARDOUR_UI::unload_session (bool hide_stuff)
 
 	session_loaded = false;
 
-	update_buffer_load ();
+	status_bar->update_buffer_load ();
 
 	return 0;
 }

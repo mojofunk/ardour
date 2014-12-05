@@ -132,7 +132,7 @@ ActionManager::lookup_entry (const ustring accel_path, Gtk::AccelKey& key)
 	if (known) {
 		key = AccelKey (gkey.accel_key, Gdk::ModifierType (gkey.accel_mods));
 	} else {
-		key = AccelKey (GDK_VoidSymbol, Gdk::ModifierType (0));
+		key = AccelKey (GDK_KEY_VoidSymbol, Gdk::ModifierType (0));
 	}
 
 	return known;

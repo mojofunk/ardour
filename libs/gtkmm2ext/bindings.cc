@@ -210,7 +210,7 @@ KeyboardKey::make_key (const string& str, KeyboardKey& k)
                 keyval = gdk_keyval_from_name (str.substr (lastmod+1).c_str());
         }
 
-        if (keyval == GDK_VoidSymbol) {
+        if (keyval == GDK_KEY_VoidSymbol) {
                 return false;
         }
 

@@ -253,11 +253,11 @@ Keyboard::snooper (GtkWidget *widget, GdkEventKey *event)
 			)
 		);
 
-	if (event->keyval == GDK_Shift_R) {
-		keyval = GDK_Shift_L;
+	if (event->keyval == GDK_KEY_Shift_R) {
+		keyval = GDK_KEY_Shift_L;
 
-	} else if (event->keyval == GDK_Control_R) {
-		keyval = GDK_Control_L;
+	} else if (event->keyval == GDK_KEY_Control_R) {
+		keyval = GDK_KEY_Control_L;
 
 	} else {
 		keyval = event->keyval;
@@ -332,7 +332,7 @@ Keyboard::snooper (GtkWidget *widget, GdkEventKey *event)
 
 	if (event->type == GDK_KEY_RELEASE && modifier_state_equals (event->state, PrimaryModifier)) {
 		switch (event->keyval) {
-		case GDK_w:
+		case GDK_KEY_w:
 			close_current_dialog ();
 			ret = true;
 			break;
@@ -612,7 +612,7 @@ Keyboard::load_keybindings (string path)
 		stringstream s;
 		s << "Action: " << *n << " Group: " << *g << " Binding: ";
 
-		if ((*b).get_key() != GDK_VoidSymbol) {
+		if ((*b).get_key() != GDK_KEY_VoidSymbol) {
 			s << b->get_key() << " w/mod " << hex << b->get_mod() << dec << " = " << b->get_abbrev () << "\n";
 		} else {
 			s << "unbound\n";

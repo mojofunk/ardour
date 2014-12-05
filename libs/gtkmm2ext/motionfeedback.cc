@@ -299,32 +299,32 @@ MotionFeedback::pixwin_key_press_event (GdkEventKey *ev)
                 ((ev->state & Keyboard::PrimaryModifier) ? 2.0 : 1.0);
 
 	switch (ev->keyval) {
-	case GDK_Page_Up:
+	case GDK_KEY_Page_Up:
 	        retval = true;
 		_controllable->set_value (adjust (multiplier * page_inc));
 		break;
 
-	case GDK_Page_Down:
+	case GDK_KEY_Page_Down:
 	        retval = true;
 		_controllable->set_value (adjust (-multiplier * page_inc));
 		break;
 
-	case GDK_Up:
+	case GDK_KEY_Up:
 	        retval = true;
 		_controllable->set_value (adjust (multiplier * step_inc));
 		break;
 
-	case GDK_Down:
+	case GDK_KEY_Down:
 	        retval = true;
 		_controllable->set_value (adjust (-multiplier * step_inc));
 		break;
 
-	case GDK_Home:
+	case GDK_KEY_Home:
 	        retval = true;
 		_controllable->set_value (_controllable->lower());
 		break;
 
-	case GDK_End:
+	case GDK_KEY_End:
 	        retval = true;
 		_controllable->set_value (_controllable->upper());
 		break;

@@ -366,7 +366,7 @@ PixFader::on_size_allocate (Gtk::Allocation& alloc)
 		_span = alloc.get_width ();
 	}
 
-	if (is_realized()) {
+	if (get_realized()) {
 		/* recreate patterns in case we've changed size */
 		create_patterns ();
 	}

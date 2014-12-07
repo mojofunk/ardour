@@ -52,17 +52,17 @@ VisibilityTracker::cycle_visibility ()
 bool
 VisibilityTracker::fully_visible () const
 {
-	return _window.is_mapped() && (_visibility == GDK_VISIBILITY_UNOBSCURED);
+	return _window.get_mapped() && (_visibility == GDK_VISIBILITY_UNOBSCURED);
 }
 
 bool
 VisibilityTracker::not_visible () const
 {
-	return !_window.is_mapped() || (_visibility == GDK_VISIBILITY_FULLY_OBSCURED);
+	return !_window.get_mapped() || (_visibility == GDK_VISIBILITY_FULLY_OBSCURED);
 }
 
 bool
 VisibilityTracker::partially_visible () const
 {
-	return _window.is_mapped() && ((_visibility == GDK_VISIBILITY_PARTIAL) || (_visibility == GDK_VISIBILITY_UNOBSCURED));
+	return _window.get_mapped() && ((_visibility == GDK_VISIBILITY_PARTIAL) || (_visibility == GDK_VISIBILITY_UNOBSCURED));
 }

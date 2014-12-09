@@ -83,9 +83,9 @@ VideoServerDialog::VideoServerDialog (Session* s)
 	listenaddr_combo.set_name ("PaddedButton");
 #ifndef __APPLE__
 	/* Note: on OSX icsd is not able to bind to IPv4 localhost */
-	listenaddr_combo.append_text("127.0.0.1");
+	listenaddr_combo.append("127.0.0.1");
 #endif
-	listenaddr_combo.append_text("0.0.0.0");
+	listenaddr_combo.append("0.0.0.0");
 	listenaddr_combo.set_active(0);
 
 	std::string harvid_exe;

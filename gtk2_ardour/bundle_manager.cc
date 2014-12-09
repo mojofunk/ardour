@@ -203,8 +203,8 @@ BundleEditor::BundleEditor (Session* session, boost::shared_ptr<UserBundle> bund
 	a = new Gtk::Alignment (0, 0.5, 0, 1);
 	a->add (_input_or_output);
 	t->attach (*Gtk::manage (a), 1, 2, 1, 2);
-	_input_or_output.append_text (_("Input"));
-	_input_or_output.append_text (_("Output"));
+	_input_or_output.append (_("Input"));
+	_input_or_output.append (_("Output"));
 
 	if (bundle->ports_are_inputs()) {
 		_input_or_output.set_active_text (_("Input"));

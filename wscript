@@ -717,7 +717,8 @@ def options(opt):
                     help='Turn on AddressSanitizer (requires GCC >= 4.8 or clang >= 3.1)')
     opt.add_option('--ptformat', action='store_true', default=False, dest='ptformat',
                     help='Turn on PT session import option')
-
+    opt.add_option('--gtk-disable-deprecated', action='store_true', default=False, dest='gtk_disable_deprecated',
+                    help='Enable GTK/MM_DISABLE_DEPRECATED')
     for i in children:
         opt.recurse(i)
 
@@ -918,6 +919,9 @@ int main () { int x = SFC_AUTO_DOWNGRADE_RF64; return 0; }
             conf.env.append_value('CXXFLAGS', "-DHAVE_RF64_RIFF")
             conf.env.append_value('CFLAGS', "-DHAVE_RF64_RIFF")
     
+    if Options.options.gtk_disable_deprecated:
+        conf.env['GTK_DISABLE_DEPRECATED'] = True
+
     if Options.options.dist_target == 'mingw':
         Options.options.fpu_optimization = True
         conf.env.append_value('CFLAGS', '-DPLATFORM_WINDOWS')

@@ -127,7 +127,7 @@ MotionFeedback::MotionFeedback (Glib::RefPtr<Gdk::Pixbuf> pix,
 			   Gdk::KEY_PRESS_MASK|
 			   Gdk::KEY_RELEASE_MASK);
 
-	pixwin.set_flags (CAN_FOCUS);
+	pixwin.set_can_focus (true);
 
 	/* Proxy all important events on the pixwin to ourselves */
 
@@ -280,7 +280,7 @@ MotionFeedback::pixwin_enter_notify_event (GdkEventCrossing*)
 bool
 MotionFeedback::pixwin_leave_notify_event (GdkEventCrossing*)
 {
-	pixwin.unset_flags (HAS_FOCUS);
+	pixwin.set_can_focus (false);
 	return false;
 }
 

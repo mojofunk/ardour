@@ -116,6 +116,10 @@ def build(bld):
     else:
         obj.source += ['gtkapplication_x11.c']
 
+    if bld.env['GTK_DISABLE_DEPRECATED']:
+        #obj.defines      += [ 'GTK_DISABLE_DEPRECATED' ]
+        obj.defines      += [ 'GTKMM_DISABLE_DEPRECATED' ]
+
     # i18n
     if bld.is_defined('ENABLE_NLS'):
         mo_files = bld.path.ant_glob('po/*.mo')

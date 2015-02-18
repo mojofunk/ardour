@@ -13,3 +13,4 @@ export LINK_CC=$HOST-gcc
 export LINK_CXX=$HOST-g++
 export WINRC=$HOST-windres
 export STRIP=$HOST-strip
+export PYTHON=python

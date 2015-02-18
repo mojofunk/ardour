@@ -21,7 +21,7 @@ if [ -d $PACKAGE_DIR ]; then
 	rm -rf $PACKAGE_DIR || exit 1
 fi
 
-./waf --destdir=$PACKAGE_DIR install || exit 1
+$PYTHON ./waf --destdir=$PACKAGE_DIR install || exit 1
 
 echo "Moving Ardour dll's and executable to $PACKAGE_DIR ..."
 

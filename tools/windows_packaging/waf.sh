@@ -3,4 +3,4 @@
 . ./mingw-env.sh
 
 cd $BASE || exit 1
-./waf "$@"
+$PYTHON ./waf "$@"

@@ -1,30 +1,16 @@
 #!/bin/bash
 
-if [ -z "$ARCH" ]; then
-	echo "ARCH not set defaulting to win32"
-	ARCH=win32
-elif [ "$ARCH" == "win32" ]; then
-	echo "ARCH set to win32"
-elif [ "$ARCH" == "win64" ]; then
-	echo "ARCH set to win64"
-else
-	echo "ARCH set invalid value aborting..."
-	exit 1
-fi
+: ${ARCH:="i686"}
 
-if [ "$ARCH" == "win32" ]; then
-	HOST=i686-w64-mingw32
-else
-	HOST=x86_64-w64-mingw32
-fi
+: ${HOST:="${ARCH}-w64-mingw32"}
 
-MINGW_ROOT=/usr/$HOST/sys-root/mingw
+: ${MINGW_ROOT:="/usr/$HOST/sys-root/mingw"}
 
 . env-tools.sh
 
 . env-common.sh
 
-APPNAME=Ardour
+: ${APPNAME:="Ardour"}
 
 # These are only relevant after a build
 if test -f $BUILD_CACHE_FILE

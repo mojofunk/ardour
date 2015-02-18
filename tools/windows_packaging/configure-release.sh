@@ -1,8 +1,9 @@
 #!/bin/bash
 
 . ./mingw-env.sh
-
+. ./env-options.sh
 . ./print-env.sh
 
 cd $BASE || exit 1
-$PYTHON ./waf configure --prefix="/" --bindir="/" --configdir="/share" --optimize --noconfirm --dist-target=mingw "$@"
+$PYTHON ./waf configure $COMMON_OPTIONS $PATH_OPTIONS \
+                        $BACKEND_OPTIONS --optimize "$@"

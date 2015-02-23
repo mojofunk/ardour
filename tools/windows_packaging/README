@@ -24,7 +24,7 @@ is packaged.
 The configure-release.sh is intended for releases only, none of the tests
 will be built and all the binaries will be optimized and stripped.
 
-These scripts both source the mingw-env.sh script to setup the appropriate 
+These scripts both source the env-mingw.sh script to setup the appropriate
 environment variables and then call waf with a specific set of parameters
 that are appropriate to configure for the windows build.
 

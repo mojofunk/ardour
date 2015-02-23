@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./mingw-env.sh
+. ./env-mingw.sh
 . ./env-options.sh
 . ./print-env.sh
 

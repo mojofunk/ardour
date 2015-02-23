@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./mingw-env.sh
+. ./env-mingw.sh
 
 cd $BASE || exit 1
 $PYTHON ./waf "$@"

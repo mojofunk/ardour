@@ -1,6 +1,8 @@
 #!/bin/bash
 
-. ./mingw-env.sh
+. ./env-mingw.sh
+
+. ./env-package.sh
 
 cd $BASE || exit 1
 

@@ -1,5 +1,5 @@
 #!/bin/bash
 
-. mingw-env.sh
+. env-mingw.sh
 
 rm -rf $BUILD_DIR

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./mingw-env.sh
+. ./env-mingw.sh
 
 export CC="distcc $HOST-gcc"
 export CPP="distcc $HOST-g++"

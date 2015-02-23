@@ -2,7 +2,7 @@
 
 . ./msys2-env.sh
 
-. ./mingw-env.sh
+. ./env-mingw.sh
 
 export AR=$HOST-gcc-ar
 

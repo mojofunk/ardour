@@ -35,6 +35,7 @@ libgthread-2.0-0.dll
 libgtkmm-2.4-1.dll
 libgtk-win32-2.0-0.dll
 libharfbuzz-0.dll
+libltc-11.dll
 iconv.dll
 libFLAC-8.dll
 libogg-0.dll

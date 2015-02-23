@@ -23,26 +23,26 @@ fi
 
 $PYTHON ./waf --destdir=$PACKAGE_DIR install || exit 1
 
-echo "Moving Ardour dll's and executable to $PACKAGE_DIR ..."
+echo "Moving Ardour dll's and executable to $PACKAGE_BIN_DIR ..."
 
-mv $PACKAGE_DIR/lib/ardour3/*.dll $PACKAGE_DIR || exit 1
-mv $PACKAGE_DIR/lib/ardour3/*.exe $PACKAGE_DIR || exit 1
+mv $PACKAGE_LIB_DIR/ardour3/*.dll $PACKAGE_BIN_DIR || exit 1
+mv $PACKAGE_LIB_DIR/ardour3/*.exe $PACKAGE_BIN_DIR || exit 1
 
 echo "Deleting import libs ..."
 
-rm $PACKAGE_DIR/lib/*dll.a
+rm $PACKAGE_LIB_DIR/*dll.a
 
 # delete sh script
-rm $PACKAGE_DIR/ardour3
+rm $PACKAGE_BIN_DIR/ardour3
 
 if test x$WITH_TESTS != x ; then
 	echo "Copying tests and test data to $PACKAGE_DIR ..."
-	cp $BUILD_DIR/libs/pbd/run-tests.exe $PACKAGE_DIR/pbd-run-tests.exe
+	cp $BUILD_DIR/libs/pbd/run-tests.exe $PACKAGE_BIN_DIR/pbd-run-tests.exe
 	cp -r $BASE/libs/pbd/test $PACKAGE_DIR/pbd_testdata
 
-	cp $BUILD_DIR/libs/midi++2/run-tests.exe $PACKAGE_DIR/midipp-run-tests.exe
+	cp $BUILD_DIR/libs/midi++2/run-tests.exe $PACKAGE_BIN_DIR/midipp-run-tests.exe
 
-	cp $BUILD_DIR/libs/evoral/run-tests.exe $PACKAGE_DIR/evoral-run-tests.exe
+	cp $BUILD_DIR/libs/evoral/run-tests.exe $PACKAGE_BIN_DIR/evoral-run-tests.exe
 	mkdir -p $PACKAGE_DIR/evoral_testdata
 	cp -r $BASE/libs/evoral/test/testdata/* $PACKAGE_DIR/evoral_testdata
 
@@ -66,17 +66,17 @@ cp $TOOLS_DIR/pango.modules $PACKAGE_DIR/etc/pango
 
 cp $TOOLS_DIR/README $PACKAGE_DIR
 
-echo "Copying mingw shared libraries to $PACKAGE_DIR ..."
+echo "Copying mingw shared libraries to $PACKAGE_BIN_DIR ..."
 
 for i in $DLLS;
 do
-	copydll "$i" "$PACKAGE_DIR" || exit 1
+	copydll "$i" "$PACKAGE_BIN_DIR" || exit 1
 done
 
 if test x$WITH_JACK != x; then
-	echo "Copying JACK server and drivers to $PACKAGE_DIR ..."
-	cp $MINGW_ROOT/bin/jackd.exe $PACKAGE_DIR
-	cp -r $MINGW_ROOT/bin/jack $PACKAGE_DIR
+	echo "Copying JACK server and drivers to $PACKAGE_BIN_DIR ..."
+	cp $MINGW_ROOT/bin/jackd.exe $PACKAGE_BIN_DIR
+	cp -r $MINGW_ROOT/bin/jack $PACKAGE_BIN_DIR
 fi
 
 if test x$WITH_LV2 != x; then
@@ -107,29 +107,29 @@ if [ x$DEBUG = xT ]; then
 	done
 
 	if test x$WITH_JACK != x; then
-		echo "Copying JACK utility programs to $PACKAGE_DIR ..."
-		cp $MINGW_ROOT/bin/jack_*.exe $PACKAGE_DIR
+		echo "Copying JACK utility programs to $PACKAGE_BIN_DIR ..."
+		cp $MINGW_ROOT/bin/jack_*.exe $PACKAGE_BIN_DIR
 	fi
 
 	if test x$WITH_LV2 != x; then
-		echo "Copying LV2 utility programs to $PACKAGE_DIR ..."
-		cp $MINGW_ROOT/bin/lilv-bench.exe $PACKAGE_DIR
-		cp $MINGW_ROOT/bin/lv2info.exe $PACKAGE_DIR
-		cp $MINGW_ROOT/bin/lv2ls.exe $PACKAGE_DIR
+		echo "Copying LV2 utility programs to $PACKAGE_BIN_DIR ..."
+		cp $MINGW_ROOT/bin/lilv-bench.exe $PACKAGE_BIN_DIR
+		cp $MINGW_ROOT/bin/lv2info.exe $PACKAGE_BIN_DIR
+		cp $MINGW_ROOT/bin/lv2ls.exe $PACKAGE_BIN_DIR
 	fi
 
 	#echo "Copying any debug files to $PACKAGE_DIR ..."
 	#cp $MINGW_ROOT/bin/*.debug $PACKAGE_DIR
 
 	echo "Copying gdb and config files to $PACKAGE_DIR ..."
-	cp $MINGW_ROOT/bin/gdb.exe $PACKAGE_DIR
+	cp $MINGW_ROOT/bin/gdb.exe $PACKAGE_BIN_DIR
 	cp $TOOLS_DIR/gdbinit $PACKAGE_DIR/.gdbinit
 	cp $TOOLS_DIR/gdbinit_home $PACKAGE_DIR/gdbinit_home
 	cp $TOOLS_DIR/gdb.bat $PACKAGE_DIR/gdb.bat
 	cp $TOOLS_DIR/gdb-ardour.bat $PACKAGE_DIR/gdb-ardour.bat
 
-	echo "Copying Gtk demo to $PACKAGE_DIR ..."
-	cp $MINGW_ROOT/bin/gtk-demo.exe $PACKAGE_DIR
+	echo "Copying Gtk demo to $PACKAGE_BIN_DIR ..."
+	cp $MINGW_ROOT/bin/gtk-demo.exe $PACKAGE_BIN_DIR
 else
 	echo "Optimized build Stripping executable ..."
 	find $PACKAGE_DIR -type f -name "*.exe*" | xargs $STRIP

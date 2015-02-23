@@ -24,6 +24,9 @@ then
 		PACKAGE_DIR="$APPNAME-${release_version}-$ARCH"
 	fi
 
+	PACKAGE_BIN_DIR=$PACKAGE_DIR/bin
+	PACKAGE_LIB_DIR=$PACKAGE_DIR/lib
+
 	if grep -q "BUILD_TESTS = True" $BUILD_CACHE_FILE; then
 		WITH_TESTS=1
 	fi

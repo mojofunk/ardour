@@ -11,11 +11,6 @@ fi
 
 cd $BASE || exit 1
 
-if ! test -f $BUILD_CACHE_FILE; then
-	echo "ERROR: $APPNAME is not configured and built yet..."
-	exit 1
-fi
-
 if [ -d $PACKAGE_DIR ]; then
 	echo "Removing old package directory structure ..."
 	rm -rf $PACKAGE_DIR || exit 1

@@ -79,11 +79,6 @@ if test x$WITH_JACK != x; then
 	cp -r $MINGW_ROOT/bin/jack $PACKAGE_BIN_DIR
 fi
 
-if test x$WITH_LV2 != x; then
-	echo "Moving Bundled LV2 $PACKAGE_DIR ..."
-	mv $PACKAGE_DIR/lib/lv2 $PACKAGE_DIR/lib/ardour3/LV2
-fi
-
 SRC_DIRS='
 libs/ardour
 libs/pbd

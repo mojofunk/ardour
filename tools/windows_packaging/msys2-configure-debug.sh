@@ -6,8 +6,6 @@
 
 export AR=$HOST-gcc-ar
 
-. ./env-options.sh
-
 . ./print-env.sh
 
 cd $BASE || exit 1

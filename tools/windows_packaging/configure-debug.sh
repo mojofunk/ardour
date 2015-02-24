@@ -1,7 +1,6 @@
 #!/bin/bash
 
 . ./env-mingw.sh
-. ./env-options.sh
 . ./print-env.sh
 
 cd $BASE || exit 1

@@ -12,6 +12,8 @@
 
 . env-common.sh
 
+. env-options.sh
+
 if test -f $BUILD_CACHE_FILE
 then
     . env-package.sh

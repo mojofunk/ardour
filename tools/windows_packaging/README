@@ -98,29 +98,7 @@ windows packaging directory using the wine-*-tests.sh scripts
 Debugging
 
 Ardour has some verbose logging/debugging output that can be useful that is used
-with the -D option. 
-
-When configured for debugging the package contains gdb along with a .gdbinit 
-file to automatically set the source directory so that the "list" gdb command
-will show the source code corresponding to the current stack frame.
-
-New versions of gdb will not load a .gdbinit file unless it is located in the directory
-set in the HOME environment variable and auto-load safe-path is set appropriately.
-
-So the gdbinit_home file needs to be moved to directory set in %USERPROFILE% and
-gdb started via gdb.bat for source file listing to work.
-
-The gdb batch scripts cannot be used if the package directory is on a network share
-so the package will need to be copied to a local drive first.
-
-When starting gdb using gdb.bat the Ardour executable needs to be set as the program
-to be debugged with the "file" command
-
-e.g (gdb) file ardour-3.5.exe
-
-You can then set a break point at main() with the "break" command as usual
-
-e.g (gdb) break main
+with the -D option. You can also export PBD_DEBUG variable to set logging options.
 
 To set a breakpoint in a dll/shared library like libardour you need to wait for
 the symbols to be loaded which only occurs once the program has been executed using

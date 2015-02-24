@@ -113,10 +113,7 @@ if [ x$DEBUG = xT ]; then
 
 	echo "Copying gdb and config files to $PACKAGE_DIR ..."
 	cp $MINGW_ROOT/bin/gdb.exe $PACKAGE_BIN_DIR
-	cp $TOOLS_DIR/gdbinit $PACKAGE_DIR/.gdbinit
-	cp $TOOLS_DIR/gdbinit_home $PACKAGE_DIR/gdbinit_home
-	cp $TOOLS_DIR/gdb.bat $PACKAGE_DIR/gdb.bat
-	cp $TOOLS_DIR/gdb-ardour.bat $PACKAGE_DIR/gdb-ardour.bat
+	. $TOOLS_DIR/make-debug-script.sh
 
 	echo "Copying Gtk demo to $PACKAGE_BIN_DIR ..."
 	cp $MINGW_ROOT/bin/gtk-demo.exe $PACKAGE_BIN_DIR

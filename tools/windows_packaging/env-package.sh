@@ -5,22 +5,23 @@
 
 PRODUCT_NAME=${PRODUCT_NAME:=ardour}
 PROGRAM_NAME=${PROGRAM_NAME:=Ardour}
-PROGRAM_VERSION=${major_version}
+PROGRAM_MAJOR_VERSION=${major_version}
+PROGRAM_FULL_VERSION=${release_version}
 
 LOWERCASE_DIRNAME=ardour3
 # see wscript 'lwrcase_dirname' used for lib/ardour3 and share/ardour3
 STATEFILE_SUFFIX=ardour # see filename_extensions.cc
 
 # derived variables
-PRODUCT_ID=${PROGRAM_NAME}${PROGRAM_VERSION}
-PRODUCT_EXE=${PRODUCT_NAME}.exe
+PRODUCT_ID=${PROGRAM_NAME}${PROGRAM_MAJOR_VERSION}
+PRODUCT_EXE=${PRODUCT_NAME}-${PROGRAM_FULL_VERSION}.exe
 PRODUCT_ICON=${PRODUCT_NAME}.ico
 
 # Figure out the Build Type
 if [ x$DEBUG = xT ]; then
-    PACKAGE_DIR="$PRODUCT_NAME-${release_version}-$ARCH-dbg"
+    PACKAGE_DIR="$PRODUCT_NAME-${PROGRAM_FULL_VERSION}-$ARCH-dbg"
 else
-    PACKAGE_DIR="$PRODUCT_NAME-${release_version}-$ARCH"
+    PACKAGE_DIR="$PRODUCT_NAME-${PROGRAM_FULL_VERSION}-$ARCH"
 fi
 
 PACKAGE_BIN_DIR=$PACKAGE_DIR/bin

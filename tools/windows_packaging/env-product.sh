@@ -1,0 +1,4 @@
+#!/bin/bash
+
+PRODUCT_NAME=${PRODUCT_NAME:=ardour}
+PROGRAM_NAME=${PROGRAM_NAME:=Ardour}

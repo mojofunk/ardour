@@ -6,6 +6,8 @@
 
 : ${MINGW_ROOT:="/usr/$HOST/sys-root/mingw"}
 
+. env-product.sh
+
 . env-tools.sh
 
 . env-common.sh

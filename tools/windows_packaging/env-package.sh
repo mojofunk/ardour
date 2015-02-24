@@ -1,10 +1,7 @@
 #!/bin/bash
 
-
 . ../define_versions.sh
 
-PRODUCT_NAME=${PRODUCT_NAME:=ardour}
-PROGRAM_NAME=${PROGRAM_NAME:=Ardour}
 PROGRAM_MAJOR_VERSION=${major_version}
 PROGRAM_FULL_VERSION=${release_version}
 

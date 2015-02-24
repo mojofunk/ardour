@@ -2,4 +2,4 @@
 
 . ./msys2-env.sh
 
-. ./waf.sh "$@"
+. ./build.sh "$@"

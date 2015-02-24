@@ -33,10 +33,8 @@ configure to use distcc for building.
 
 Building
 
-After the build is configured the waf.sh script is used to build the Ardour
-application and all necessary libraries. The waf.sh script is not strictly
-needed, it just saves having to change working directories.
-
+After the build is configured the build.sh script is used to build the Ardour
+application and all necessary libraries.
 
 Packaging
 

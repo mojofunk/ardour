@@ -75,5 +75,5 @@ sord-0-0.dll
 WITH_JACK='TRUE'
 WITH_LV2='TRUE'
 
-. ./copydll-fedora.sh
+. ./copydll-default.sh
 . ./package.sh

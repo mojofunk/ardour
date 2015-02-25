@@ -51,13 +51,21 @@ cp -RL $MINGW_ROOT/etc/gtk-2.0 $PACKAGE_DIR/etc
 cp -RL $MINGW_ROOT/etc/pango $PACKAGE_DIR/etc
 
 cp -R $MINGW_ROOT/lib/gtk-2.0 $PACKAGE_DIR/lib
-cp -R $MINGW_ROOT/lib/gdk-pixbuf-2.0 $PACKAGE_DIR/lib
-cp $TOOLS_DIR/loaders.cache $PACKAGE_DIR/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache
 
-mkdir -p $PACKAGE_DIR/lib/pango/1.8.0/modules
-cp -r $MINGW_ROOT/lib/pango/1.8.0/modules/*.dll $PACKAGE_DIR/lib/pango/1.8.0/modules
+# Copy any gdk-pixbuf2 modules if they exist
+if [ -d $MINGW_ROOT/lib/gdk-pixbuf-2.0 ]; then
+    echo "Copying gdk-pixbuf2 modules to $PACKAGE_LIB_DIR ..."
+    cp -R $MINGW_ROOT/lib/gdk-pixbuf-2.0 $PACKAGE_LIB_DIR
+    cp $TOOLS_DIR/loaders.cache $PACKAGE_LIB_DIR/gdk-pixbuf-2.0/2.10.0/loaders.cache
+fi
 
-cp $TOOLS_DIR/pango.modules $PACKAGE_DIR/etc/pango
+# Copy any pango modules if they exist
+if [ -d $MINGW_ROOT/lib/pango/1.8.0/modules ]; then
+    echo "Copying pango modules to $PACKAGE_LIB_DIR ..."
+    mkdir -p $PACKAGE_LIB_DIR/pango/1.8.0/modules
+    cp -r $MINGW_ROOT/lib/pango/1.8.0/modules/*.dll $PACKAGE_LIB_DIR/pango/1.8.0/modules
+    cp $TOOLS_DIR/pango.modules $PACKAGE_DIR/etc/pango
+fi
 
 cp $TOOLS_DIR/README $PACKAGE_DIR
 

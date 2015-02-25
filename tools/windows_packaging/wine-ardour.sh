@@ -2,4 +2,4 @@
 
 . ./wine-env.sh
 
-wine ardour-3.3.exe
+wine ./$PRODUCT_EXE

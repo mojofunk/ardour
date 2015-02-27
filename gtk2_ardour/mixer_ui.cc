@@ -1648,7 +1648,7 @@ Mixer_UI::get_state (void)
 {
 	XMLNode* node = new XMLNode ("Mixer");
 
-	if (is_realized()) {
+	if (get_realized()) {
 		Glib::RefPtr<Gdk::Window> win = get_window();
 
 		get_window_pos_and_size ();

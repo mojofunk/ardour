@@ -170,7 +170,7 @@ void
 ArdourButton::set_text (const std::string& str)
 {
 	_text = str;
-	if (!is_realized()) {
+	if (!get_realized()) {
 		return;
 	}
 	ensure_layout ();
@@ -885,7 +885,7 @@ ArdourButton::on_name_changed ()
 	_char_pixel_height = 0;
 	_diameter = 0;
 	_update_colors = true;
-	if (is_realized()) {
+	if (get_realized()) {
 		queue_resize ();
 	}
 }
@@ -923,7 +923,7 @@ void
 ArdourButton::set_image (const RefPtr<Gdk::Pixbuf>& img)
 {
 	_pixbuf = img;
-	if (is_realized()) {
+	if (get_realized()) {
 		queue_resize ();
 	}
 }
@@ -1009,7 +1009,7 @@ ArdourButton::set_tweaks (Tweaks t)
 {
 	if (_tweaks != t) {
 		_tweaks = t;
-		if (is_realized()) {
+		if (get_realized()) {
 			queue_resize ();
 		}
 	}
@@ -1038,7 +1038,7 @@ ArdourButton::set_layout_ellipsize_width (int w)
 	if (_layout_ellipsize_width > 3 * PANGO_SCALE) {
 		_layout->set_width (_layout_ellipsize_width - 3 * PANGO_SCALE);
 	}
-	if (is_realized ()) {
+	if (get_realized ()) {
 		queue_resize ();
 	}
 }
@@ -1057,7 +1057,7 @@ ArdourButton::set_text_ellipsize (Pango::EllipsizeMode e)
 	if (_layout_ellipsize_width > 3 * PANGO_SCALE) {
 		_layout->set_width (_layout_ellipsize_width - 3 * PANGO_SCALE);
 	}
-	if (is_realized ()) {
+	if (get_realized ()) {
 		queue_resize ();
 	}
 }

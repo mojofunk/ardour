@@ -2482,7 +2482,7 @@ Editor::get_state ()
 	id().print (buf, sizeof (buf));
 	node->add_property ("id", buf);
 
-	if (is_realized()) {
+	if (get_realized()) {
 		Glib::RefPtr<Gdk::Window> win = get_window();
 
 		int x, y, width, height;

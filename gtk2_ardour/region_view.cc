@@ -551,7 +551,7 @@ void
 RegionView::hide_region_editor()
 {
 	if (editor) {
-		editor->hide_all ();
+		editor->hide ();
 	}
 }
 

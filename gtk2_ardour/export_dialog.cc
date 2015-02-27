@@ -139,7 +139,7 @@ ExportDialog::init ()
 	/* Done! */
 
 	show_all_children ();
-	progress_widget.hide_all();
+	progress_widget.hide ();
 }
 
 void
@@ -192,7 +192,7 @@ ExportDialog::close_dialog ()
 		status->abort();
 	}
 
-	hide_all ();
+	hide ();
 	set_modal (false);
 
 }
@@ -307,7 +307,7 @@ ExportDialog::show_progress ()
 	export_button->set_sensitive (false);
 
 	progress_bar.set_fraction (0.0);
-	warning_widget.hide_all();
+	warning_widget.hide ();
 	progress_widget.show ();
 	progress_widget.show_all_children ();
 	progress_connection = Glib::signal_timeout().connect (sigc::mem_fun(*this, &ExportDialog::progress_timeout), 100);

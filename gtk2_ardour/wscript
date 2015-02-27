@@ -480,6 +480,9 @@ def build(bld):
 
     obj.use += 'libptformat'
 
+    if bld.env['GTK_DISABLE_DEPRECATED']:
+        obj.defines      += [ 'GTKMM_DISABLE_DEPRECATED' ]
+
     if bld.env['build_target'] == 'mingw':
         obj.linkflags += ' -mwindows'
 

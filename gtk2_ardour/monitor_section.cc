@@ -545,10 +545,10 @@ MonitorSection::ChannelButtonSet::ChannelButtonSet ()
 	solo.set_name (X_("monitor section solo"));
 	invert.set_name (X_("monitor section invert"));
 
-	cut.unset_flags (Gtk::CAN_FOCUS);
-	dim.unset_flags (Gtk::CAN_FOCUS);
-	solo.unset_flags (Gtk::CAN_FOCUS);
-	invert.unset_flags (Gtk::CAN_FOCUS);
+	cut.set_can_focus (false);
+	dim.set_can_focus (false);
+	solo.set_can_focus (false);
+	invert.set_can_focus (false);
 }
 
 	void

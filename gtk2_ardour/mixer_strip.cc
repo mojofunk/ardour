@@ -367,7 +367,7 @@ MixerStrip::init ()
 		    Gdk::KEY_PRESS_MASK|
 		    Gdk::KEY_RELEASE_MASK);
 
-	set_flags (get_flags() | Gtk::CAN_FOCUS);
+	set_can_focus (true);
 
 	AudioEngine::instance()->PortConnectedOrDisconnected.connect (
 		*this, invalidator (*this), boost::bind (&MixerStrip::port_connected_or_disconnected, this, _1, _3), gui_context ()

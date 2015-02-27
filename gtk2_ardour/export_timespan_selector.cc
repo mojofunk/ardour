@@ -41,7 +41,7 @@ using std::string;
 
 ExportTimespanSelector::ExportTimespanSelector (ARDOUR::Session * session, ProfileManagerPtr manager) :
 	manager (manager),
-	time_format_label (_("Show Times as:"), Gtk::ALIGN_LEFT)
+	time_format_label (_("Show Times as:"), Gtk::ALIGN_START)
 {
 	set_session (session);
 

@@ -38,9 +38,9 @@ TempoDialog::TempoDialog (TempoMap& map, framepos_t frame, const string&)
 	: ArdourDialog (_("New Tempo"))
 	, bpm_adjustment (60.0, 1.0, 999.9, 0.1, 1.0)
 	, bpm_spinner (bpm_adjustment)
-	, when_bar_label (_("bar:"), ALIGN_LEFT, ALIGN_CENTER)
-	, when_beat_label (_("beat:"), ALIGN_LEFT, ALIGN_CENTER)
-	, pulse_selector_label (_("Pulse note"), ALIGN_LEFT, ALIGN_CENTER)
+	, when_bar_label (_("bar:"), ALIGN_START, ALIGN_CENTER)
+	, when_beat_label (_("beat:"), ALIGN_START, ALIGN_CENTER)
+	, pulse_selector_label (_("Pulse note"), ALIGN_START, ALIGN_CENTER)
 	, tap_tempo_button (_("Tap tempo"))
 {
 	Timecode::BBT_Time when;
@@ -54,9 +54,9 @@ TempoDialog::TempoDialog (TempoSection& section, const string&)
 	: ArdourDialog (_("Edit Tempo"))
 	, bpm_adjustment (60.0, 1.0, 999.9, 0.1, 1.0)
 	, bpm_spinner (bpm_adjustment)
-	, when_bar_label (_("bar:"), ALIGN_LEFT, ALIGN_CENTER)
-	, when_beat_label (_("beat:"), ALIGN_LEFT, ALIGN_CENTER)
-	, pulse_selector_label (_("Pulse note"), ALIGN_LEFT, ALIGN_CENTER)
+	, when_bar_label (_("bar:"), ALIGN_START, ALIGN_CENTER)
+	, when_beat_label (_("beat:"), ALIGN_START, ALIGN_CENTER)
+	, pulse_selector_label (_("Pulse note"), ALIGN_START, ALIGN_CENTER)
 	, tap_tempo_button (_("Tap tempo"))
 {
 	init (section.start(), section.beats_per_minute(), section.note_type(), section.movable());
@@ -118,7 +118,7 @@ TempoDialog::init (const Timecode::BBT_Time& when, double bpm, double note_type,
 	table->set_homogeneous (false);
 
 	int row;
-	Label* bpm_label = manage (new Label(_("Beats per minute:"), ALIGN_LEFT, ALIGN_CENTER));
+	Label* bpm_label = manage (new Label(_("Beats per minute:"), ALIGN_START, ALIGN_CENTER));
 	table->attach (*bpm_label, 0, 1, 0, 1);
 	table->attach (bpm_spinner, 1, 5, 0, 1);
 
@@ -152,7 +152,7 @@ TempoDialog::init (const Timecode::BBT_Time& when, double bpm, double note_type,
 		table->attach (when_beat_label, 3, 4, row, row+1, Gtk::AttachOptions(0), Gtk::AttachOptions(0));
 		table->attach (when_beat_entry, 4, 5, row, row+1, Gtk::AttachOptions(0), Gtk::AttachOptions(0));
 
-		Label* when_label = manage (new Label(_("Tempo begins at"), ALIGN_LEFT, ALIGN_CENTER));
+		Label* when_label = manage (new Label(_("Tempo begins at"), ALIGN_START, ALIGN_CENTER));
 		table->attach (*when_label, 0, 1, row, row+1);
 	}
 
@@ -372,8 +372,8 @@ MeterDialog::init (const Timecode::BBT_Time& when, double bpb, double divisor, b
 		note_type.set_active_text (strings[3]); // "quarter"
 	}
 
-	Label* note_label = manage (new Label (_("Note value:"), ALIGN_LEFT, ALIGN_CENTER));
-	Label* bpb_label = manage (new Label (_("Beats per bar:"), ALIGN_LEFT, ALIGN_CENTER));
+	Label* note_label = manage (new Label (_("Note value:"), ALIGN_START, ALIGN_CENTER));
+	Label* bpb_label = manage (new Label (_("Beats per bar:"), ALIGN_START, ALIGN_CENTER));
 	Table* table = manage (new Table (3, 2));
 	table->set_spacings (6);
 
@@ -387,7 +387,7 @@ MeterDialog::init (const Timecode::BBT_Time& when, double bpb, double divisor, b
 	when_bar_entry.set_alignment (1.0);
 
 	if (movable) {
-		Label* when_label = manage (new Label(_("Meter begins at bar:"), ALIGN_LEFT, ALIGN_CENTER));
+		Label* when_label = manage (new Label(_("Meter begins at bar:"), ALIGN_START, ALIGN_CENTER));
 
 		table->attach (*when_label, 0, 1, 2, 3, FILL | EXPAND, FILL | EXPAND);
 		table->attach (when_bar_entry, 1, 2, 2, 3, FILL | EXPAND, FILL | EXPAND);

@@ -27,16 +27,16 @@
 using namespace ARDOUR;
 
 ExportFilenameSelector::ExportFilenameSelector () :
-	include_label ("", Gtk::ALIGN_LEFT),
+	include_label ("", Gtk::ALIGN_START),
 
-	label_label (_("Label:"), Gtk::ALIGN_LEFT),
+	label_label (_("Label:"), Gtk::ALIGN_START),
 	session_checkbox (_("Session Name")),
 	revision_checkbox (_("Revision:")),
 
-	path_label (_("Folder:"), Gtk::ALIGN_LEFT),
+	path_label (_("Folder:"), Gtk::ALIGN_START),
 	browse_button (_("Browse")),
 
-	example_filename_label ("", Gtk::ALIGN_LEFT)
+	example_filename_label ("", Gtk::ALIGN_START)
 {
 	include_label.set_markup (_("<i>Build filename(s) from these components:</i>"));
 

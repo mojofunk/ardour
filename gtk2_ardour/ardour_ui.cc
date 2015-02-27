@@ -3775,7 +3775,7 @@ ARDOUR_UI::add_route (Gtk::Window* /* ignored */)
 		return;
 	}
 
-	if (add_route_dialog->is_visible()) {
+	if (add_route_dialog->get_visible()) {
 		/* we're already doing this */
 		return;
 	}
@@ -4003,7 +4003,7 @@ ARDOUR_UI::add_video (Gtk::Window* float_window)
 		add_video_dialog->set_transient_for (*float_window);
 	}
 
-	if (add_video_dialog->is_visible()) {
+	if (add_video_dialog->get_visible()) {
 		/* we're already doing this */
 		return;
 	}

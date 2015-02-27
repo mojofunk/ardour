@@ -329,7 +329,7 @@ _hide_splash (gpointer arg)
 void
 ARDOUR_UI::goto_editor_window ()
 {
-	if (splash && splash->is_visible()) {
+	if (splash && splash->get_visible()) {
 		// in 2 seconds, hide the splash screen
 		Glib::signal_timeout().connect (sigc::bind (sigc::ptr_fun (_hide_splash), this), 2000);
 	}

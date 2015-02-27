@@ -151,8 +151,7 @@ TimeAxisView::TimeAxisView (ARDOUR::Session* sess, PublicEditor& ed, TimeAxisVie
 
 	Gtk::Entry* an_entry = new Gtkmm2ext::FocusEntry;
 	an_entry->set_name ("EditorTrackNameDisplay");
-	Gtk::Requisition req;
-	an_entry->size_request (req);
+	Gtk::Requisition req = an_entry->size_request ();
 	name_label.set_size_request (-1, req.height);
 	name_label.set_ellipsize (Pango::ELLIPSIZE_MIDDLE);
 	delete an_entry;

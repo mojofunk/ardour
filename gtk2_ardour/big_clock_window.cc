@@ -46,7 +46,7 @@ BigClockWindow::BigClockWindow (AudioClock& c)
 	add (clock);
 	clock.show_all ();
 
-	clock.size_request (default_size);
+	default_size = clock.size_request ();
 
 	clock.signal_size_allocate().connect (sigc::mem_fun (*this, &BigClockWindow::clock_size_reallocated));
 }

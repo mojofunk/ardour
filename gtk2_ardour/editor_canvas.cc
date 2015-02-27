@@ -323,15 +323,14 @@ Editor::track_canvas_viewport_size_allocated ()
 void
 Editor::reset_controls_layout_width ()
 {
-	GtkRequisition req = { 0, 0 };
+	GtkRequisition req = edit_controls_vbox.size_request ();
 	gint w;
 
-	edit_controls_vbox.size_request (req);
 	w = req.width;
 
         if (_group_tabs->get_mapped()) {
-		_group_tabs->size_request (req);
-                w += req.width;
+			req = _group_tabs->size_request ();
+			w += req.width;
         }
 
         /* the controls layout has no horizontal scrolling, its visible

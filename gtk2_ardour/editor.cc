@@ -5653,7 +5653,7 @@ Editor::super_rapid_screen_update ()
 	/* METERING / MIXER STRIPS */
 
 	/* update track meters, if required */
-	if (is_mapped() && meters_running) {
+	if (get_mapped() && meters_running) {
 		RouteTimeAxisView* rtv;
 		for (TrackViewList::iterator i = track_views.begin(); i != track_views.end(); ++i) {
 			if ((rtv = dynamic_cast<RouteTimeAxisView*>(*i)) != 0) {

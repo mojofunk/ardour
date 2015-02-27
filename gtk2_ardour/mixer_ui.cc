@@ -911,7 +911,7 @@ Mixer_UI::stop_updating ()
 void
 Mixer_UI::fast_update_strips ()
 {
-	if (is_mapped () && _session) {
+	if (get_mapped () && _session) {
 		for (list<MixerStrip *>::iterator i = strips.begin(); i != strips.end(); ++i) {
 			(*i)->fast_update ();
 		}

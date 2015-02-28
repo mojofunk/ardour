@@ -457,15 +457,15 @@ GenericPluginUI::build ()
 		prefheight = 30 * i;
 	}
 
-	if (box->children().empty()) {
+	if (box->get_children().empty()) {
 		hpacker.remove (*frame);
 	}
 
-	if (button_table.children().empty()) {
+	if (button_table.get_children().empty()) {
 		hpacker.remove (*bt_frame);
 	}
 
-	if (!output_table.children().empty()) {
+	if (!output_table.get_children().empty()) {
 		frame = manage (new Frame);
 		frame->set_name ("BaseFrame");
 		frame->set_label(_("Meters"));

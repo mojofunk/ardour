@@ -345,9 +345,14 @@ void
 Meterbridge::on_size_allocate (Gtk::Allocation& a)
 {
 	const Gtk::Scrollbar * hsc = scroller.get_hscrollbar();
+#ifndef GTKMM_DISABLE_DEPRECATED
+	bool hscrollbar_visible = scroller.get_hscrollbar_visible();
+#else
+	bool hscrollbar_visible = false;
+#endif
 
 	/* switch left/right edge patterns depending on horizontal scroll-position */
-	if (scroller.get_hscrollbar_visible() && hsc) {
+	if (hscrollbar_visible && hsc) {
 		if (!scroll_connection.connected()) {
 			scroll_connection = scroller.get_hscrollbar()->get_adjustment()->signal_value_changed().connect(sigc::mem_fun (*this, &Meterbridge::on_scroll));
 			scroller.get_hscrollbar()->get_adjustment()->signal_changed().connect(sigc::mem_fun (*this, &Meterbridge::on_scroll));

@@ -163,8 +163,10 @@ ThemeManager::ThemeManager()
 
 	show_all ();
 
+#ifndef GTKMM_DISABLE_DEPRECATED
 	waveform_gradient_depth.set_update_policy (Gtk::UPDATE_DELAYED);
 	timeline_item_gradient_depth.set_update_policy (Gtk::UPDATE_DELAYED);
+#endif
 
 	color_dialog.get_color_selection()->set_has_opacity_control (true);
 	color_dialog.get_color_selection()->set_has_palette (true);
@@ -227,7 +229,9 @@ ThemeManager::setup_modifiers ()
 		mod_scale = manage (new HScale (0.0, 1.0, 0.01));
 		mod_scale->set_draw_value (false);
 		mod_scale->set_value (m->second.a());
+#ifndef GTKMM_DISABLE_DEPRECATED
 		mod_scale->set_update_policy (Gtk::UPDATE_DISCONTINUOUS);
+#endif
 		mod_scale->signal_value_changed().connect (sigc::bind (sigc::mem_fun (*this, &ThemeManager::modifier_edited), mod_scale, m->first));
 
 		mod_label = manage (new Label (m->first));

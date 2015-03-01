@@ -663,7 +663,7 @@ SoundFileBrowser::SoundFileBrowser (string title, ARDOUR::Session* s, bool persi
 	label->set_text (_("Sort:"));
 	passbox->pack_start (*label, false, false);
 	passbox->pack_start (freesound_sort, false, false);
-	freesound_sort.clear_items();
+	freesound_sort.remove_all ();
 
 	// Order of the following must correspond with enum sortMethod
 	// in sfdb_freesound_mootcher.h

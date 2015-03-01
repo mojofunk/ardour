@@ -803,8 +803,10 @@ SessionMetadataEditor::SessionMetadataEditor () :
 
 SessionMetadataEditor::~SessionMetadataEditor ()
 {
+#ifndef GTKMM_DISABLE_DEPRECATED
 	// Remove pages from notebook to get rid of gsignal runtime warnings
 	notebook.pages().clear();
+#endif
 }
 
 void
@@ -834,8 +836,10 @@ SessionMetadataImporter::SessionMetadataImporter () :
 
 SessionMetadataImporter::~SessionMetadataImporter ()
 {
+#ifndef GTKMM_DISABLE_DEPRECATED
 	// Remove pages from notebook to get rid of gsignal runtime warnings
 	notebook.pages().clear();
+#endif
 }
 
 void

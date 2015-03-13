@@ -5,8 +5,6 @@
 PROGRAM_MAJOR_VERSION=${major_version}
 PROGRAM_FULL_VERSION=${release_version}
 
-LOWERCASE_DIRNAME=ardour3
-# see wscript 'lwrcase_dirname' used for lib/ardour3 and share/ardour3
 STATEFILE_SUFFIX=ardour # see filename_extensions.cc
 
 # derived variables
@@ -28,4 +26,5 @@ if grep -q "BUILD_TESTS = True" $BUILD_CACHE_FILE; then
     WITH_TESTS=1
 fi
 
-ARDOUR_DATA_DIR=$PACKAGE_DIR/share/ardour3
+PROGRAM_DATA_DIRNAME=${PRODUCT_NAME}${PROGRAM_MAJOR_VERSION}
+PROGRAM_DATA_DIR=$PACKAGE_DIR/share/${PROGRAM_DATA_DIRNAME}

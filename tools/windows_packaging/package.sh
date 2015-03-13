@@ -20,15 +20,15 @@ $PYTHON ./waf --destdir=$PACKAGE_DIR install || exit 1
 
 echo "Moving Ardour dll's and executable to $PACKAGE_BIN_DIR ..."
 
-mv $PACKAGE_LIB_DIR/ardour3/*.dll $PACKAGE_BIN_DIR || exit 1
-mv $PACKAGE_LIB_DIR/ardour3/*.exe $PACKAGE_BIN_DIR || exit 1
+mv $PACKAGE_LIB_DIR/$PROGRAM_DATA_DIRNAME/*.dll $PACKAGE_BIN_DIR || exit 1
+mv $PACKAGE_LIB_DIR/$PROGRAM_DATA_DIRNAME/*.exe $PACKAGE_BIN_DIR || exit 1
 
 echo "Deleting import libs ..."
 
 rm $PACKAGE_LIB_DIR/*dll.a
 
 # delete sh script
-rm $PACKAGE_BIN_DIR/ardour3
+rm $PACKAGE_BIN_DIR/$PROGRAM_NAME$PROGRAM_MAJOR_VERSION
 
 if test x$WITH_TESTS != x ; then
 	echo "Copying tests and test data to $PACKAGE_DIR ..."

@@ -21,7 +21,7 @@
 #include "pbd/enumwriter.h"
 #include "pbd/xml++.h"
 #include "pbd/error.h"
-#include "pbd/locale_guard.h"
+#include "pbd/string_convert.h"
 
 #include "i18n.h"
 
@@ -107,14 +107,11 @@ XMLNode&
 Controllable::get_state ()
 {
 	XMLNode* node = new XMLNode (xml_node_name);
-	LocaleGuard lg (X_("C"));
-	char buf[64];
 
 	node->add_property (X_("name"), _name); // not reloaded from XML state, just there to look at
 	node->add_property (X_ ("id"), id().to_s ());
 	node->add_property (X_("flags"), enum_2_string (_flags));
-	snprintf (buf, sizeof (buf), "%2.12f", get_value());
-        node->add_property (X_("value"), buf);
+    node->add_property (X_("value"), to_string (get_value()));
 
 	if (_extra_xml) {
 		node->add_child_copy (*_extra_xml);
@@ -127,7 +124,6 @@ Controllable::get_state ()
 int
 Controllable::set_state (const XMLNode& node, int /*version*/)
 {
-	LocaleGuard lg (X_("C"));
 	const XMLProperty* prop;
 
 	Stateful::save_extra_xml (node);
@@ -139,12 +135,8 @@ Controllable::set_state (const XMLNode& node, int /*version*/)
 	}
 
 	if ((prop = node.property (X_("value"))) != 0) {
-		float val;
-
-		if (sscanf (prop->value().c_str(), "%f", &val) == 1) {
-			set_value (val);
-		} 
-        }
+		set_value (string_to<double>(prop->value()));
+    }
 
         return 0;
 }

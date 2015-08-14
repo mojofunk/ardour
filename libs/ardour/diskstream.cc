@@ -37,6 +37,7 @@
 #include "pbd/memento_command.h"
 #include "pbd/xml++.h"
 #include "pbd/stacktrace.h"
+#include "pbd/string_convert.h"
 
 #include "ardour/debug.h"
 #include "ardour/diskstream.h"
@@ -460,23 +461,20 @@ XMLNode&
 Diskstream::get_state ()
 {
 	XMLNode* node = new XMLNode ("Diskstream");
-        char buf[64];
-	LocaleGuard lg (X_("C"));
 
 	node->add_property ("flags", enum_2_string (_flags));
 	node->add_property ("playlist", _playlist->name());
-	node->add_property("name", _name);
+	node->add_property ("name", _name);
 	node->add_property ("id", id ().to_s ());
-	snprintf (buf, sizeof(buf), "%f", _visible_speed);
-	node->add_property ("speed", buf);
-        node->add_property ("capture-alignment", enum_2_string (_alignment_choice));
+	node->add_property ("speed", to_string (_visible_speed));
+    node->add_property ("capture-alignment", enum_2_string (_alignment_choice));
 	node->add_property ("record-safe", _record_safe ? "yes" : "no");
 
 	if (_extra_xml) {
 		node->add_child_copy (*_extra_xml);
 	}
 
-        return *node;
+    return *node;
 }
 
 int
@@ -518,7 +516,7 @@ Diskstream::set_state (const XMLNode& node, int /*version*/)
 	}
 
 	if ((prop = node.property ("speed")) != 0) {
-		double sp = atof (prop->value().c_str());
+		double sp = string_to<double> (prop->value());
 
 		if (realtime_set_speed (sp, false)) {
 			non_realtime_set_speed ();

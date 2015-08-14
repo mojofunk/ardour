@@ -32,6 +32,7 @@
 #include "pbd/replace_all.h"
 #include "pbd/unknown_type.h"
 #include "pbd/enumwriter.h"
+#include "pbd/string_convert.h"
 
 #include "ardour/audioengine.h"
 #include "ardour/buffer.h"
@@ -524,11 +525,9 @@ XMLNode&
 IO::state (bool /*full_state*/)
 {
 	XMLNode* node = new XMLNode (state_node_name);
-	char buf[64];
 	string str;
 	vector<string>::iterator ci;
 	int n;
-	LocaleGuard lg (X_("C"));
 	Glib::Threads::Mutex::Lock lm (io_lock);
 
 	node->add_property("name", _name);
@@ -571,8 +570,7 @@ IO::state (bool /*full_state*/)
 		node->add_child_nocopy (*pnode);
 	}
 
-	snprintf (buf, sizeof (buf), "%" PRId64, _user_latency);
-	node->add_property (X_("user-latency"), buf);
+	node->add_property (X_("user-latency"), to_string (_user_latency));
 	
 	return *node;
 }
@@ -588,7 +586,6 @@ IO::set_state (const XMLNode& node, int version)
 
 	const XMLProperty* prop;
 	XMLNodeConstIterator iter;
-	LocaleGuard lg (X_("C"));
 
 	/* force use of non-localized representation of decimal point,
 	   since we use it a lot in XML files and so forth.
@@ -633,7 +630,7 @@ IO::set_state (const XMLNode& node, int version)
 	}
 
 	if ((prop = node.property ("user-latency")) != 0) {
-		_user_latency = atoi (prop->value ());
+		_user_latency = string_to<int64_t>(prop->value ());
 	}
 
 	return 0;
@@ -644,7 +641,6 @@ IO::set_state_2X (const XMLNode& node, int version, bool in)
 {
 	const XMLProperty* prop;
 	XMLNodeConstIterator iter;
-	LocaleGuard lg (X_("C"));
 
 	/* force use of non-localized representation of decimal point,
 	   since we use it a lot in XML files and so forth.

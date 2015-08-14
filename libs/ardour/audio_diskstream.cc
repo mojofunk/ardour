@@ -33,6 +33,7 @@
 #include "pbd/memento_command.h"
 #include "pbd/enumwriter.h"
 #include "pbd/stateful_diff_command.h"
+#include "pbd/string_convert.h"
 
 #include "ardour/analyser.h"
 #include "ardour/audio_buffer.h"
@@ -1903,12 +1904,9 @@ XMLNode&
 AudioDiskstream::get_state ()
 {
 	XMLNode& node (Diskstream::get_state());
-	char buf[64] = "";
-	LocaleGuard lg (X_("C"));
 
 	boost::shared_ptr<ChannelList> c = channels.reader();
-	snprintf (buf, sizeof(buf), "%u", (unsigned int) c->size());
-	node.add_property ("channels", buf);
+	node.add_property ("channels", to_string (c->size ()));
 
 	if (!capturing_sources.empty() && _session.get_record_enabled()) {
 
@@ -1926,12 +1924,11 @@ AudioDiskstream::get_state ()
 		Location* pi;
 
 		if (_session.config.get_punch_in() && ((pi = _session.locations()->auto_punch_location()) != 0)) {
-			snprintf (buf, sizeof (buf), "%" PRId64, pi->start());
+			cs_child->add_property (X_("at"), to_string (pi->start()));
 		} else {
-			snprintf (buf, sizeof (buf), "%" PRId64, _session.transport_frame());
+			cs_child->add_property (X_ ("at"), to_string (_session.transport_frame ()));
 		}
 
-		cs_child->add_property (X_("at"), buf);
 		node.add_child_nocopy (*cs_child);
 	}
 

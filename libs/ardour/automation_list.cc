@@ -202,9 +202,9 @@ AutomationList::set_automation_style (AutoStyle s)
 void
 AutomationList::start_touch (double when)
 {
-        if (_state == Touch) {
+	if (_state == Touch) {
 		start_write_pass (when);
-        }
+	}
 
 	g_atomic_int_set (&_touching, 1);
 }
@@ -221,15 +221,15 @@ AutomationList::stop_touch (bool mark, double)
 
 	g_atomic_int_set (&_touching, 0);
 
-        if (_state == Touch) {
+	if (_state == Touch) {
 
-                if (mark) {
-			
+		if (mark) {
+
 			/* XXX need to mark the last added point with the
-			 * current time 
+			 * current time
 			 */
-                }
-        }
+		}
+	}
 }
 
 void
@@ -270,18 +270,18 @@ AutomationList::state (bool full)
 	root->add_property ("interpolation-style", enum_2_string (_interpolation));
 
 	if (full) {
-                /* never serialize state with Write enabled - too dangerous
-                   for the user's data
-                */
-                if (_state != Write) {
-                        root->add_property ("state", auto_state_to_string (_state));
-                } else {
+		/* never serialize state with Write enabled - too dangerous
+		   for the user's data
+		*/
+		if (_state != Write) {
+			root->add_property ("state", auto_state_to_string (_state));
+		} else {
 			if (_events.empty ()) {
 				root->add_property ("state", auto_state_to_string (Off));
 			} else {
 				root->add_property ("state", auto_state_to_string (Touch));
 			}
-                }
+		}
 	} else {
 		/* never save anything but Off for automation state to a template */
 		root->add_property ("state", auto_state_to_string (Off));
@@ -334,7 +334,7 @@ AutomationList::deserialize_events (const XMLNode& node)
 		return -1;
 	}
 
-        ControlList::freeze ();
+	ControlList::freeze ();
 	clear ();
 
 	stringstream str (content_node->content());
@@ -364,7 +364,7 @@ AutomationList::deserialize_events (const XMLNode& node)
 		maybe_signal_changed ();
 	}
 
-        thaw ();
+	thaw ();
 
 	return 0;
 }
@@ -398,7 +398,7 @@ AutomationList::set_state (const XMLNode& node, int version)
 		pframes_t x;
 		double y;
 
-                ControlList::freeze ();
+		ControlList::freeze ();
 		clear ();
 
 		for (i = elist.begin(); i != elist.end(); ++i) {
@@ -459,9 +459,9 @@ AutomationList::set_state (const XMLNode& node, int version)
 
 	if ((prop = node.property (X_("state"))) != 0) {
 		_state = string_to_auto_state (prop->value());
-                if (_state == Write) {
-                        _state = Off;
-                }
+		if (_state == Write) {
+			_state = Off;
+		}
 		automation_state_changed(_state);
 	} else {
 		_state = Off;

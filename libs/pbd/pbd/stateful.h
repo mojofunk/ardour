@@ -43,7 +43,7 @@ class OwnedPropertyList;
 
 /** Base class for objects with saveable and undoable state */
 class LIBPBD_API Stateful {
-  public:
+public:
 	Stateful ();
 	virtual ~Stateful();
 
@@ -52,8 +52,8 @@ class LIBPBD_API Stateful {
 
 	virtual bool apply_changes (PropertyBase const &);
 	PropertyChange apply_changes (PropertyList const &);
-	
-        const OwnedPropertyList& properties() const { return *_properties; }
+
+	const OwnedPropertyList& properties () const { return *_properties; }
 
 	void add_property (PropertyBase& s);
 
@@ -70,21 +70,21 @@ class LIBPBD_API Stateful {
 	void set_id (const std::string&);
 	void reset_id ();
 
-        /* history management */
+	/* history management */
 
 	void clear_changes ();
 	virtual void clear_owned_changes ();
-        PropertyList* get_changes_as_properties (Command *) const;
+	PropertyList* get_changes_as_properties (Command*) const;
 	virtual void rdiff (std::vector<Command*> &) const;
-        bool changed() const;
+	bool changed () const;
 
-        /* create a property list from an XMLNode
-         */
-        virtual PropertyList* property_factory (const XMLNode&) const;
+	/* create a property list from an XMLNode
+	 */
+	virtual PropertyList* property_factory (const XMLNode&) const;
 
 	/* How stateful's notify of changes to their properties
 	 */
-	PBD::Signal1<void,const PropertyChange&> PropertyChanged;
+	PBD::Signal1<void, const PropertyChange&> PropertyChanged;
 
 	static int current_state_version;
 	static int loading_state_version;
@@ -92,9 +92,12 @@ class LIBPBD_API Stateful {
 	virtual void suspend_property_changes ();
 	virtual void resume_property_changes ();
 
-        bool property_changes_suspended() const { return g_atomic_int_get (const_cast<gint*>(&_stateful_frozen)) > 0; }
-        
-  protected:
+	bool property_changes_suspended () const
+	{
+		return g_atomic_int_get (const_cast<gint*>(&_stateful_frozen)) > 0;
+	}
+
+protected:
 
 	void add_instant_xml (XMLNode&, const std::string& directory_path);
 	XMLNode *instant_xml (const std::string& str, const std::string& directory_path);
@@ -111,20 +114,20 @@ class LIBPBD_API Stateful {
 	XMLNode *_extra_xml;
 	XMLNode *_instant_xml;
 	PBD::PropertyChange     _pending_changed;
-        Glib::Threads::Mutex _lock;
+	Glib::Threads::Mutex _lock;
 
 	std::string _xml_node_name; ///< name of node to use for this object in XML
 	OwnedPropertyList* _properties;
 
-        virtual void send_change (const PropertyChange&);
-        /** derived classes can implement this in order to process a property change
-            within thaw() just before send_change() is called.
-        */
-        virtual void mid_thaw (const PropertyChange&) { }
+	virtual void send_change (const PropertyChange&);
+	/** derived classes can implement this in order to process a property change
+	    within thaw() just before send_change() is called.
+	*/
+	virtual void mid_thaw (const PropertyChange&) {}
 
-  private:
-	PBD::ID  _id;
-        gint     _stateful_frozen;
+private:
+	PBD::ID _id;
+	gint _stateful_frozen;
 };
 
 } // namespace PBD

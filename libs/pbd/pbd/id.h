@@ -54,16 +54,15 @@ class LIBPBD_API ID {
 		return _id < other._id;
 	}
 
-	void print (char* buf, uint32_t bufsize) const;
-        std::string to_s() const;
-	
+	std::string to_s () const;
+
 	static uint64_t counter() { return _counter; }
 	static void init_counter (uint64_t val) { _counter = val; }
 	static void init ();
 
   private:
 	uint64_t _id;
-	int string_assign (std::string);
+	bool string_assign (std::string);
 
 	static Glib::Threads::Mutex* counter_lock;
 	static uint64_t _counter;

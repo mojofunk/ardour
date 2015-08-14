@@ -29,6 +29,7 @@
 #include "evoral/Curve.hpp"
 #include "pbd/stacktrace.h"
 #include "pbd/enumwriter.h"
+#include "pbd/string_convert.h"
 
 #include "i18n.h"
 
@@ -253,19 +254,14 @@ XMLNode&
 AutomationList::state (bool full)
 {
 	XMLNode* root = new XMLNode (X_("AutomationList"));
-	char buf[64];
-	LocaleGuard lg (X_("C"));
 
 	root->add_property ("automation-id", EventTypeMap::instance().to_symbol(_parameter));
 
 	root->add_property ("id", id().to_s());
 
-	snprintf (buf, sizeof (buf), "%.12g", _default_value);
-	root->add_property ("default", buf);
-	snprintf (buf, sizeof (buf), "%.12g", _min_yval);
-	root->add_property ("min-yval", buf);
-	snprintf (buf, sizeof (buf), "%.12g", _max_yval);
-	root->add_property ("max-yval", buf);
+	root->add_property ("default", to_string (_default_value));
+	root->add_property ("min-yval", to_string (_min_yval));
+	root->add_property ("max-yval", to_string (_max_yval));
 
 	root->add_property ("interpolation-style", enum_2_string (_interpolation));
 
@@ -372,7 +368,6 @@ AutomationList::deserialize_events (const XMLNode& node)
 int
 AutomationList::set_state (const XMLNode& node, int version)
 {
-	LocaleGuard lg (X_("C"));
 	XMLNodeList nlist = node.children();
 	XMLNode* nsos;
 	XMLNodeIterator niter;
@@ -407,13 +402,13 @@ AutomationList::set_state (const XMLNode& node, int version)
 				error << _("automation list: no x-coordinate stored for control point (point ignored)") << endmsg;
 				continue;
 			}
-			x = atoi (prop->value().c_str());
+			x = string_to<uint32_t>(prop->value());
 
 			if ((prop = (*i)->property ("y")) == 0) {
 				error << _("automation list: no y-coordinate stored for control point (point ignored)") << endmsg;
 				continue;
 			}
-			y = atof (prop->value().c_str());
+			y = string_to<double>(prop->value());
 
 			fast_simple_add (x, y);
 		}
@@ -446,7 +441,7 @@ AutomationList::set_state (const XMLNode& node, int version)
 	}
 
 	if ((prop = node.property (X_("default"))) != 0){
-		_default_value = atof (prop->value().c_str());
+		_default_value = string_to<double>(prop->value());
 	} else {
 		_default_value = 0.0;
 	}
@@ -468,13 +463,13 @@ AutomationList::set_state (const XMLNode& node, int version)
 	}
 
 	if ((prop = node.property (X_("min-yval"))) != 0) {
-		_min_yval = atof (prop->value ().c_str());
+		_min_yval = string_to<double>(prop->value());
 	} else {
 		_min_yval = FLT_MIN;
 	}
 
 	if ((prop = node.property (X_("max-yval"))) != 0) {
-		_max_yval = atof (prop->value ().c_str());
+		_max_yval = string_to<double>(prop->value());
 	} else {
 		_max_yval = FLT_MAX;
 	}

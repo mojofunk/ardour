@@ -130,7 +130,7 @@ setup_enum_writer ()
 	Session::SlaveState _Session_SlaveState;
 	MTC_Status _MIDI_MTC_Status;
 	Evoral::OverlapType _OverlapType;
-        BufferingPreset _BufferingPreset;
+    BufferingPreset _BufferingPreset;
 	AutoReturnTarget _AutoReturnTarget;
 
 #define REGISTER(e) enum_writer.register_distinct (typeid(e).name(), i, s); i.clear(); s.clear()
@@ -307,12 +307,12 @@ setup_enum_writer ()
 	REGISTER (_LayerModel);
 
 	REGISTER_ENUM (InsertMergeReject);
-        REGISTER_ENUM (InsertMergeRelax);
-        REGISTER_ENUM (InsertMergeReplace);
-        REGISTER_ENUM (InsertMergeTruncateExisting);
-        REGISTER_ENUM (InsertMergeTruncateAddition);
-        REGISTER_ENUM (InsertMergeExtend);
-        REGISTER (_InsertMergePolicy);
+	REGISTER_ENUM (InsertMergeRelax);
+	REGISTER_ENUM (InsertMergeReplace);
+	REGISTER_ENUM (InsertMergeTruncateExisting);
+	REGISTER_ENUM (InsertMergeTruncateAddition);
+	REGISTER_ENUM (InsertMergeExtend);
+	REGISTER (_InsertMergePolicy);
 
 	REGISTER_ENUM (AfterFaderListen);
 	REGISTER_ENUM (PreFaderListen);

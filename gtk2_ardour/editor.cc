@@ -2466,8 +2466,7 @@ Editor::get_state ()
 	XMLNode* node = new XMLNode ("Editor");
 	char buf[32];
 
-	id().print (buf, sizeof (buf));
-	node->add_property ("id", buf);
+	node->add_property ("id", id().to_s ());
 
 	if (is_realized()) {
 		Glib::RefPtr<Gdk::Window> win = get_window();

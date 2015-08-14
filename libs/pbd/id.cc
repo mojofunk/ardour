@@ -97,7 +97,7 @@ ID::operator= (const ID& other)
 ostream&
 operator<< (ostream& ostr, const ID& _id)
 {
-	ostr << to_string (_id.counter);
+	ostr << to_string (_id.counter());
 	return ostr;
 }
 

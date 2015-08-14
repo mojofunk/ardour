@@ -2197,8 +2197,7 @@ Route::state(bool full_state)
 	ProcessorList::iterator i;
 	char buf[32];
 
-	id().print (buf, sizeof (buf));
-	node->add_property("id", buf);
+	node->add_property ("id", id ().to_s ());
 	node->add_property ("name", _name);
 	node->add_property("default-type", _default_type.to_string());
 
@@ -2282,8 +2281,7 @@ Route::state(bool full_state)
 	if (_custom_meter_position_noted) {
 		boost::shared_ptr<Processor> after = _processor_after_last_custom_meter.lock ();
 		if (after) {
-			after->id().print (buf, sizeof (buf));
-			node->add_property (X_("processor-after-last-custom-meter"), buf);
+			node->add_property (X_("processor-after-last-custom-meter"), after->id().to_s());
 		}
 	}
 

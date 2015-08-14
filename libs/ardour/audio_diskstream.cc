@@ -1943,7 +1943,6 @@ AudioDiskstream::set_state (const XMLNode& node, int version)
 	XMLNodeIterator niter;
 	uint32_t nchans = 1;
 	XMLNode* capture_pending_node = 0;
-	LocaleGuard lg (X_("C"));
 
 	/* prevent write sources from being created */
 
@@ -1964,7 +1963,7 @@ AudioDiskstream::set_state (const XMLNode& node, int version)
 	}
 
 	if ((prop = node.property ("channels")) != 0) {
-		nchans = atoi (prop->value().c_str());
+		nchans = string_to<uint32_t> (prop->value());
 	}
 
 	// create necessary extra channels
@@ -1981,8 +1980,6 @@ AudioDiskstream::set_state (const XMLNode& node, int version)
 
 		remove_channel (_n_channels.n_audio() - nchans);
 	}
-
-
 
 	if (!destructive() && capture_pending_node) {
 		/* destructive streams have one and only one source per channel,

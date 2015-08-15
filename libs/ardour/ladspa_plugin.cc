@@ -350,8 +350,6 @@ void
 LadspaPlugin::add_state (XMLNode* root) const
 {
 	XMLNode *child;
-	char buf[16];
-	LocaleGuard lg (X_("C"));
 
 	for (uint32_t i = 0; i < parameter_count(); ++i){
 
@@ -359,10 +357,8 @@ LadspaPlugin::add_state (XMLNode* root) const
 		    LADSPA_IS_PORT_CONTROL(port_descriptor (i))){
 
 			child = new XMLNode("Port");
-			snprintf(buf, sizeof(buf), "%u", i);
-			child->add_property("number", string(buf));
-			snprintf(buf, sizeof(buf), "%+f", _shadow_data[i]);
-			child->add_property("value", string(buf));
+			child->add_property("number", to_string (i));
+			child->add_property("value", to_string (_shadow_data[i]));
 			root->add_child_nocopy (*child);
 		}
 	}
@@ -380,11 +376,7 @@ LadspaPlugin::set_state (const XMLNode& node, int version)
 	XMLProperty *prop;
 	XMLNodeConstIterator iter;
 	XMLNode *child;
-	const char *port;
-	const char *data;
-	uint32_t port_id;
 #endif
-	LocaleGuard lg (X_("C"));
 
 	if (node.name() != state_node_name()) {
 		error << _("Bad node sent to LadspaPlugin::set_state") << endmsg;
@@ -398,22 +390,23 @@ LadspaPlugin::set_state (const XMLNode& node, int version)
 	for (iter = nodes.begin(); iter != nodes.end(); ++iter) {
 
 		child = *iter;
+		std::string port_string;
+		std::string data_string;
 
 		if ((prop = child->property("number")) != 0) {
-			port = prop->value().c_str();
+			port_string = prop->value();
 		} else {
 			warning << _("LADSPA: no ladspa port number") << endmsg;
 			continue;
 		}
 		if ((prop = child->property("value")) != 0) {
-			data = prop->value().c_str();
+			data_string = prop->value();
 		} else {
 			warning << _("LADSPA: no ladspa port data") << endmsg;
 			continue;
 		}
 
-		sscanf (port, "%" PRIu32, &port_id);
-		set_parameter (port_id, atof(data));
+		set_parameter (string_to<uint32_t>(port_string), string_to<float>(data_string));
 	}
 #endif
 
@@ -430,11 +423,7 @@ LadspaPlugin::set_state_2X (const XMLNode& node, int /* version */)
 	XMLProperty *prop;
 	XMLNodeConstIterator iter;
 	XMLNode *child;
-	const char *port;
-	const char *data;
-	uint32_t port_id;
 #endif
-	LocaleGuard lg (X_("C"));
 
 	if (node.name() != state_node_name()) {
 		error << _("Bad node sent to LadspaPlugin::set_state") << endmsg;
@@ -447,22 +436,23 @@ LadspaPlugin::set_state_2X (const XMLNode& node, int /* version */)
 	for(iter = nodes.begin(); iter != nodes.end(); ++iter){
 
 		child = *iter;
+		std::string port_string;
+		std::string data_string;
 
 		if ((prop = child->property("number")) != 0) {
-			port = prop->value().c_str();
+			port_string = prop->value();
 		} else {
 			warning << _("LADSPA: no ladspa port number") << endmsg;
 			continue;
 		}
 		if ((prop = child->property("value")) != 0) {
-			data = prop->value().c_str();
+			data_string = prop->value();
 		} else {
 			warning << _("LADSPA: no ladspa port data") << endmsg;
 			continue;
 		}
 
-		sscanf (port, "%" PRIu32, &port_id);
-		set_parameter (port_id, atof(data));
+		set_parameter (string_to<uint32_t>(port_string), string_to<float>(data_string));
 	}
 
 	latency_compute_run ();

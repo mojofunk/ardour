@@ -772,11 +772,8 @@ XMLNode&
 AudioRegion::get_basic_state ()
 {
 	XMLNode& node (Region::state ());
-	char buf[64];
-	LocaleGuard lg (X_("C"));
 
-	snprintf (buf, sizeof (buf), "%u", (uint32_t) _sources.size());
-	node.add_property ("channels", buf);
+	node.add_property ("channels", to_string (_sources.size()));
 
 	return node;
 }
@@ -786,7 +783,6 @@ AudioRegion::state ()
 {
 	XMLNode& node (get_basic_state());
 	XMLNode *child;
-	LocaleGuard lg (X_("C"));
 
 	child = node.add_child ("Envelope");
 
@@ -843,7 +839,6 @@ AudioRegion::_set_state (const XMLNode& node, int version, PropertyChange& what_
 {
 	const XMLNodeList& nlist = node.children();
 	const XMLProperty *prop;
-	LocaleGuard lg (X_("C"));
 	boost::shared_ptr<Playlist> the_playlist (_playlist.lock());
 
 	suspend_property_changes ();
@@ -852,7 +847,6 @@ AudioRegion::_set_state (const XMLNode& node, int version, PropertyChange& what_
 		the_playlist->freeze ();
 	}
 
-
 	/* this will set all our State members and stuff controlled by the Region.
 	   It should NOT send any changed signals - that is our responsibility.
 	*/
@@ -860,7 +854,7 @@ AudioRegion::_set_state (const XMLNode& node, int version, PropertyChange& what_
 	Region::_set_state (node, version, what_changed, false);
 
 	if ((prop = node.property ("scale-gain")) != 0) {
-		float a = atof (prop->value().c_str());
+		float a = string_to<float> (prop->value());
 		if (a != _scale_amplitude) {
 			_scale_amplitude = a;
 			what_changed.add (Properties::scale_amplitude);

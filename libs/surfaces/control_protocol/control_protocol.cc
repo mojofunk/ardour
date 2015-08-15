@@ -20,6 +20,8 @@
 
 #include "pbd/error.h"
 
+#include "pbd/convert.h"
+
 #include "ardour/session.h"
 #include "ardour/route.h"
 #include "ardour/audio_track.h"

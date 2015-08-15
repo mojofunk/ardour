@@ -134,12 +134,12 @@ MonitorProcessor::set_state (const XMLNode& node, int version)
         allocate_channels (atoi (prop->value()));
 
         if ((prop = node.property (X_("dim-level"))) != 0) {
-                gain_t val = atof (prop->value());
+                gain_t val = string_to<float>(prop->value());
                 _dim_level = val;
         }
 
         if ((prop = node.property (X_("solo-boost-level"))) != 0) {
-                gain_t val = atof (prop->value());
+                gain_t val = string_to<float>(prop->value());
                 _solo_boost_level = val;
         }
 
@@ -167,7 +167,7 @@ MonitorProcessor::set_state (const XMLNode& node, int version)
 
                         uint32_t chn;
 
-                        if (sscanf (prop->value().c_str(), "%u", &chn) != 1) {
+                        if (!string_to_uint32 (prop->value(), chn)) {
                                 error << string_compose (X_("programming error: %1"), X_("MonitorProcessor XML settings has an unreadable channel ID"))
                                       << endmsg;
                                 return -1;
@@ -224,19 +224,14 @@ MonitorProcessor::set_state (const XMLNode& node, int version)
 XMLNode&
 MonitorProcessor::state (bool full)
 {
-	LocaleGuard lg (X_("C"));
     XMLNode& node (Processor::state (full));
-    char buf[64];
 
 	/* this replaces any existing "type" property */
 
 	node.add_property (X_("type"), X_("monitor"));
 
-    snprintf (buf, sizeof(buf), "%.12g", _dim_level.val());
-    node.add_property (X_("dim-level"), buf);
-
-    snprintf (buf, sizeof(buf), "%.12g", _solo_boost_level.val());
-    node.add_property (X_("solo-boost-level"), buf);
+    node.add_property (X_("dim-level"), to_string (_dim_level.val()));
+    node.add_property (X_("solo-boost-level"), to_string (_solo_boost_level.val()));
 
     node.add_property (X_("cut-all"), (_cut_all ? "yes" : "no"));
     node.add_property (X_("dim-all"), (_dim_all ? "yes" : "no"));
@@ -244,8 +239,7 @@ MonitorProcessor::state (bool full)
 
     uint32_t limit = _channels.size();
 
-    snprintf (buf, sizeof (buf), "%u", limit);
-    node.add_property (X_("channels"), buf);
+    node.add_property (X_("channels"), to_string (limit));
 
     XMLNode* chn_node;
     uint32_t chn = 0;
@@ -253,8 +247,7 @@ MonitorProcessor::state (bool full)
     for (vector<ChannelRecord*>::const_iterator x = _channels.begin(); x != _channels.end(); ++x, ++chn) {
         chn_node = new XMLNode (X_("Channel"));
 
-        snprintf (buf, sizeof (buf), "%u", chn);
-        chn_node->add_property ("id", buf);
+        chn_node->add_property ("id", to_string (chn));
 
         chn_node->add_property (X_("cut"), (*x)->cut == GAIN_COEFF_UNITY ? "no" : "yes");
         chn_node->add_property (X_("invert"), (*x)->polarity == GAIN_COEFF_UNITY ? "no" : "yes");

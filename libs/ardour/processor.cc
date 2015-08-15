@@ -109,7 +109,6 @@ XMLNode&
 Processor::state (bool full_state)
 {
 	XMLNode* node = new XMLNode (state_node_name);
-	char buf[64];
 
 	node->add_property("id", id().to_s ());
 	node->add_property("name", _name);
@@ -126,8 +125,7 @@ Processor::state (bool full_state)
 		}
 	}
 
-	snprintf (buf, sizeof (buf), "%" PRId64, _user_latency);
-	node->add_property("user-latency", buf);
+	node->add_property("user-latency", to_string (_user_latency));
 
 	return *node;
 }
@@ -234,7 +232,7 @@ Processor::set_state (const XMLNode& node, int version)
 	}
 
 	if ((prop = node.property ("user-latency")) != 0) {
-		_user_latency = atoi (prop->value ());
+		_user_latency = string_to<int64_t>(prop->value ());
 	}
 
 	return 0;

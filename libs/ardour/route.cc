@@ -2513,7 +2513,6 @@ Route::set_state (const XMLNode& node, int version)
 int
 Route::set_state_2X (const XMLNode& node, int version)
 {
-	LocaleGuard lg (X_("C"));
 	XMLNodeList nlist;
 	XMLNodeConstIterator niter;
 	XMLNode *child;
@@ -2697,7 +2696,7 @@ Route::set_state_2X (const XMLNode& node, int version)
 			if ((prop = child->property (X_("gain"))) != 0) {
 				gain_t val;
 
-				if (sscanf (prop->value().c_str(), "%f", &val) == 1) {
+				if (string_to_float (prop->value(), val)) {
 					_amp->gain_control()->set_value (val);
 				}
 			}

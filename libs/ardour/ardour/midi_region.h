@@ -25,6 +25,8 @@
 
 #include "evoral/Beats.hpp"
 
+#include "pbd/string_convert.h"
+
 #include "ardour/ardour.h"
 #include "ardour/region.h"
 

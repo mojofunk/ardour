@@ -1213,8 +1213,6 @@ XMLNode&
 MidiDiskstream::get_state ()
 {
 	XMLNode& node (Diskstream::get_state());
-	char buf[64];
-	LocaleGuard lg (X_("C"));
 
 	if (_write_source && _session.get_record_enabled()) {
 
@@ -1230,12 +1228,11 @@ MidiDiskstream::get_state ()
 		Location* pi;
 
 		if (_session.config.get_punch_in() && ((pi = _session.locations()->auto_punch_location()) != 0)) {
-			snprintf (buf, sizeof (buf), "%" PRId64, pi->start());
+			cs_child->add_property (X_("at"), to_string (pi->start()));
 		} else {
-			snprintf (buf, sizeof (buf), "%" PRId64, _session.transport_frame());
+			cs_child->add_property (X_("at"), to_string (_session.transport_frame()));
 		}
 
-		cs_child->add_property (X_("at"), buf);
 		node.add_child_nocopy (*cs_child);
 	}
 
@@ -1248,7 +1245,6 @@ MidiDiskstream::set_state (const XMLNode& node, int version)
 	XMLNodeList nlist = node.children();
 	XMLNodeIterator niter;
 	XMLNode* capture_pending_node = 0;
-	LocaleGuard lg (X_("C"));
 
 	/* prevent write sources from being created */
 

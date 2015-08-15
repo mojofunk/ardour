@@ -25,6 +25,7 @@
 
 #include <glibmm/threads.h>
 #include "pbd/xml++.h"
+#include "pbd/string_convert.h"
 #include "evoral/types.hpp"
 #include "ardour/debug.h"
 #include "ardour/lmath.h"
@@ -74,7 +75,6 @@ TempoSection::TempoSection (const XMLNode& node)
 {
 	const XMLProperty *prop;
 	BBT_Time start;
-	LocaleGuard lg (X_("C"));
 
 	if ((prop = node.property ("start")) == 0) {
 		error << _("TempoSection XML node has no \"start\" property") << endmsg;
@@ -96,7 +96,7 @@ TempoSection::TempoSection (const XMLNode& node)
 		throw failed_constructor();
 	}
 
-	if (sscanf (prop->value().c_str(), "%lf", &_beats_per_minute) != 1 || _beats_per_minute < 0.0) {
+	if (!string_to_double (prop->value(), _beats_per_minute) || _beats_per_minute < 0.0) {
 		error << _("TempoSection XML node has an illegal \"beats_per_minute\" value") << endmsg;
 		throw failed_constructor();
 	}
@@ -105,7 +105,7 @@ TempoSection::TempoSection (const XMLNode& node)
 		/* older session, make note type be quarter by default */
 		_note_type = 4.0;
 	} else {
-		if (sscanf (prop->value().c_str(), "%lf", &_note_type) != 1 || _note_type < 1.0) {
+		if (!string_to_double (prop->value(), _note_type) || _note_type < 1.0) {
 			error << _("TempoSection XML node has an illegal \"note-type\" value") << endmsg;
 			throw failed_constructor();
 		}
@@ -121,7 +121,7 @@ TempoSection::TempoSection (const XMLNode& node)
 	if ((prop = node.property ("bar-offset")) == 0) {
 		_bar_offset = -1.0;
 	} else {
-		if (sscanf (prop->value().c_str(), "%lf", &_bar_offset) != 1 || _bar_offset < 0.0) {
+		if (!string_to_double (prop->value(), _bar_offset) || _bar_offset < 0.0) {
 			error << _("TempoSection XML node has an illegal \"bar-offset\" value") << endmsg;
 			throw failed_constructor();
 		}
@@ -133,19 +133,15 @@ TempoSection::get_state() const
 {
 	XMLNode *root = new XMLNode (xml_state_node_name);
 	char buf[256];
-	LocaleGuard lg (X_("C"));
 
 	snprintf (buf, sizeof (buf), "%" PRIu32 "|%" PRIu32 "|%" PRIu32,
 		  start().bars,
 		  start().beats,
 		  start().ticks);
 	root->add_property ("start", buf);
-	snprintf (buf, sizeof (buf), "%f", _beats_per_minute);
-	root->add_property ("beats-per-minute", buf);
-	snprintf (buf, sizeof (buf), "%f", _note_type);
-	root->add_property ("note-type", buf);
-	// snprintf (buf, sizeof (buf), "%f", _bar_offset);
-	// root->add_property ("bar-offset", buf);
+	root->add_property ("beats-per-minute", to_string (_beats_per_minute));
+	root->add_property ("note-type", to_string (_note_type));
+	// root->add_property ("bar-offset", to_string (_bar_offset));
 	snprintf (buf, sizeof (buf), "%s", movable()?"yes":"no");
 	root->add_property ("movable", buf);
 
@@ -196,7 +192,6 @@ MeterSection::MeterSection (const XMLNode& node)
 {
 	const XMLProperty *prop;
 	BBT_Time start;
-	LocaleGuard lg (X_("C"));
 
 	if ((prop = node.property ("start")) == 0) {
 		error << _("MeterSection XML node has no \"start\" property") << endmsg;
@@ -222,7 +217,7 @@ MeterSection::MeterSection (const XMLNode& node)
 		} 
 	}
 
-	if (sscanf (prop->value().c_str(), "%lf", &_divisions_per_bar) != 1 || _divisions_per_bar < 0.0) {
+	if (!string_to_double (prop->value(), _divisions_per_bar) || _divisions_per_bar < 0.0) {
 		error << _("MeterSection XML node has an illegal \"beats-per-bar\" or \"divisions-per-bar\" value") << endmsg;
 		throw failed_constructor();
 	}
@@ -232,7 +227,7 @@ MeterSection::MeterSection (const XMLNode& node)
 		throw failed_constructor();
 	}
 
-	if (sscanf (prop->value().c_str(), "%lf", &_note_type) != 1 || _note_type < 0.0) {
+	if (!string_to_double (prop->value(), _note_type) || _note_type < 0.0) {
 		error << _("MeterSection XML node has an illegal \"note-type\" value") << endmsg;
 		throw failed_constructor();
 	}
@@ -250,17 +245,14 @@ MeterSection::get_state() const
 {
 	XMLNode *root = new XMLNode (xml_state_node_name);
 	char buf[256];
-	LocaleGuard lg (X_("C"));
 
 	snprintf (buf, sizeof (buf), "%" PRIu32 "|%" PRIu32 "|%" PRIu32,
 		  start().bars,
 		  start().beats,
 		  start().ticks);
 	root->add_property ("start", buf);
-	snprintf (buf, sizeof (buf), "%f", _note_type);
-	root->add_property ("note-type", buf);
-	snprintf (buf, sizeof (buf), "%f", _divisions_per_bar);
-	root->add_property ("divisions-per-bar", buf);
+	root->add_property ("note-type", to_string (_note_type));
+	root->add_property ("divisions-per-bar", to_string (_divisions_per_bar));
 	snprintf (buf, sizeof (buf), "%s", movable()?"yes":"no");
 	root->add_property ("movable", buf);
 

@@ -938,15 +938,12 @@ LV2Plugin::add_state(XMLNode* root) const
 	assert(_insert_id != PBD::ID("0"));
 
 	XMLNode*    child;
-	char        buf[16];
-	LocaleGuard lg(X_("C"));
 
 	for (uint32_t i = 0; i < parameter_count(); ++i) {
 		if (parameter_is_input(i) && parameter_is_control(i)) {
 			child = new XMLNode("Port");
 			child->add_property("symbol", port_symbol(i));
-			snprintf(buf, sizeof(buf), "%+f", _shadow_data[i]);
-			child->add_property("value", string(buf));
+			child->add_property("value", to_string (_shadow_data[i]));
 			root->add_child_nocopy(*child);
 		}
 	}
@@ -1589,10 +1586,6 @@ LV2Plugin::set_state(const XMLNode& node, int version)
 	const XMLProperty*   prop;
 	XMLNodeConstIterator iter;
 	XMLNode*             child;
-	const char*          sym;
-	const char*          value;
-	uint32_t             port_id;
-	LocaleGuard          lg(X_("C"));
 
 	if (node.name() != state_node_name()) {
 		error << _("Bad node sent to LV2Plugin::set_state") << endmsg;
@@ -1610,15 +1603,18 @@ LV2Plugin::set_state(const XMLNode& node, int version)
 	for (iter = nodes.begin(); iter != nodes.end(); ++iter) {
 
 		child = *iter;
+		std::string symbol_string;
+		std::string value_string;
+		uint32_t port_id;
 
 		if ((prop = child->property("symbol")) != 0) {
-			sym = prop->value().c_str();
+			symbol_string = prop->value();
 		} else {
 			warning << _("LV2: port has no symbol, ignored") << endmsg;
 			continue;
 		}
 
-		map<string, uint32_t>::iterator i = _port_indices.find(sym);
+		map<string, uint32_t>::iterator i = _port_indices.find(symbol_string);
 
 		if (i != _port_indices.end()) {
 			port_id = i->second;
@@ -1628,13 +1624,13 @@ LV2Plugin::set_state(const XMLNode& node, int version)
 		}
 
 		if ((prop = child->property("value")) != 0) {
-			value = prop->value().c_str();
+			value_string = prop->value();
 		} else {
 			warning << _("LV2: port has no value, ignored") << endmsg;
 			continue;
 		}
 
-		set_parameter(port_id, atof(value));
+		set_parameter (port_id, string_to<float>(value_string));
 	}
 
 	_state_version = 0;

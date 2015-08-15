@@ -158,8 +158,6 @@ VSTPlugin::set_chunk (gchar const * data, bool single)
 void
 VSTPlugin::add_state (XMLNode* root) const
 {
-	LocaleGuard lg (X_("C"));
-
 	if (_plugin->flags & 32 /* effFlagsProgramsChunks */) {
 
 		gchar* data = get_chunk (false);
@@ -182,10 +180,8 @@ VSTPlugin::add_state (XMLNode* root) const
 
 		for (int32_t n = 0; n < _plugin->numParams; ++n) {
 			char index[64];
-			char val[32];
 			snprintf (index, sizeof (index), "param-%d", n);
-			snprintf (val, sizeof (val), "%.12g", _plugin->getParameter (_plugin, n));
-			parameters->add_property (index, val);
+			parameters->add_property (index, to_string (_plugin->getParameter (_plugin, n)));
 		}
 
 		root->add_child_nocopy (*parameters);
@@ -195,7 +191,6 @@ VSTPlugin::add_state (XMLNode* root) const
 int
 VSTPlugin::set_state (const XMLNode& node, int version)
 {
-	LocaleGuard lg (X_("C"));
 	int ret = -1;
 
 	if (node.name() != state_node_name()) {
@@ -226,12 +221,10 @@ VSTPlugin::set_state (const XMLNode& node, int version)
 
 		for (i = child->properties().begin(); i != child->properties().end(); ++i) {
 			int32_t param;
-			float val;
 
 			sscanf ((*i)->name().c_str(), "param-%d", &param);
-			sscanf ((*i)->value().c_str(), "%f", &val);
 
-			_plugin->setParameter (_plugin, param, val);
+			_plugin->setParameter (_plugin, param, string_to<float>((*i)->value()));
 		}
 
 		ret = 0;
@@ -415,7 +408,7 @@ VSTPlugin::load_user_preset (PresetRecord r)
 						assert (index);
 						assert (value);
 
-						set_parameter (atoi (index->value().c_str()), atof (value->value().c_str ()));
+						set_parameter (string_to<uint32_t>(index->value()), string_to<float> (value->value()));
 				}
 			}
 			return true;
@@ -454,8 +447,8 @@ VSTPlugin::do_save_preset (string name)
 		for (uint32_t i = 0; i < parameter_count(); ++i) {
 			if (parameter_is_input (i)) {
 				XMLNode* c = new XMLNode (X_("Parameter"));
-				c->add_property (X_("index"), string_compose ("%1", i));
-				c->add_property (X_("value"), string_compose ("%1", get_parameter (i)));
+				c->add_property (X_("index"), to_string (i));
+				c->add_property (X_("value"), to_string (get_parameter (i)));
 				p->add_child_nocopy (*c);
 			}
 		}

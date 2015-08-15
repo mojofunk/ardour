@@ -25,6 +25,8 @@
 
 #include "evoral/types.hpp"
 
+#include "pbd/string_convert.h"
+
 #include "ardour/ardour.h"
 #include "ardour/region.h"
 
@@ -36,6 +38,30 @@ namespace ARDOUR {
 		LIBARDOUR_API extern PBD::PropertyDescriptor<Evoral::Beats> length_beats;
 	}
 }
+
+namespace PBD {
+
+template <>
+inline
+std::string
+to_string (Evoral::Beats beats)
+{
+	std::string tmp;
+	double_to_string (beats.to_double (), tmp);
+	return tmp;
+}
+
+template <>
+inline
+Evoral::Beats
+string_to (const std::string& str)
+{
+	double tmp;
+	string_to_double (str, tmp);
+	return Evoral::Beats(tmp);
+}
+
+} // namespace PBD
 
 namespace Evoral {
 template<typename Time> class EventSink;

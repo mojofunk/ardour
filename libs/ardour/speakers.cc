@@ -17,8 +17,7 @@
 */
 
 #include "pbd/error.h"
-#include "pbd/convert.h"
-#include "pbd/locale_guard.h"
+#include "pbd/string_convert.h"
 
 #include "ardour/speaker.h"
 #include "ardour/speakers.h"
@@ -244,18 +243,13 @@ XMLNode&
 Speakers::get_state ()
 {
         XMLNode* node = new XMLNode (X_("Speakers"));
-        char buf[32];
-        LocaleGuard lg (X_("C"));
 
         for (vector<Speaker>::const_iterator i = _speakers.begin(); i != _speakers.end(); ++i) {
                 XMLNode* speaker = new XMLNode (X_("Speaker"));
 
-                snprintf (buf, sizeof (buf), "%.12g", (*i).angles().azi);
-                speaker->add_property (X_("azimuth"), buf);
-                snprintf (buf, sizeof (buf), "%.12g", (*i).angles().ele);
-                speaker->add_property (X_("elevation"), buf);
-                snprintf (buf, sizeof (buf), "%.12g", (*i).angles().length);
-                speaker->add_property (X_("distance"), buf);
+                speaker->add_property (X_("azimuth"), to_string ((*i).angles().azi));
+                speaker->add_property (X_("elevation"), to_string ((*i).angles().ele));
+                speaker->add_property (X_("distance"), to_string ((*i).angles().length));
 
                 node->add_child_nocopy (*speaker);
         }
@@ -269,7 +263,6 @@ Speakers::set_state (const XMLNode& node, int /*version*/)
         XMLNodeConstIterator i;
         const XMLProperty* prop;
         double a, e, d;
-        LocaleGuard lg (X_("C"));
         int n = 0;
 
         _speakers.clear ();
@@ -280,19 +273,19 @@ Speakers::set_state (const XMLNode& node, int /*version*/)
                                 warning << _("Speaker information is missing azimuth - speaker ignored") << endmsg;
                                 continue;
                         }
-                        a = atof (prop->value());
+                        a = string_to<double>(prop->value());
 
                         if ((prop = (*i)->property (X_("elevation"))) == 0) {
                                 warning << _("Speaker information is missing elevation - speaker ignored") << endmsg;
                                 continue;
                         }
-                        e = atof (prop->value());
+                        e = string_to<double>(prop->value());
 
                         if ((prop = (*i)->property (X_("distance"))) == 0) {
                                 warning << _("Speaker information is missing distance - speaker ignored") << endmsg;
                                 continue;
                         }
-                        d = atof (prop->value());
+                        d = string_to<double>(prop->value());
 
                         add_speaker (AngularVector (a, e, d));
                 }

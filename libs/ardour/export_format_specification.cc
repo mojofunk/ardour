@@ -19,9 +19,6 @@
 */
 
 #include "ardour/export_format_specification.h"
-
-#include <sstream>
-
 #include "ardour/export_format_compatibility.h"
 #include "ardour/export_formats.h"
 #include "ardour/session.h"
@@ -29,9 +26,14 @@
 #include "pbd/error.h"
 #include "pbd/xml++.h"
 #include "pbd/enumwriter.h"
-#include "pbd/convert.h"
+#include "pbd/enum_convert.h"
+#include "pbd/string_convert.h"
 
 #include "i18n.h"
+
+namespace PBD {
+DEFINE_ENUM_CONVERT(ARDOUR::ExportFormatBase::SampleRate)
+}
 
 namespace ARDOUR
 {
@@ -64,21 +66,21 @@ ExportFormatSpecification::Time::get_state ()
 
 	switch (type) {
 	  case Timecode:
-		node->add_property ("hours", to_string (timecode.hours, std::dec));
-		node->add_property ("minutes", to_string (timecode.minutes, std::dec));
-		node->add_property ("seconds", to_string (timecode.seconds, std::dec));
-		node->add_property ("frames", to_string (timecode.frames, std::dec));
+		node->add_property ("hours", to_string (timecode.hours));
+		node->add_property ("minutes", to_string (timecode.minutes));
+		node->add_property ("seconds", to_string (timecode.seconds));
+		node->add_property ("frames", to_string (timecode.frames));
 		break;
 	  case BBT:
-		node->add_property ("bars", to_string (bbt.bars, std::dec));
-		node->add_property ("beats", to_string (bbt.beats, std::dec));
-		node->add_property ("ticks", to_string (bbt.ticks, std::dec));
+		node->add_property ("bars", to_string (bbt.bars));
+		node->add_property ("beats", to_string (bbt.beats));
+		node->add_property ("ticks", to_string (bbt.ticks));
 		break;
 	  case Frames:
-		node->add_property ("frames", to_string (frames, std::dec));
+		node->add_property ("frames", to_string (frames));
 		break;
 	  case Seconds:
-		node->add_property ("seconds", to_string (seconds, std::dec));
+		node->add_property ("seconds", to_string (seconds));
 		break;
 	}
 
@@ -99,49 +101,48 @@ ExportFormatSpecification::Time::set_state (const XMLNode & node)
 	switch (type) {
 	  case Timecode:
 		if ((prop = node.property ("hours"))) {
-			timecode.hours = atoi (prop->value());
+			timecode.hours = string_to<uint32_t>(prop->value());
 		}
 
 		if ((prop = node.property ("minutes"))) {
-			timecode.minutes = atoi (prop->value());
+			timecode.minutes = string_to<uint32_t>(prop->value());
 		}
 
 		if ((prop = node.property ("seconds"))) {
-			timecode.seconds = atoi (prop->value());
+			timecode.seconds = string_to<uint32_t>(prop->value());
 		}
 
 		if ((prop = node.property ("frames"))) {
-			timecode.frames = atoi (prop->value());
+			timecode.frames = string_to<uint32_t>(prop->value());
 		}
 
 		break;
 
 	  case BBT:
 		if ((prop = node.property ("bars"))) {
-			bbt.bars = atoi (prop->value());
+			bbt.bars = string_to<uint32_t>(prop->value());
 		}
 
 		if ((prop = node.property ("beats"))) {
-			bbt.beats = atoi (prop->value());
+			bbt.beats = string_to<uint32_t>(prop->value());
 		}
 
 		if ((prop = node.property ("ticks"))) {
-			bbt.ticks = atoi (prop->value());
+			bbt.ticks = string_to<uint32_t>(prop->value());
 		}
 
 		break;
 
 	  case Frames:
 		if ((prop = node.property ("frames"))) {
-			std::istringstream iss (prop->value());
-			iss >> frames;
+			frames = string_to<uint32_t>(prop->value());
 		}
 
 		break;
 
 	  case Seconds:
 		if ((prop = node.property ("seconds"))) {
-			seconds = atof (prop->value());
+			seconds = string_to<double>(prop->value());
 		}
 
 		break;
@@ -258,10 +259,11 @@ ExportFormatSpecification::get_state ()
 	node->add_property ("extension", extension());
 	node->add_property ("name", _format_name);
 	node->add_property ("has-sample-format", has_sample_format ? "true" : "false");
-	node->add_property ("channel-limit", to_string (_channel_limit, std::dec));
+	node->add_property ("channel-limit", to_string (_channel_limit));
 
 	node = root->add_child ("SampleRate");
-	node->add_property ("rate", to_string (sample_rate(), std::dec));
+	// make the specialization of to_string explicit for documentation purposes
+	node->add_property ("rate", to_string<ExportFormatBase::SampleRate>(sample_rate()));
 
 	node = root->add_child ("SRCQuality");
 	node->add_property ("quality", enum_2_string (src_quality()));
@@ -278,7 +280,7 @@ ExportFormatSpecification::get_state ()
 
 	node = processing->add_child ("Normalize");
 	node->add_property ("enabled", normalize() ? "true" : "false");
-	node->add_property ("target", to_string (normalize_target(), std::dec));
+	node->add_property ("target", to_string (normalize_target()));
 
 	XMLNode * silence = processing->add_child ("Silence");
 	XMLNode * start = silence->add_child ("Start");
@@ -368,13 +370,13 @@ ExportFormatSpecification::set_state (const XMLNode & root)
 		}
 
 		if ((prop = child->property ("channel-limit"))) {
-			_channel_limit = atoi (prop->value());
+			_channel_limit = string_to<uint32_t>(prop->value());
 		}
 	}
 
 	if ((child = root.child ("SampleRate"))) {
 		if ((prop = child->property ("rate"))) {
-			set_sample_rate ( (SampleRate) string_2_enum (prop->value(), SampleRate));
+			set_sample_rate (string_to<ExportFormatBase::SampleRate>(prop->value()));
 		}
 	}
 
@@ -405,7 +407,7 @@ ExportFormatSpecification::set_state (const XMLNode & root)
 		}
 
 		if ((prop = child->property ("target"))) {
-			_normalize_target = atof (prop->value());
+			_normalize_target = string_to<float>(prop->value());
 		}
 	}
 

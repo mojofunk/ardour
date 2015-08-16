@@ -24,7 +24,7 @@
 
 #include "pbd/convert.h"
 #include "pbd/failed_constructor.h"
-#include "pbd/locale_guard.h"
+#include "pbd/string_convert.h"
 
 #include "canvas/colors.h"
 #include "canvas/colorspace.h"
@@ -582,11 +582,11 @@ SVAModifier::from_string (string const & str)
 	while (ss) {
 		ss >> mod;
 		if ((pos = mod.find ("alpha:")) != string::npos) {
-			_a = PBD::atof (mod.substr (pos+6));
+			_a = PBD::string_to<double>(mod.substr (pos+6));
 		} else if ((pos = mod.find ("saturate:")) != string::npos) {
-			_s = PBD::atof (mod.substr (pos+9));
+			_s = PBD::string_to<double>(mod.substr (pos+9));
 		} else if ((pos = mod.find ("darkness:")) != string::npos) {
-			_v = PBD::atof (mod.substr (pos+9));
+			_v = PBD::string_to<double>(mod.substr (pos+9));
 		} else {
 			throw failed_constructor ();
 		}
@@ -596,7 +596,6 @@ SVAModifier::from_string (string const & str)
 string
 SVAModifier::to_string () const
 {
-	PBD::LocaleGuard lg ("C");
 	stringstream ss;
 
 	switch (type) {
@@ -612,15 +611,15 @@ SVAModifier::to_string () const
 	}
 
 	if (_s >= 0.0) {
-		ss << " saturate:" << _s;
+		ss << " saturate:" << PBD::to_string(_s);
 	}
 
 	if (_v >= 0.0) {
-		ss << " darker:" << _v;
+		ss << " darker:" << PBD::to_string(_v);
 	}
 
 	if (_a >= 0.0) {
-		ss << " alpha:" << _a;
+		ss << " alpha:" << PBD::to_string(_a);
 	}
 
 	return ss.str();

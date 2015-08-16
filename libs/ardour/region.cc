@@ -36,32 +36,13 @@
 #include "ardour/session.h"
 #include "ardour/source.h"
 #include "ardour/tempo.h"
+#include "ardour/types_convert.h"
 
 #include "i18n.h"
 
 using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
-
-namespace PBD {
-
-template <>
-std::string
-to_string (PositionLockStyle style)
-{
-	return enum_2_string (style);
-}
-
-template <>
-PositionLockStyle
-string_to (const std::string& str)
-{
-	PositionLockStyle tmp;
-	tmp = (PositionLockStyle) string_2_enum (str, tmp);
-	return tmp;
-}
-
-} // namespace PBD
 
 namespace ARDOUR {
 	class Progress;

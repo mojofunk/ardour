@@ -24,7 +24,6 @@
 #include <glibmm/miscutils.h>
 
 #include "pbd/floating.h"
-#include "pbd/locale_guard.h"
 
 #include "ardour/vst_plugin.h"
 #include "ardour/vestige/aeffectx.h"

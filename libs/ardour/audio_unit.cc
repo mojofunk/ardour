@@ -30,7 +30,6 @@
 #include "pbd/convert.h"
 #include "pbd/whitespace.h"
 #include "pbd/file_utils.h"
-#include "pbd/locale_guard.h"
 
 #include <glibmm/threads.h>
 #include <glibmm/fileutils.h>

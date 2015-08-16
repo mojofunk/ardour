@@ -23,7 +23,6 @@
 
 #include "pbd/error.h"
 #include "pbd/file_utils.h"
-#include "pbd/locale_guard.h"
 #include "pbd/pathexpand.h"
 
 #include "ardour/types.h"

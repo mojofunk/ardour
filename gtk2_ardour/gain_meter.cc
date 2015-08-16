@@ -33,6 +33,7 @@
 #include <gtkmm2ext/gtk_ui.h>
 #include "pbd/fastlog.h"
 #include "pbd/stacktrace.h"
+#include "pbd/locale_guard.h"
 
 #include "ardour_ui.h"
 #include "gain_meter.h"

@@ -19,7 +19,6 @@
 
 #include "pbd/convert.h"
 #include "pbd/error.h"
-#include "pbd/locale_guard.h"
 #include "pbd/xml++.h"
 
 #include "ardour/amp.h"

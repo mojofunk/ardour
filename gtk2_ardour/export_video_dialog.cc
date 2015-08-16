@@ -33,6 +33,7 @@
 
 #include "pbd/error.h"
 #include "pbd/convert.h"
+#include "pbd/locale_guard.h"
 #include "gtkmm2ext/keyboard.h"
 #include "gtkmm2ext/utils.h"
 #include "ardour/session_directory.h"

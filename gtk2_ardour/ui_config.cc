@@ -39,6 +39,7 @@
 #include "gtkmm2ext/gtk_ui.h"
 
 #include "ardour/filesystem_paths.h"
+#include "ardour/types_convert.h"
 
 #include "ardour_ui.h"
 #include "global_signals.h"

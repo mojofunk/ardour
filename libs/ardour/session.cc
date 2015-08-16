@@ -99,6 +99,7 @@
 #include "ardour/speakers.h"
 #include "ardour/tempo.h"
 #include "ardour/track.h"
+#include "ardour/types_convert.h"
 #include "ardour/user_bundle.h"
 #include "ardour/utils.h"
 

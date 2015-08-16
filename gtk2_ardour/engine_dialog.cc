@@ -47,6 +47,7 @@
 
 #include "pbd/convert.h"
 #include "pbd/error.h"
+#include "pbd/string_convert.h"
 
 #include "opts.h"
 #include "debug.h"
@@ -1690,8 +1691,6 @@ EngineControl::maybe_display_saved_state ()
 XMLNode&
 EngineControl::get_state ()
 {
-	LocaleGuard lg (X_("C"));
-
 	XMLNode* root = new XMLNode ("AudioMIDISetup");
 	std::string path;
 
@@ -1818,32 +1817,32 @@ EngineControl::set_state (const XMLNode& root)
 			if ((prop = grandchild->property ("sample-rate")) == 0) {
 				continue;
 			}
-			state->sample_rate = atof (prop->value ());
+			state->sample_rate = string_to<double>(prop->value ());
 
 			if ((prop = grandchild->property ("buffer-size")) == 0) {
 				continue;
 			}
-			state->buffer_size = atoi (prop->value ());
+			state->buffer_size = string_to<uint32_t>(prop->value ());
 
 			if ((prop = grandchild->property ("input-latency")) == 0) {
 				continue;
 			}
-			state->input_latency = atoi (prop->value ());
+			state->input_latency = string_to<uint32_t>(prop->value ());
 
 			if ((prop = grandchild->property ("output-latency")) == 0) {
 				continue;
 			}
-			state->output_latency = atoi (prop->value ());
+			state->output_latency = string_to<uint32_t>(prop->value ());
 
 			if ((prop = grandchild->property ("input-channels")) == 0) {
 				continue;
 			}
-			state->input_channels = atoi (prop->value ());
+			state->input_channels = string_to<uint32_t>(prop->value ());
 
 			if ((prop = grandchild->property ("output-channels")) == 0) {
 				continue;
 			}
-			state->output_channels = atoi (prop->value ());
+			state->output_channels = string_to<uint32_t>(prop->value ());
 
 			if ((prop = grandchild->property ("active")) == 0) {
 				continue;
@@ -1871,8 +1870,8 @@ EngineControl::set_state (const XMLNode& root)
 					MidiDeviceSettings ptr (new MidiDeviceSetting(
 								(*n)->property (X_("name"))->value (),
 								string_is_affirmative ((*n)->property (X_("enabled"))->value ()),
-								atoi ((*n)->property (X_("input-latency"))->value ()),
-								atoi ((*n)->property (X_("output-latency"))->value ())
+								string_to<uint32_t>((*n)->property (X_("input-latency"))->value ()),
+								string_to<uint32_t>((*n)->property (X_("output-latency"))->value ())
 								));
 					state->midi_devices.push_back (ptr);
 				}

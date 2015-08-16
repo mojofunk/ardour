@@ -2263,7 +2263,7 @@ Editor::set_state (const XMLNode& node, int /*version*/)
 
 	if ((prop = node.property ("zoom"))) {
 		/* older versions of ardour used floating point samples_per_pixel */
-		double f = PBD::atof (prop->value());
+		double f = string_to<double>(prop->value());
 		reset_zoom (llrintf (f));
 	} else {
 		reset_zoom (samples_per_pixel);
@@ -2315,7 +2315,7 @@ Editor::set_state (const XMLNode& node, int /*version*/)
 	}
 
 	if ((prop = node.property ("y-origin")) != 0) {
-		reset_y_origin (atof (prop->value ()));
+		reset_y_origin (string_to<double>(prop->value ()));
 	}
 
 	if ((prop = node.property ("join-object-range"))) {
@@ -2514,8 +2514,7 @@ Editor::get_state ()
 	node->add_property ("playhead", buf);
 	snprintf (buf, sizeof (buf), "%" PRIi64, leftmost_frame);
 	node->add_property ("left-frame", buf);
-	snprintf (buf, sizeof (buf), "%f", vertical_adjustment.get_value ());
-	node->add_property ("y-origin", buf);
+	node->add_property ("y-origin", to_string (vertical_adjustment.get_value()));
 
 	node->add_property ("show-measures", _show_measures ? "yes" : "no");
 	node->add_property ("maximised", _maximised ? "yes" : "no");

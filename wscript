@@ -603,6 +603,9 @@ int main() { return 0; }''',
         if platform != 'darwin' and not is_clang and not Options.options.dist_target == 'mingw':
             linker_flags += [ '-rdynamic' ]
 
+    if opt.class_tracking:
+        compiler_flags.append('-DPBD_ENABLE_CLASS_TRACKER')
+
     conf.env.append_value('CFLAGS', compiler_flags)
     conf.env.append_value('CFLAGS', c_flags)
     conf.env.append_value('CXXFLAGS', compiler_flags)
@@ -634,6 +637,8 @@ def options(opt):
                     help='Compile with Boost shared pointer debugging')
     opt.add_option('--debug-symbols', action='store_true', default=False, dest='debug_symbols',
                     help='Add debug-symbols to optimized builds')
+    opt.add_option('--class-tracking', action='store_true', default=False, dest='class_tracking',
+                    help='Enable tracking of class instance lifetime data for debugging')
     opt.add_option('--depstack-root', type='string', default='~', dest='depstack_root',
                     help='Directory/folder where dependency stack trees (gtk, a3) can be found (defaults to ~)')
     opt.add_option('--dist-target', type='string', default='auto', dest='dist_target',

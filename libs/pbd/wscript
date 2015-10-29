@@ -33,6 +33,7 @@ libpbd_sources = [
     'base_ui.cc',
     'boost_debug.cc',
     'cartesian.cc',
+    'class_tracker.cc',
     'command.cc',
     'configuration_variable.cc',
     'convert.cc',
@@ -70,6 +71,7 @@ libpbd_sources = [
     'shortpath.cc',
     'signals.cc',
     'stacktrace.cc',
+    'stack_trace.cc',
     'stateful_diff_command.cc',
     'stateful.cc',
     'strreplace.cc',
@@ -157,11 +159,13 @@ def build(bld):
         # Unit tests
         testobj              = bld(features = 'cxx cxxprogram')
         testobj.source       = '''
+                test/class_tracker_test.cc
                 test/testrunner.cc
                 test/xpath.cc
                 test/mutex_test.cc
                 test/scalar_properties.cc
                 test/signals_test.cc
+                test/stack_trace_test.cc
                 test/convert_test.cc
                 test/filesystem_test.cc
                 test/xml_test.cc

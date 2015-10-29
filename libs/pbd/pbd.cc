@@ -30,6 +30,7 @@
 #include <glibmm/thread.h>
 
 #include "pbd/pbd.h"
+#include "pbd/class_tracker.h"
 #include "pbd/debug.h"
 #include "pbd/error.h"
 #include "pbd/id.h"
@@ -61,6 +62,20 @@ set_debug_options_from_env ()
 	if (set) {
 		std::cerr << X_("PBD_DEBUG=") << options << std::endl;
 		PBD::parse_debug_options (options.c_str());
+	}
+}
+
+static
+void
+set_class_tracker_options_from_env ()
+{
+	bool set;
+	std::string options;
+
+	options = Glib::getenv ("PBD_CLASS_TRACKER", set);
+	if (set) {
+		std::cerr << X_("PBD_CLASS_TRACKER=") << options << std::endl;
+		PBD::ClassTrackerManager::set_classes_enabled_from_string(options);
 	}
 }
 
@@ -131,6 +146,11 @@ PBD::init ()
 
 	set_debug_options_from_env ();
 
+#if defined(PBD_ENABLE_CLASS_TRACKER)
+	ClassTrackerManager::initialize ();
+	set_class_tracker_options_from_env ();
+#endif
+
 	libpbd_initialized = true;
 	return true;
 }
@@ -138,6 +158,11 @@ PBD::init ()
 void
 PBD::cleanup ()
 {
+
+#if defined(PBD_ENABLE_CLASS_TRACKER)
+	ClassTrackerManager::deinitialize ();
+#endif
+
 #ifdef PLATFORM_WINDOWS
 	PBD::MMCSS::deinitialize ();
 	WSACleanup();

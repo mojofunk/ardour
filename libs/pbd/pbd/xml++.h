@@ -38,6 +38,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "pbd/libpbd_visibility.h"
+#include "pbd/class_tracker.h"
 
 class XMLTree;
 class XMLNode;
@@ -148,6 +149,8 @@ private:
 	mutable XMLNodeList _selected_children;
 
 	void clear_lists ();
+private:
+	PBD_CLASS_TRACKER(XMLNode)
 };
 
 class LIBPBD_API XMLProperty {
@@ -162,6 +165,8 @@ public:
 private:
 	std::string _name;
 	std::string _value;
+private:
+	PBD_CLASS_TRACKER(XMLProperty)
 };
 
 class LIBPBD_API XMLException: public std::exception {

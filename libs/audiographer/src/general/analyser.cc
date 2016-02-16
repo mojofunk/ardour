@@ -175,12 +175,12 @@ Analyser::process (ProcessContext<float> const & c)
 	}
 
 	float const * const data = c.data ();
-	for (unsigned int c = 0; c < _channels; ++c) {
-		if (!_dbtp_plugin[c]) { continue; }
+	for (unsigned int ch = 0; ch < _channels; ++ch) {
+		if (!_dbtp_plugin[ch]) { continue; }
 		for (s = 0; s < n_samples; ++s) {
-			_bufs[0][s] = data[s * _channels + c];
+			_bufs[0][s] = data[s * _channels + ch];
 		}
-		_dbtp_plugin[c]->process (_bufs, Vamp::RealTime::fromSeconds ((double) _pos / _sample_rate));
+		_dbtp_plugin[ch]->process (_bufs, Vamp::RealTime::fromSeconds ((double) _pos / _sample_rate));
 	}
 
 	fftwf_execute (_fft_plan);

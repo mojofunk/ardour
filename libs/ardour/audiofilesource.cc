@@ -199,10 +199,8 @@ XMLNode&
 AudioFileSource::get_state ()
 {
 	XMLNode& root (AudioSource::get_state());
-	char buf[32];
-	snprintf (buf, sizeof (buf), "%u", _channel);
-	root.add_property (X_("channel"), buf);
-        root.add_property (X_("origin"), _origin);
+	root.set_property (X_("channel"), _channel);
+	root.set_property (X_("origin"), _origin);
 	return root;
 }
 

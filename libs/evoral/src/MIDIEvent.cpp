@@ -40,8 +40,12 @@ MIDIEvent<Time>::MIDIEvent(const XMLNode& event)
 		this->_owns_buf = true;
 		set_type(MIDI_CMD_CONTROL);
 
-		set_cc_number(atoi(event.property("Control")->value().c_str()));
-		set_cc_value (atoi(event.property("Value")->value().c_str()));
+		uint8_t cc_num;
+		uint8_t cc_val;
+		event.get_property("Control", cc_num);
+		event.get_property("Value", cc_val);
+		set_cc_number(cc_num);
+		set_cc_value (cc_val);
 	} else if (name == "ProgramChange") {
 		this->_buf = (uint8_t*) ::malloc(2);
 		this->_owns_buf = true;
@@ -61,35 +65,35 @@ MIDIEvent<Time>::to_xml() const
 	switch (type()) {
 	case MIDI_CMD_CONTROL:
 		result = new XMLNode("ControlChange");
-		result->add_property("Channel", long(channel()));
-		result->add_property("Control", long(cc_number()));
-		result->add_property("Value",   long(cc_value()));
+		result->set_property("Channel", channel());
+		result->set_property("Control", cc_number());
+		result->set_property("Value", cc_value());
 		break;
 
 	case MIDI_CMD_PGM_CHANGE:
 		result = new XMLNode("ProgramChange");
-		result->add_property("Channel", long(channel()));
-		result->add_property("Number",  long(pgm_number()));
+		result->set_property("Channel", channel());
+		result->set_property("Number", pgm_number());
 		break;
 
 	case MIDI_CMD_NOTE_ON:
 		result = new XMLNode("NoteOn");
-		result->add_property("Channel", long(channel()));
-		result->add_property("Note",  long(note()));
-		result->add_property("Velocity",  long(velocity()));
+		result->set_property("Channel", channel());
+		result->set_property("Note", note());
+		result->set_property("Velocity", velocity());
 		break;
 
 	case MIDI_CMD_NOTE_OFF:
 		result = new XMLNode("NoteOff");
-		result->add_property("Channel", long(channel()));
-		result->add_property("Note",  long(note()));
-		result->add_property("Velocity",  long(velocity()));
+		result->set_property("Channel", channel());
+		result->set_property("Note", note());
+		result->set_property("Velocity", velocity());
 		break;
 
 	case MIDI_CMD_BENDER:
 		result = new XMLNode("PitchBendChange");
-		result->add_property("Channel", long(channel()));
-		result->add_property("Value",  long(pitch_bender_value()));
+		result->set_property("Channel", channel());
+		result->set_property("Value",  pitch_bender_value());
 		break;
 
 	default:

@@ -156,12 +156,7 @@ SoloIsolateControl::get_value () const
 int
 SoloIsolateControl::set_state (XMLNode const & node, int)
 {
-	XMLProperty const * prop;
-
-	if ((prop = node.property ("solo-isolated")) != 0) {
-		_solo_isolated = string_is_affirmative (prop->value());
-	}
-
+	node.get_property ("solo-isolated", _solo_isolated);
 	return 0;
 }
 
@@ -169,6 +164,6 @@ XMLNode&
 SoloIsolateControl::get_state ()
 {
 	XMLNode& node (SlavableAutomationControl::get_state());
-	node.add_property (X_("solo-isolated"), _solo_isolated ? X_("yes") : X_("no"));
+	node.set_property (X_("solo-isolated"), _solo_isolated);
 	return node;
 }

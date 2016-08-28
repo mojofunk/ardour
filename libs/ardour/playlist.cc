@@ -24,7 +24,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include "pbd/convert.h"
+#include "pbd/types_convert.h"
 #include "pbd/stateful_diff_command.h"
 #include "pbd/xml++.h"
 
@@ -37,6 +37,7 @@
 #include "ardour/playlist_factory.h"
 #include "ardour/playlist_source.h"
 #include "ardour/transient_detector.h"
+#include "ardour/types_convert.h"
 #include "ardour/session_playlists.h"
 #include "ardour/source_factory.h"
 
@@ -104,16 +105,16 @@ RegionListProperty::get_content_as_xml (boost::shared_ptr<Region> region, XMLNod
 	   code, so we can just store ID here.
 	*/
 
-	node.add_property ("id", region->id().to_s ());
+	node.set_property ("id", region->id());
 }
 
 boost::shared_ptr<Region>
 RegionListProperty::get_content_from_xml (XMLNode const & node) const
 {
-	XMLProperty const * prop = node.property ("id");
-	assert (prop);
-
-	PBD::ID id (prop->value ());
+	PBD::ID id;
+	if (!node.get_property ("id", id)) {
+		assert (false);
+	}
 
 	boost::shared_ptr<Region> ret = _playlist.region_by_id (id);
 
@@ -2212,9 +2213,9 @@ Playlist::find_next_region (framepos_t frame, RegionPoint point, int dir)
 		 } else if (prop->name() == X_("orig-track-id")) {
 			 _orig_track_id = prop->value ();
 		 } else if (prop->name() == X_("frozen")) {
-			 _frozen = string_is_affirmative (prop->value());
+			 _frozen = string_to<bool> (prop->value());
 		 } else if (prop->name() == X_("combine-ops")) {
-			 _combine_ops = atoi (prop->value());
+			 _combine_ops = string_to<uint32_t> (prop->value());
 		 }
 	 }
 
@@ -2230,12 +2231,11 @@ Playlist::find_next_region (framepos_t frame, RegionPoint point, int dir)
 
 			 seen_region_nodes = true;
 
-			 if ((prop = child->property ("id")) == 0) {
+			 ID id;
+			 if (!child->get_property ("id", id)) {
 				 error << _("region state node has no ID, ignored") << endmsg;
 				 continue;
 			 }
-
-			 ID id = prop->value ();
 
 			 if ((region = region_by_id (id))) {
 
@@ -2294,19 +2294,17 @@ XMLNode&
 Playlist::state (bool full_state)
 {
 	XMLNode *node = new XMLNode (X_("Playlist"));
-	char buf[64];
 
-	node->add_property (X_("id"), id().to_s());
-	node->add_property (X_("name"), _name);
-	node->add_property (X_("type"), _type.to_string());
-	node->add_property (X_("orig-track-id"), _orig_track_id.to_s ());
-	node->add_property (X_("frozen"), _frozen ? "yes" : "no");
+	node->set_property (X_("id"), id());
+	node->set_property (X_("name"), name());
+	node->set_property (X_("type"), _type);
+	node->set_property (X_("orig-track-id"), _orig_track_id);
+	node->set_property (X_("frozen"), _frozen);
 
 	if (full_state) {
 		RegionReadLock rlock (this);
 
-		snprintf (buf, sizeof (buf), "%u", _combine_ops);
-		node->add_property ("combine-ops", buf);
+		node->set_property ("combine-ops", _combine_ops);
 
 		for (RegionList::iterator i = regions.begin(); i != regions.end(); ++i) {
 			node->add_child_nocopy ((*i)->get_state());

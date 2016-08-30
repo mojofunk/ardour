@@ -277,7 +277,7 @@ XMLNode::operator= (const XMLNode& from)
 
 		props = from.properties();
 		for (curprop = props.begin(); curprop != props.end(); ++curprop) {
-			add_property((*curprop)->name().c_str(), (*curprop)->value());
+			set_property((*curprop)->name().c_str(), (*curprop)->value());
 		}
 
 		nodes = from.children();
@@ -468,47 +468,27 @@ XMLNode::has_property_with_value (const string& key, const string& value) const
 	return false;
 }
 
-XMLProperty*
-XMLNode::add_property(const char* n, const string& v)
-{
-	string ns(n);
-        map<string,XMLProperty*>::iterator iter;
-
-        if ((iter = _propmap.find(ns)) != _propmap.end()) {
-                iter->second->set_value (v);
-                return iter->second;
-	}
-
-	XMLProperty* tmp = new XMLProperty(ns, v);
-
-	if (!tmp) {
-		return 0;
-	}
-
-	_propmap[tmp->name()] = tmp;
-	_proplist.insert(_proplist.end(), tmp);
-
-	return tmp;
-}
-
-XMLProperty*
-XMLNode::add_property(const char* n, const char* v)
-{
-	string vs(v);
-	return add_property(n, vs);
-}
-
-XMLProperty*
-XMLNode::add_property(const char* name, const long value)
-{
-	char str[64];
-	snprintf(str, sizeof(str), "%ld", value);
-	return add_property(name, str);
-}
 
 bool
-XMLNode::set_property(const char* name, const string& str) {
-	return add_property (name, str);
+XMLNode::set_property(const char* name, const string& value)
+{
+	const string ns(name);
+	map<string, XMLProperty*>::iterator iter;
+
+	if ((iter = _propmap.find (ns)) != _propmap.end ()) {
+		iter->second->set_value (value);
+		return true;
+	}
+
+	XMLProperty* tmp = new XMLProperty(ns, value);
+
+	if (!tmp) {
+		return false;
+	}
+
+	_proplist.insert(_proplist.end(), tmp);
+
+	return _propmap.insert(std::make_pair(tmp->name(), tmp)).second;
 }
 
 bool
@@ -627,7 +607,7 @@ readnode(xmlNodePtr node)
 		if (attr->children) {
 			content = (char*)attr->children->content;
 		}
-		tmp->add_property((const char*)attr->name, content);
+		tmp->set_property((const char*)attr->name, content);
 	}
 
 	if (node->content) {

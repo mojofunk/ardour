@@ -572,7 +572,6 @@ Session::immediately_post_engine ()
 	}
 
 	try {
-		LocaleGuard lg;
 		BootMessage (_("Set up LTC"));
 		setup_ltc ();
 		BootMessage (_("Set up Click"));

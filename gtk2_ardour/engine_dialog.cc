@@ -1597,7 +1597,7 @@ EngineControl::output_device_changed ()
 string
 EngineControl::bufsize_as_string (uint32_t sz)
 {
-	return string_compose (P_("%1 sample", "%1 samples", sz), sz);
+	return string_compose (P_("%1 sample", "%1 samples", sz), to_string(sz));
 }
 
 string

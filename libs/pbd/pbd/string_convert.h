@@ -23,6 +23,8 @@
 #include <string>
 #include <stdint.h>
 
+#include "pbd/libpbd_visibility.h"
+
 /**
  * Locale independent and thread-safe string conversion utility functions.
  *
@@ -31,41 +33,41 @@
  */
 namespace PBD {
 
-bool bool_to_string (bool val, std::string& str);
+LIBPBD_API bool bool_to_string (bool val, std::string& str);
 
-bool int16_to_string (int16_t val, std::string& str);
+LIBPBD_API bool int16_to_string (int16_t val, std::string& str);
 
-bool uint16_to_string (uint16_t val, std::string& str);
+LIBPBD_API bool uint16_to_string (uint16_t val, std::string& str);
 
-bool int32_to_string (int32_t val, std::string& str);
+LIBPBD_API bool int32_to_string (int32_t val, std::string& str);
 
-bool uint32_to_string (uint32_t val, std::string& str);
+LIBPBD_API bool uint32_to_string (uint32_t val, std::string& str);
 
-bool int64_to_string (int64_t val, std::string& str);
+LIBPBD_API bool int64_to_string (int64_t val, std::string& str);
 
-bool uint64_to_string (uint64_t val, std::string& str);
+LIBPBD_API bool uint64_to_string (uint64_t val, std::string& str);
 
-bool float_to_string (float val, std::string& str);
+LIBPBD_API bool float_to_string (float val, std::string& str);
 
-bool double_to_string (double val, std::string& str);
+LIBPBD_API bool double_to_string (double val, std::string& str);
 
-bool string_to_bool (const std::string& str, bool& val);
+LIBPBD_API bool string_to_bool (const std::string& str, bool& val);
 
-bool string_to_int16 (const std::string& str, int16_t& val);
+LIBPBD_API bool string_to_int16 (const std::string& str, int16_t& val);
 
-bool string_to_uint16 (const std::string& str, uint16_t& val);
+LIBPBD_API bool string_to_uint16 (const std::string& str, uint16_t& val);
 
-bool string_to_int32 (const std::string& str, int32_t& val);
+LIBPBD_API bool string_to_int32 (const std::string& str, int32_t& val);
 
-bool string_to_uint32 (const std::string& str, uint32_t& val);
+LIBPBD_API bool string_to_uint32 (const std::string& str, uint32_t& val);
 
-bool string_to_int64 (const std::string& str, int64_t& val);
+LIBPBD_API bool string_to_int64 (const std::string& str, int64_t& val);
 
-bool string_to_uint64 (const std::string& str, uint64_t& val);
+LIBPBD_API bool string_to_uint64 (const std::string& str, uint64_t& val);
 
-bool string_to_float (const std::string& str, float& val);
+LIBPBD_API bool string_to_float (const std::string& str, float& val);
 
-bool string_to_double (const std::string& str, double& val);
+LIBPBD_API bool string_to_double (const std::string& str, double& val);
 
 template <class T>
 inline bool to_string (T val, std::string& str)

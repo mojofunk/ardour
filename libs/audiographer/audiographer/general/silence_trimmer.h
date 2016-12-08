@@ -167,16 +167,16 @@ class /*LIBAUDIOGRAPHER_API*/ SilenceTrimmer
 		 */
 
 		framecnt_t output_start_index = 0;
-		framecnt_t output_sample_count = c.frames();
+		framecnt_t output_frame_count = c.frames();
 
 		if (!processed_data) {
 			if (trim_beginning) {
 				framecnt_t first_non_silent_frame_index = 0;
-				if (find_first_non_silent_frame (c, first_non_silent_frame_index)) {
+				if (find_first_non_silent_sample (c, first_non_silent_frame_index)) {
 					// output from start of non-silent data until end of buffer
-					// output_sample_count may also be altered in trim end
+					// output_frame_count may also be altered in trim end
 					output_start_index = first_non_silent_frame_index;
-					output_sample_count = c.frames() - first_non_silent_frame_index;
+					output_frame_count = c.frames() - first_non_silent_frame_index;
 					processed_data = true;
 				} else {
 					// keep entering this block until non-silence is found to trim
@@ -196,34 +196,34 @@ class /*LIBAUDIOGRAPHER_API*/ SilenceTrimmer
 		if (processed_data) {
 			if (trim_end) {
 				framecnt_t first_non_silent_frame_index = 0;
-				if (find_first_non_silent_frame (c, first_non_silent_frame_index)) {
+				if (find_first_non_silent_sample (c, first_non_silent_frame_index)) {
 					// context buffer contains non-silent data, flush any intermediate silence
 					output_silence_frames (c, silence_frames);
 
 					framecnt_t silent_frame_index = 0;
-					find_last_silent_frame_reverse (c, silent_frame_index);
+					find_last_silent_sample_reverse (c, silent_frame_index);
 
-					// Count of samples at end of block that are "silent", may be zero.
-					framecnt_t silent_end_samples = c.frames () - silent_frame_index;
-					framecnt_t samples_before_silence = c.frames() - silent_end_samples;
+					// Count of frames at end of block that are "silent", may be zero.
+					framecnt_t silent_end_frames = c.frames () - silent_frame_index;
+					framecnt_t frames_before_silence = c.frames() - silent_end_frames;
 
-					assert (samples_before_silence + silent_end_samples == c.frames ());
+					assert (frames_before_silence + silent_end_frames == c.frames ());
 
 					// output_start_index may be non-zero if start trim occurred above
-					output_sample_count = samples_before_silence - output_start_index;
+					output_frame_count = frames_before_silence - output_start_index;
 
-					// keep track of any silent samples not output
-					silence_frames = silent_end_samples;
+					// keep track of any silent frames not output
+					silence_frames = silent_end_frames;
 
 				} else {
 					// whole context buffer is silent output nothing
 					silence_frames += c.frames ();
-					output_sample_count = 0;
+					output_frame_count = 0;
 				}
 			}
 
 			// now output data if any
-			ConstProcessContext<T> c_out (c, &c.data()[output_start_index], output_sample_count);
+			ConstProcessContext<T> c_out (c, &c.data()[output_start_index], output_frame_count);
 			ListedSource<T>::output (c_out);
 		}
 
@@ -250,12 +250,12 @@ class /*LIBAUDIOGRAPHER_API*/ SilenceTrimmer
 
 private:
 
-	bool find_first_non_silent_frame (ProcessContext<T> const & c, framecnt_t & result_frame)
+	bool find_first_non_silent_sample (ProcessContext<T> const & c, framecnt_t & result_frame)
 	{
 		for (framecnt_t i = 0; i < c.frames(); ++i) {
 			if (!tester.is_silent (c.data()[i])) {
 				result_frame = i;
-				// Round down to nearest interleaved "frame" beginning
+				// Round down to nearest interleaved "sample" beginning
 				result_frame -= result_frame % c.channels();
 				return true;
 			}
@@ -264,23 +264,25 @@ private:
 	}
 
 	/**
-	 * Reverse find the last silent frame index. If the last sample in the
-	 * buffer is non-silent the index will be one past the end of the buffer and
-	 * equal to c.frames(). e.g silent_end_samples = c.frames() - result_frame
+	 * Reverse find the last silent frame index. If the last interleaved "sample"
+	 * in the buffer is non-silent the index will be one past the end of the
+	 * buffer and equal to c.frames().
+	 *
+	 * e.g silent_end_frames = c.frames() - result_frame
 	 *
 	 * @return true if result_frame index is valid, false if there were only
-	 * silent samples in the context buffer
+	 * silent frames in the context buffer
 	 */
-	bool find_last_silent_frame_reverse (ProcessContext<T> const & c, framecnt_t & result_frame)
+	bool find_last_silent_sample_reverse (ProcessContext<T> const & c, framecnt_t & result_frame)
 	{
-		framecnt_t last_sample_index = c.frames() - 1;
+		framecnt_t last_frame_index = c.frames() - 1;
 
-		for (framecnt_t i = last_sample_index; i >= 0; --i) {
+		for (framecnt_t i = last_frame_index; i >= 0; --i) {
 			if (!tester.is_silent (c.data()[i])) {
 				result_frame = i;
-				// Round down to nearest interleaved "frame" beginning
+				// Round down to nearest interleaved "sample" beginning
 				result_frame -= result_frame % c.channels();
-				// Round up to return the "last" silent interleaved frame
+				// Round up to return the "last" silent interleaved "sample"
 				result_frame += c.channels();
 				return true;
 			}

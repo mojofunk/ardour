@@ -24,6 +24,7 @@
 
 #include "ardour/types.h"
 #include "ardour/data_type.h"
+#include "ardour/mode.h"
 
 namespace PBD {
 
@@ -67,6 +68,8 @@ DEFINE_ENUM_CONVERT(ARDOUR::VUMeterStandard)
 DEFINE_ENUM_CONVERT(ARDOUR::MeterLineUp)
 
 DEFINE_ENUM_CONVERT(ARDOUR::MidiPortFlags)
+
+DEFINE_ENUM_CONVERT(MusicalMode::Type)
 
 template <>
 inline bool to_string (ARDOUR::AutoState val, std::string& str)

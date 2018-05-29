@@ -16,7 +16,6 @@ def options(opt):
     autowaf.set_options(opt)
 
 def configure(conf):
-    conf.load('misc')
     conf.load('compiler_cxx')
     conf.check_cc(function_name='readline',
             header_name='stdio.h readline/readline.h',
@@ -39,7 +38,7 @@ def build(bld):
         obj.source       = 'devel.cc'
         obj.target       = 'devel'
         obj.uselib       = ['SIGCPP', 'READLINE']
-        obj.use          = ['liblua']
+        obj.use          = ['LUA']
         obj.install_path = None
     #########################################
 
@@ -58,13 +57,8 @@ def build(bld):
     obj.source       = 'luasession.cc'
     obj.target       = 'luasession'
     obj.includes     = ['../libs']
-    obj.use          = ['liblua'
-                        'libpbd',
-                        'libardour',
-                        'libardour_cp',
-                        'libtemporal',
-                        'libmidipp',
-                     ]
+    obj.uselib       = 'READLINE'
+    obj.use          = ['LUA', 'ARDOUR_CP' ]
     obj.defines = [
         'VERSIONSTRING="' + str(bld.env['VERSION']) + '"',
         'DATA_DIR="'   + os.path.normpath(bld.env['DATADIR']) + '"',
@@ -72,16 +66,6 @@ def build(bld):
         'LOCALEDIR="'  + os.path.join(os.path.normpath(bld.env['DATADIR']), 'locale') + '"',
         'PACKAGE="'    + "ARDOURUTILS" + '"',
         ]
-
-    obj.uselib       = 'UUID FLAC FONTCONFIG GLIBMM GTHREAD OGG CURL DL XML'
-    obj.uselib       += ' FFTW3F'
-    obj.uselib       += ' AUDIOUNITS OSX LO '
-    obj.uselib       += ' TAGLIB '
-    obj.uselib       += ' READLINE '
-
-    if sys.platform == 'darwin':
-        obj.uselib += ' AUDIOUNITS OSX'
-        obj.use    += ' libappleutility'
 
     #if bld.env['build_target'] == 'mingw':
     #    if bld.env['DEBUG'] == False:

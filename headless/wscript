@@ -22,7 +22,6 @@ def options(opt):
     autowaf.set_options(opt)
 
 def configure(conf):
-    conf.load('misc')
     conf.load('compiler_cxx')
     autowaf.configure(conf)
 
@@ -44,12 +43,7 @@ def build(bld):
     # at this point, "obj" refers to either the normal native executable
     # OR the shared library built for use with wine on linux.
 
-    obj.use      = [ 'libpbd',
-                     'libardour',
-                     'libardour_cp',
-                     'libtemporal',
-                     'libmidipp',
-                     ]
+    obj.use      = [ 'ARDOUR' ]
 
     obj.defines = [
         'VERSIONSTRING="' + str(bld.env['VERSION']) + '"',
@@ -58,14 +52,6 @@ def build(bld):
         'LOCALEDIR="' + os.path.join(os.path.normpath(bld.env['DATADIR']), 'locale') + '"',
         ]
     obj.install_path = bld.env['LIBDIR']
-    obj.uselib       = 'UUID FLAC FONTCONFIG GLIBMM GTHREAD OGG CURL DL XML'
-    obj.uselib       += ' FFTW3F'
-    obj.uselib       += ' AUDIOUNITS OSX LO '
-    obj.uselib       += ' TAGLIB '
-
-    if sys.platform == 'darwin':
-        obj.uselib += ' AUDIOUNITS OSX'
-        obj.use    += ' libappleutility'
     obj.includes += ['../libs']
 
     if bld.env['build_target'] == 'mingw':

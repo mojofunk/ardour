@@ -26,7 +26,6 @@ def configure(conf):
         autowaf.display_msg(conf, 'build session-utils', 'no')
         return
     autowaf.display_msg(conf, 'build session-utils', 'yes')
-    conf.load('misc')
     conf.load('compiler_cxx')
     autowaf.configure(conf)
 
@@ -40,12 +39,7 @@ def build_ardour_util(bld, util):
     obj.source   = ['common.cc', util + '.cc' ]
     obj.target   = pgmprefix + '-' + util
     obj.includes = ['.']
-    obj.use      = [ 'libpbd',
-                     'libardour',
-                     'libardour_cp',
-                     'libtemporal',
-                     'libmidipp',
-                     ]
+    obj.use      = [ 'ARDOUR' ]
     obj.defines = [
         'VERSIONSTRING="' + str(bld.env['VERSION']) + '"',
         'UTILNAME="'   + str(pgmprefix + '-' + util) + '"',
@@ -55,15 +49,9 @@ def build_ardour_util(bld, util):
         'PACKAGE="'    + "ARDOURUTILS" + '"',
         ]
     obj.install_path = bld.env['LIBDIR'] + '/utils'
-    obj.uselib       = 'UUID FLAC FONTCONFIG GLIBMM GTHREAD OGG CURL DL XML'
-    obj.uselib       += ' FFTW3F'
-    obj.uselib       += ' AUDIOUNITS OSX LO '
-    obj.uselib       += ' TAGLIB '
 
     if sys.platform == 'darwin':
-        obj.uselib += ' AUDIOUNITS OSX'
-        obj.use    += ' libappleutility'
-    obj.includes += ['../libs']
+        obj.includes += ['../libs']
 
     if bld.env['build_target'] == 'mingw':
         obj.install_path = bld.env['BINDIR']
@@ -87,7 +75,7 @@ def build(bld):
 
     for util in utils:
         fn = str(util)[:-3]
-        build_ardour_util(bld, fn)
+        build_ardour_util(bld, os.path.basename(fn))
         if bld.env['build_target'] != 'mingw':
             bld.symlink_as(bld.env['BINDIR'] + '/' + pgmprefix + "-" + fn, bld.env['LIBDIR'] + '/utils/ardour-util.sh')
 

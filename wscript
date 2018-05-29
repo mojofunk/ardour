@@ -216,16 +216,18 @@ if len (sys.argv) > 1 and sys.argv[1] == 'dist':
 top = '.'
 out = 'build'
 
-children = [
-        # optionally external libraries
+optionally_external_libs = [
         'libs/fluidsynth',
         'libs/hidapi',
         'libs/libltc',
+        'libs/qm-dsp',
+        'libs/zita-resampler',
+]
+
+children = [
         'libs/lua',
         'libs/ptformat',
-        'libs/qm-dsp',
         'libs/vamp-plugins',
-        'libs/zita-resampler',
         # core ardour libraries
         'libs/pbd',
         'libs/midi++2',
@@ -716,6 +718,8 @@ def options(opt):
                     help='Architecture-specific compiler FLAGS')
     opt.add_option('--with-backends', type='string', action='store', default='jack', dest='with_backends',
                     help='Specify which backend modules are to be included(jack,alsa,dummy,portaudio,coreaudio)')
+    opt.add_option('--with-surfaces', type='string', action='store', default='all', dest='with_surfaces',
+                    help='Specify which surface modules are to be included(all(default), none)')
     opt.add_option('--backtrace', action='store_true', default=False, dest='backtrace',
                     help='Compile with -rdynamic -- allow obtaining backtraces from within Ardour')
     opt.add_option('--no-carbon', action='store_true', default=False, dest='nocarbon',
@@ -742,12 +746,10 @@ def options(opt):
                     help='Compile for use with gprofile')
     opt.add_option('--libjack', type='string', default="auto", dest='libjack_link',
                     help='libjack link mode  [auto|link|weak]')
-    opt.add_option('--internal-shared-libs', action='store_true', default=True, dest='internal_shared_libs',
-                   help='Build internal libs as shared libraries')
-    opt.add_option('--internal-static-libs', action='store_false', dest='internal_shared_libs',
-                   help='Build internal libs as static libraries')
     opt.add_option('--use-external-libs', action='store_true', default=False, dest='use_external_libs',
                    help='Use external/system versions of some bundled libraries')
+    opt.add_option('--amalgamate', action='store_true', default=False, dest='amalgamate',
+                   help='Amalgamate source files to speed up build times')
     opt.add_option('--keepflags', action='store_true', default=False, dest='keepflags',
                     help='Do not ignore CFLAGS/CXXFLAGS environment vars')
     opt.add_option('--luadoc', action='store_true', default=False, dest='luadoc',
@@ -788,6 +790,8 @@ def options(opt):
                     help="Run tests after build")
     opt.add_option('--single-tests', action='store_true', default=False, dest='single_tests',
                     help="Build a single executable for each unit test")
+    opt.add_option('--dev-tools', action='store_true', default=False, dest='dev_tools',
+                    help="Compile with developer tools enabled")
     #opt.add_option('--tranzport', action='store_true', default=False, dest='tranzport',
     # help='Compile with support for Frontier Designs Tranzport (if libusb is available)')
     opt.add_option('--maschine', action='store_true', default=False, dest='maschine',
@@ -827,7 +831,10 @@ def options(opt):
         '--qm-dsp-include', type='string', action='store',
         dest='qm_dsp_include', default='/usr/include/qm-dsp',
         help='directory where the header files of qm-dsp can be found')
-
+    opt.add_option('--gtk-disable-deprecated', action='store_true', default=False, dest='gtk_disable_deprecated',
+                    help='Enable GTK/MM_DISABLE_DEPRECATED')
+    opt.add_option('--with-gtk3', action='store_true', default=False, dest='with_gtk3',
+                    help='Also compile libraries and applications with Gtk+3')
     for i in children:
         opt.recurse(i)
 
@@ -997,9 +1004,6 @@ def configure(conf):
         conf.env['LUABINDINGDOC'] = True
         conf.define ('LUABINDINGDOC', 1)
 
-    if Options.options.internal_shared_libs:
-        conf.define('INTERNAL_SHARED_LIBS', 1)
-
     if Options.options.use_external_libs:
         conf.define('USE_EXTERNAL_LIBS', 1)
         conf.env.append_value(
@@ -1039,18 +1043,9 @@ def configure(conf):
     if re.search ("openbsd", sys.platform) != None:
         conf.env.append_value('LDFLAGS', '-L/usr/X11R6/lib')
 
-    autowaf.check_pkg(conf, 'glib-2.0', uselib_store='GLIB', atleast_version='2.28', mandatory=True)
-    autowaf.check_pkg(conf, 'gthread-2.0', uselib_store='GTHREAD', atleast_version='2.2', mandatory=True)
-    autowaf.check_pkg(conf, 'glibmm-2.4', uselib_store='GLIBMM', atleast_version='2.32.0', mandatory=True)
-    autowaf.check_pkg(conf, 'sndfile', uselib_store='SNDFILE', atleast_version='1.0.18', mandatory=True)
-    autowaf.check_pkg(conf, 'giomm-2.4', uselib_store='GIOMM', atleast_version='2.2', mandatory=True)
-    autowaf.check_pkg(conf, 'libcurl', uselib_store='CURL', atleast_version='7.0.0', mandatory=True)
-    autowaf.check_pkg(conf, 'libarchive', uselib_store='ARCHIVE', atleast_version='3.0.0', mandatory=True)
-    autowaf.check_pkg(conf, 'liblo', uselib_store='LO', atleast_version='0.26', mandatory=True)
-    autowaf.check_pkg(conf, 'taglib', uselib_store='TAGLIB', atleast_version='1.6', mandatory=True)
-    autowaf.check_pkg(conf, 'vamp-sdk', uselib_store='VAMPSDK', atleast_version='2.1', mandatory=True)
-    autowaf.check_pkg(conf, 'vamp-hostsdk', uselib_store='VAMPHOSTSDK', atleast_version='2.1', mandatory=True)
-    autowaf.check_pkg(conf, 'rubberband', uselib_store='RUBBERBAND', mandatory=True)
+    if conf.is_defined('USE_EXTERNAL_LIBS'):
+        # Is this even in use anymore???
+        autowaf.check_pkg(conf, 'hidapi-hidraw', uselib_store='HIDAPI', mandatory=False)
 
     have_rf64_riff_support = conf.check_cc(fragment = '''
 #include <sndfile.h>
@@ -1067,6 +1062,11 @@ int main () { int x = SFC_RF64_AUTO_DOWNGRADE; return 0; }
     if have_rf64_riff_support:
             conf.env.append_value('CXXFLAGS', "-DHAVE_RF64_RIFF")
             conf.env.append_value('CFLAGS', "-DHAVE_RF64_RIFF")
+    
+    if Options.options.gtk_disable_deprecated:
+        conf.env.append_value('CXXFLAGS', '-DGTKMM_DISABLE_DEPRECATED')
+
+    conf.env['WITH_GTK3'] = Options.options.with_gtk3
 
     if Options.options.dist_target == 'mingw':
         Options.options.fpu_optimization = True
@@ -1143,9 +1143,8 @@ int main () { return 0; }
     # We can't do this till all tests are complete, since some fail if this is et.
     if opts.exports_hidden:
         conf.define ('EXPORT_VISIBILITY_HIDDEN', True)
-        if opts.internal_shared_libs:
-            conf.env.append_value ('CXXFLAGS', '-fvisibility=hidden')
-            conf.env.append_value ('CFLAGS', '-fvisibility=hidden')
+        conf.env.append_value ('CXXFLAGS', '-fvisibility=hidden')
+        conf.env.append_value ('CFLAGS', '-fvisibility=hidden')
     else:
         conf.define ('EXPORT_VISIBILITY_HIDDEN', False)
 
@@ -1165,8 +1164,12 @@ int main () { return 0; }
         conf.env['RUN_TESTS'] = opts.run_tests
     if opts.single_tests:
         conf.env['SINGLE_TESTS'] = opts.single_tests
+    if opts.dev_tools:
+        conf.define('WITH_DEV_TOOLS', 1)
+        conf.env['WITH_DEV_TOOLS'] = True
     #if opts.tranzport:
     #    conf.env['TRANZPORT'] = 1
+    conf.env['AMALGAMATE'] = opts.amalgamate
     if opts.windows_vst:
         conf.define('WINDOWS_VST_SUPPORT', 1)
         conf.env['WINDOWS_VST_SUPPORT'] = True
@@ -1228,6 +1231,11 @@ int main () { return 0; }
         print("ALSA Backend is only available on Linux")
         sys.exit(1)
 
+    surfaces = opts.with_surfaces.split(',')
+
+    conf.env['SURFACES'] = surfaces
+    conf.env['BUILD_SURFACES'] = any('all' in s for s in surfaces)
+
     set_compiler_flags (conf, Options.options)
 
     if sys.platform == 'darwin':
@@ -1263,12 +1271,12 @@ const char* const ardour_config_info = "\\n\\
     write_config_text('Export all symbols (backtrace)', opts.backtrace)
     write_config_text('Install prefix',        conf.env['PREFIX'])
     write_config_text('Strict compiler flags', conf.env['STRICT'])
-    write_config_text('Internal Shared Libraries', conf.is_defined('INTERNAL_SHARED_LIBS'))
     write_config_text('Use External Libraries', conf.is_defined('USE_EXTERNAL_LIBS'))
     write_config_text('Library exports hidden', conf.is_defined('EXPORT_VISIBILITY_HIDDEN'))
     write_config_text('Free/Demo copy',        conf.is_defined('FREEBIE'))
     config_text.write("\\n\\\n")
     write_config_text('ALSA DBus Reservation', conf.is_defined('HAVE_DBUS'))
+    write_config_text('Amalgamated build',     conf.env['AMALGAMATE'])
     write_config_text('Architecture flags',    opts.arch)
     write_config_text('Aubio',                 conf.is_defined('HAVE_AUBIO'))
     write_config_text('AudioUnits',            conf.is_defined('AUDIOUNIT_SUPPORT'))
@@ -1280,9 +1288,11 @@ const char* const ardour_config_info = "\\n\\
     write_config_text('Debug RT allocations',  conf.is_defined('DEBUG_RT_ALLOC'))
     write_config_text('Debug Symbols',         conf.is_defined('debug_symbols') or conf.env['DEBUG'])
     write_config_text('Denormal exceptions',   conf.is_defined('DEBUG_DENORMAL_EXCEPTION'))
+    write_config_text('Developer Tools',       conf.is_defined('WITH_DEV_TOOLS'))
     write_config_text('FLAC',                  conf.is_defined('HAVE_FLAC'))
     write_config_text('FPU optimization',      opts.fpu_optimization)
     write_config_text('Freedesktop files',     opts.freedesktop)
+    write_config_text('Gtk+3 build',           conf.env['WITH_GTK3'])
     write_config_text('Libjack linking',       conf.env['libjack_link'])
     write_config_text('Libjack metadata',      conf.is_defined ('HAVE_JACK_METADATA'))
     write_config_text('Lua Binding Doc',       conf.is_defined('LUABINDINGDOC'))
@@ -1313,6 +1323,8 @@ const char* const ardour_config_info = "\\n\\
     write_config_text('ALSA Backend',          conf.env['BUILD_ALSABACKEND'])
     write_config_text('Dummy backend',         conf.env['BUILD_DUMMYBACKEND'])
     write_config_text('JACK Backend',          conf.env['BUILD_JACKBACKEND'])
+    config_text.write("\\n\\\n")
+    write_config_text('Surfaces',              conf.env['BUILD_SURFACES'])
     config_text.write("\\n\\\n")
     write_config_text('Buildstack', conf.env['DEPSTACK_REV'])
     write_config_text('Mac i386 Architecture', opts.generic)
@@ -1375,6 +1387,10 @@ def build(bld):
 
     for i in children:
         bld.recurse(i)
+
+    if not bld.is_defined ('USE_EXTERNAL_LIBS'):
+        for i in optionally_external_libs:
+            bld.recurse(i)
 
     if bld.is_defined ('BEATBOX'):
         bld.recurse('tools/bb')

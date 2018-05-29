@@ -44,8 +44,11 @@
 #endif
 
 using namespace std;
-using namespace ARDOUR;
 using namespace PBD;
+
+namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::AutomationControl);
 
 AutomationControl::AutomationControl(ARDOUR::Session&                          session,
                                      const Evoral::Parameter&                  parameter,
@@ -60,6 +63,8 @@ AutomationControl::AutomationControl(ARDOUR::Session&                          s
 	, _desc(desc)
 	, _no_session(false)
 {
+	A_CLASS_CALL1 (Controllable::name());
+
 	if (_desc.toggled) {
 		set_flags (Controllable::Toggle);
 	}
@@ -71,6 +76,8 @@ AutomationControl::AutomationControl(ARDOUR::Session&                          s
 
 AutomationControl::~AutomationControl ()
 {
+	A_CLASS_CALL ();
+
 	if (!_no_session && !_session.deletion_in_progress ()) {
 		_session.selection().remove_control_by_id (id());
 		DropReferences (); /* EMIT SIGNAL */
@@ -384,3 +391,5 @@ AutomationControl::check_rt (double val, Controllable::GroupControlDisposition g
 
 	return false;
 }
+
+} // namespace ARDOUR

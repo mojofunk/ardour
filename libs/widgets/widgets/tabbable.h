@@ -27,6 +27,8 @@
 #include <gtkmm/label.h>
 #include <gtkmm/notebook.h>
 
+#include "pbd/dev_tools.h"
+
 #include "gtkmm2ext/window_proxy.h"
 #include "widgets/visibility.h"
 
@@ -95,6 +97,9 @@ private:
 	void show_own_window (bool and_pack_it);
 	void window_mapped ();
 	void window_unmapped ();
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourWidgets::Tabbable);
 };
 
 } /* end namespace */

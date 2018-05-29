@@ -38,6 +38,7 @@
 
 #include <glibmm/ustring.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/string_convert.h"
 #include "pbd/libpbd_visibility.h"
 
@@ -198,6 +199,8 @@ private:
 	mutable XMLNodeList _selected_children;
 
 	void clear_lists ();
+
+	A_DECLARE_CLASS_MEMBERS (XMLNode);
 };
 
 class LIBPBD_API XMLException: public std::exception {

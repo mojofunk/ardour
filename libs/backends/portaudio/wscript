@@ -31,8 +31,8 @@ def build_portaudio (bld, name, defines):
     obj.includes = ['.']
     obj.name     = name
     obj.target   = name
-    obj.use      = 'libardour libpbd'
-    obj.uselib   = 'PORTAUDIO GLIBMM XML'
+    obj.use      = 'ARDOUR'
+    obj.uselib   = 'PORTAUDIO'
     obj.install_path  = os.path.join(bld.env['LIBDIR'], 'backends')
     obj.defines = ['PACKAGE="' + I18N_PACKAGE + '"',
                    'ARDOURBACKEND_DLL_EXPORTS',

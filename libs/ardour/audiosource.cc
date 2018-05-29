@@ -49,6 +49,7 @@
 #include <glibmm/fileutils.h>
 #include <glibmm/miscutils.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/file_utils.h"
 #include "pbd/scoped_file_descriptor.h"
 #include "pbd/xml++.h"
@@ -60,11 +61,12 @@
 
 #include "pbd/i18n.h"
 
-#include "ardour/debug.h"
-
 using namespace std;
-using namespace ARDOUR;
 using namespace PBD;
+
+namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS(ARDOUR::AudioSource);
 
 Glib::Threads::Mutex AudioSource::_level_buffer_lock;
 vector<boost::shared_array<Sample> > AudioSource::_mixdown_buffers;
@@ -214,6 +216,8 @@ AudioSource::touch_peakfile ()
 int
 AudioSource::rename_peakfile (string newpath)
 {
+	A_CLASS_CALL1 (newpath);
+
 	/* caller must hold _lock */
 
 	string oldpath = _peakpath;
@@ -233,6 +237,8 @@ AudioSource::rename_peakfile (string newpath)
 int
 AudioSource::initialize_peakfile (const string& audio_path, const bool in_session)
 {
+	A_CLASS_CALL2 (audio_path, in_session);
+
 	Glib::Threads::Mutex::Lock lm (_initialize_peaks_lock);
 	GStatBuf statbuf;
 
@@ -240,15 +246,13 @@ AudioSource::initialize_peakfile (const string& audio_path, const bool in_sessio
 
 	if (!empty() && !Glib::file_test (_peakpath.c_str(), Glib::FILE_TEST_EXISTS)) {
 		string oldpeak = construct_peak_filepath (audio_path, in_session, true);
-		DEBUG_TRACE(DEBUG::Peaks, string_compose ("Looking for old peak file %1 for Audio file %2\n", oldpeak, audio_path));
 		if (Glib::file_test (oldpeak.c_str(), Glib::FILE_TEST_EXISTS)) {
 			// TODO use hard-link if possible
-			DEBUG_TRACE(DEBUG::Peaks, string_compose ("Copy old peakfile %1 to %2\n", oldpeak, _peakpath));
 			PBD::copy_file (oldpeak, _peakpath);
 		}
 	}
 
-	DEBUG_TRACE(DEBUG::Peaks, string_compose ("Initialize Peakfile %1 for Audio file %2\n", _peakpath, audio_path));
+	A_CLASS_DATA1 (_peakpath);
 
 	if (g_stat (_peakpath.c_str(), &statbuf)) {
 		if (errno != ENOENT) {
@@ -258,7 +262,7 @@ AudioSource::initialize_peakfile (const string& audio_path, const bool in_sessio
 			return -1;
 		}
 
-		DEBUG_TRACE(DEBUG::Peaks, string_compose("Peakfile %1 does not exist\n", _peakpath));
+		A_CLASS_MSG (A_FMT ("Peakfile : {} does not exist", _peakpath));
 
 		_peaks_built = false;
 
@@ -267,7 +271,7 @@ AudioSource::initialize_peakfile (const string& audio_path, const bool in_sessio
 		/* we found it in the peaks dir, so check it out */
 
 		if (statbuf.st_size == 0 || (statbuf.st_size < (off_t) ((length(_timeline_position) / _FPP) * sizeof (PeakData)))) {
-			DEBUG_TRACE(DEBUG::Peaks, string_compose("Peakfile %1 is empty\n", _peakpath));
+			A_CLASS_MSG (A_FMT ("Peakfile : {} is empty", _peakpath));
 			_peaks_built = false;
 		} else {
 			// Check if the audio file has changed since the peakfile was built.
@@ -279,7 +283,7 @@ AudioSource::initialize_peakfile (const string& audio_path, const bool in_sessio
 				/* no audio path - nested source or we can't
 				   read it or ... whatever, use the peakfile as-is.
 				*/
-				DEBUG_TRACE(DEBUG::Peaks, string_compose("Error when calling stat on Peakfile %1\n", _peakpath));
+				A_CLASS_MSG (A_FMT("Error when calling stat on Peakfile : {}", _peakpath));
 
 				_peaks_built = true;
 				_peak_byte_max = statbuf.st_size;
@@ -340,6 +344,8 @@ int
 AudioSource::read_peaks_with_fpp (PeakData *peaks, samplecnt_t npeaks, samplepos_t start, samplecnt_t cnt,
 				  double samples_per_visual_peak, samplecnt_t samples_per_file_peak) const
 {
+	A_CLASS_CALL5 (npeaks, start, cnt, samples_per_visual_peak, samples_per_file_peak);
+
 	Glib::Threads::Mutex::Lock lm (_lock);
 	double scale;
 	double expected_peaks;
@@ -404,9 +410,7 @@ AudioSource::read_peaks_with_fpp (PeakData *peaks, samplecnt_t npeaks, samplepos
 
 	scale = npeaks/expected_peaks;
 
-
-	DEBUG_TRACE (DEBUG::Peaks, string_compose (" ======>RP: npeaks = %1 start = %2 cnt = %3 len = %4 samples_per_visual_peak = %5 expected was %6 ... scale =  %7 PD ptr = %8\n"
-			, npeaks, start, cnt, _length, samples_per_visual_peak, expected_peaks, scale, peaks));
+	A_CLASS_DATA8 (npeaks, start, cnt, _length, samples_per_visual_peak, expected_peaks, scale, peaks);
 
 	/* fix for near-end-of-file conditions */
 
@@ -425,7 +429,7 @@ AudioSource::read_peaks_with_fpp (PeakData *peaks, samplecnt_t npeaks, samplepos
 
 	if (npeaks == cnt) {
 
-		DEBUG_TRACE (DEBUG::Peaks, "RAW DATA\n");
+		A_CLASS_DURATION ("Read Data");
 
 		/* no scaling at all, just get the sample data and duplicate it for
 		   both max and min peak values.
@@ -451,7 +455,7 @@ AudioSource::read_peaks_with_fpp (PeakData *peaks, samplecnt_t npeaks, samplepos
 		size_t bytes_to_read = sizeof (PeakData) * read_npeaks;
 		/* open, read, close */
 
-		DEBUG_TRACE (DEBUG::Peaks, "DIRECT PEAKS\n");
+		A_CLASS_DURATION ("Read Direct Peaks");
 
 		off_t  map_off =  first_peak_byte;
 		off_t  read_map_off = map_off & ~(bufsize - 1);
@@ -516,7 +520,7 @@ AudioSource::read_peaks_with_fpp (PeakData *peaks, samplecnt_t npeaks, samplepos
 
 	if (scale < 1.0) {
 
-		DEBUG_TRACE (DEBUG::Peaks, "DOWNSAMPLE\n");
+		A_CLASS_DURATION ("Downsample Peaks");
 
 		/* the caller wants:
 
@@ -628,7 +632,7 @@ AudioSource::read_peaks_with_fpp (PeakData *peaks, samplecnt_t npeaks, samplepos
 		memcpy ((void*)peaks, (void*)peak_cache.get(), npeaks * sizeof(PeakData));
 
 	} else {
-		DEBUG_TRACE (DEBUG::Peaks, "UPSAMPLE\n");
+		A_CLASS_DURATION ("Upsample Peaks");
 
 		/* the caller wants
 
@@ -710,16 +714,15 @@ AudioSource::read_peaks_with_fpp (PeakData *peaks, samplecnt_t npeaks, samplepos
 		}
 	}
 
-	DEBUG_TRACE (DEBUG::Peaks, "READPEAKS DONE\n");
 	return 0;
 }
 
 int
 AudioSource::build_peaks_from_scratch ()
 {
-	const samplecnt_t bufsize = 65536; // 256kB per disk read for mono data is about ideal
+	A_CLASS_CALL ();
 
-	DEBUG_TRACE (DEBUG::Peaks, "Building peaks from scratch\n");
+	const samplecnt_t bufsize = 65536; // 256kB per disk read for mono data is about ideal
 
 	int ret = -1;
 
@@ -781,7 +784,8 @@ AudioSource::build_peaks_from_scratch ()
 
   out:
 	if (ret) {
-		DEBUG_TRACE (DEBUG::Peaks, string_compose("Could not write peak data, attempting to remove peakfile %1\n", _peakpath));
+		A_CLASS_MSG (
+		    A_FMT ("Could not write peak data, attempting to remove peakfile : {}", _peakpath));
 		::g_unlink (_peakpath.c_str());
 	}
 
@@ -791,6 +795,8 @@ AudioSource::build_peaks_from_scratch ()
 int
 AudioSource::close_peakfile ()
 {
+	A_CLASS_CALL ();
+
 	Glib::Threads::Mutex::Lock lp (_lock);
 	if (_peakfile_fd >= 0) {
 		close (_peakfile_fd);
@@ -806,6 +812,8 @@ AudioSource::close_peakfile ()
 int
 AudioSource::prepare_for_peakfile_writes ()
 {
+	A_CLASS_CALL ();
+
 	if (_session.deletion_in_progress() || _session.peaks_cleanup_in_progres()) {
 		return -1;
 	}
@@ -820,6 +828,8 @@ AudioSource::prepare_for_peakfile_writes ()
 void
 AudioSource::done_with_peakfile_writes (bool done)
 {
+	A_CLASS_CALL ();
+
 	if (_session.deletion_in_progress() || _session.peaks_cleanup_in_progres()) {
 		if (_peakfile_fd) {
 			close (_peakfile_fd);
@@ -856,6 +866,8 @@ int
 AudioSource::compute_and_write_peaks (Sample* buf, samplecnt_t first_sample, samplecnt_t cnt,
 				      bool force, bool intermediate_peaks_ready, samplecnt_t fpp)
 {
+	A_CLASS_CALL5 (first_sample, cnt, force, intermediate_peaks_ready, fpp);
+
 	samplecnt_t to_do;
 	uint32_t  peaks_computed;
 	samplepos_t current_sample;
@@ -1003,7 +1015,7 @@ AudioSource::compute_and_write_peaks (Sample* buf, samplecnt_t first_sample, sam
 		off_t target_length = blocksize * ((first_peak_byte + blocksize + 1) / blocksize);
 
 		if (endpos < target_length) {
-			DEBUG_TRACE(DEBUG::Peaks, string_compose ("Truncating Peakfile %1\n", _peakpath));
+			A_CLASS_MSG (A_FMT ("Truncating Peakfile : {}", _peakpath));
 			if (ftruncate (_peakfile_fd, target_length)) {
 				/* error doesn't actually matter so continue on without testing */
 			}
@@ -1054,7 +1066,7 @@ AudioSource::truncate_peakfile ()
 	off_t end = lseek (_peakfile_fd, 0, SEEK_END);
 
 	if (end > _peak_byte_max) {
-		DEBUG_TRACE(DEBUG::Peaks, string_compose ("Truncating Peakfile  %1\n", _peakpath));
+		A_CLASS_MSG (A_FMT ("Truncating Peakfile : {}", _peakpath));
 		if (ftruncate (_peakfile_fd, _peak_byte_max)) {
 			error << string_compose (_("could not truncate peakfile %1 to %2 (error: %3)"),
 						 _peakpath, _peak_byte_max, errno) << endmsg;
@@ -1083,6 +1095,8 @@ AudioSource::available_peaks (double zoom_factor) const
 void
 AudioSource::mark_streaming_write_completed (const Lock& lock)
 {
+	A_CLASS_CALL ();
+
 	Glib::Threads::Mutex::Lock lm (_peaks_ready_lock);
 
 	if (_peaks_built) {
@@ -1093,6 +1107,8 @@ AudioSource::mark_streaming_write_completed (const Lock& lock)
 void
 AudioSource::allocate_working_buffers (samplecnt_t framerate)
 {
+	A_CLASS_STATIC_CALL1 (framerate);
+
 	Glib::Threads::Mutex::Lock lm (_level_buffer_lock);
 
 
@@ -1135,3 +1151,5 @@ AudioSource::ensure_buffers_for_level_locked (uint32_t level, samplecnt_t sample
 		_gain_buffers.push_back (boost::shared_array<gain_t> (new gain_t[nframes]));
 	}
 }
+
+} // namespace ARDOUR

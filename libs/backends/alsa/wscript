@@ -15,6 +15,9 @@ def options(opt):
 
 def configure(conf):
     autowaf.configure(conf)
+    if conf.is_defined('USE_EXTERNAL_LIBS'):
+        autowaf.check_pkg(conf, 'zita-resampler', uselib_store='ZITA_RESAMPLER',
+                          atleast_version='1.6.0')
 
 def build(bld):
     obj = bld(features = 'cxx cxxshlib')
@@ -27,10 +30,10 @@ def build(bld):
             'zita-alsa-pcmi.cc',
             ]
     obj.includes = ['.']
-    obj.name     = 'alsa_audiobackend'
+    obj.name     = 'ALSA_AUDIOBACKEND'
     obj.target   = 'alsa_audiobackend'
-    obj.use      = ['zita-resampler', 'libardour', 'libpbd', 'ardouralsautil']
-    obj.uselib   = 'ALSA GLIBMM XML'
+    obj.use      = 'ARDOUR ARDOUR_ALSA_UTIL ZITA_RESAMPLER'
+    obj.uselib   = 'ALSA'
     obj.install_path  = os.path.join(bld.env['LIBDIR'], 'backends')
     obj.defines = ['PACKAGE="' + I18N_PACKAGE + '"',
                    'ARDOURBACKEND_DLL_EXPORTS'

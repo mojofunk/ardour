@@ -45,6 +45,7 @@
 #include "ardour/export_filename.h"
 #include "ardour/export_format_specification.h"
 #include "ardour/export_timespan.h"
+#include "ardour/logging.h"
 #include "ardour/session_directory.h"
 #include "ardour/sndfile_helpers.h"
 
@@ -70,9 +71,12 @@ ExportGraphBuilder::~ExportGraphBuilder ()
 int
 ExportGraphBuilder::process (samplecnt_t samples, bool last_cycle)
 {
+	A_LOG_CALL2 (LOG::Export, samples, last_cycle);
+
 	assert(samples <= process_buffer_samples);
 
 	for (ChannelMap::iterator it = channels.begin(); it != channels.end(); ++it) {
+		A_LOG_DURATION(LOG::Export, "Processing Channels");
 		Sample const * process_buffer = 0;
 		it->first->read (process_buffer, samples);
 		ConstProcessContext<Sample> context(process_buffer, samples, 1);
@@ -86,6 +90,8 @@ ExportGraphBuilder::process (samplecnt_t samples, bool last_cycle)
 bool
 ExportGraphBuilder::post_process ()
 {
+	A_LOG_CALL (LOG::Export);
+
 	for (std::list<Intermediate *>::iterator it = intermediates.begin(); it != intermediates.end(); /* ++ in loop */) {
 		if ((*it)->process()) {
 			it = intermediates.erase (it);
@@ -100,6 +106,8 @@ ExportGraphBuilder::post_process ()
 unsigned
 ExportGraphBuilder::get_postprocessing_cycle_count() const
 {
+	A_LOG_CALL (LOG::Export);
+
 	unsigned max = 0;
 	for (std::list<Intermediate *>::const_iterator it = intermediates.begin(); it != intermediates.end(); ++it) {
 		max = std::max(max, (*it)->get_postprocessing_cycle_count());
@@ -110,6 +118,8 @@ ExportGraphBuilder::get_postprocessing_cycle_count() const
 void
 ExportGraphBuilder::reset ()
 {
+	A_LOG_CALL (LOG::Export);
+
 	timespan.reset();
 	channel_configs.clear ();
 	channels.clear ();
@@ -121,6 +131,8 @@ ExportGraphBuilder::reset ()
 void
 ExportGraphBuilder::cleanup (bool remove_out_files/*=false*/)
 {
+	A_LOG_CALL (LOG::Export);
+
 	ChannelConfigList::iterator iter = channel_configs.begin();
 
 	while (iter != channel_configs.end() ) {
@@ -132,12 +144,16 @@ ExportGraphBuilder::cleanup (bool remove_out_files/*=false*/)
 void
 ExportGraphBuilder::set_current_timespan (boost::shared_ptr<ExportTimespan> span)
 {
+	A_LOG_CALL (LOG::Export);
+
 	timespan = span;
 }
 
 void
 ExportGraphBuilder::add_config (FileSpec const & config, bool rt)
 {
+	A_LOG_CALL1 (LOG::Export, rt);
+
 	ExportChannelConfiguration::ChannelList const & channels =
 		config.channel_config->get_channels();
 	for(ExportChannelConfiguration::ChannelList::const_iterator it = channels.begin();
@@ -183,6 +199,8 @@ ExportGraphBuilder::add_config (FileSpec const & config, bool rt)
 
 void
 ExportGraphBuilder::get_analysis_results (AnalysisResults& results) {
+	A_LOG_CALL (LOG::Export);
+
 	for (AnalysisMap::iterator i = analysis_map.begin(); i != analysis_map.end(); ++i) {
 		ExportAnalysisPtr p = i->second->result ();
 		if (p) {
@@ -194,6 +212,8 @@ ExportGraphBuilder::get_analysis_results (AnalysisResults& results) {
 void
 ExportGraphBuilder::add_split_config (FileSpec const & config)
 {
+	A_LOG_CALL (LOG::Export);
+
 	for (ChannelConfigList::iterator it = channel_configs.begin(); it != channel_configs.end(); ++it) {
 		if (*it == config) {
 			it->add_child (config);
@@ -243,6 +263,8 @@ ExportGraphBuilder::Encoder::add_child (FileSpec const & new_config)
 void
 ExportGraphBuilder::Encoder::destroy_writer (bool delete_out_file)
 {
+	A_LOG_CALL1 (LOG::Export, delete_out_file);
+
 	if (delete_out_file ) {
 
 		if (float_writer) {
@@ -284,6 +306,8 @@ template<typename T>
 void
 ExportGraphBuilder::Encoder::init_writer (boost::shared_ptr<AudioGrapher::SndfileWriter<T> > & writer)
 {
+	A_LOG_CALL (LOG::Export);
+
 	unsigned channels = config.channel_config->get_n_chans();
 	int format = get_real_format (config);
 	config.filename->set_channel_config(config.channel_config);
@@ -296,6 +320,8 @@ ExportGraphBuilder::Encoder::init_writer (boost::shared_ptr<AudioGrapher::Sndfil
 void
 ExportGraphBuilder::Encoder::copy_files (std::string orig_path)
 {
+	A_LOG_CALL (LOG::Export);
+
 	while (filenames.size()) {
 		ExportFilenamePtr & filename = filenames.front();
 		PBD::copy_file (orig_path, filename->get_path (config.format).c_str());
@@ -308,6 +334,8 @@ ExportGraphBuilder::Encoder::copy_files (std::string orig_path)
 ExportGraphBuilder::SFC::SFC (ExportGraphBuilder &parent, FileSpec const & new_config, samplecnt_t max_samples)
 	: data_width(0)
 {
+	A_LOG_CALL (LOG::Export);
+
 	config = new_config;
 	data_width = sndfile_data_width (Encoder::get_real_format (config));
 	unsigned channels = new_config.channel_config->get_n_chans();
@@ -372,6 +400,8 @@ ExportGraphBuilder::SFC::sink ()
 void
 ExportGraphBuilder::SFC::add_child (FileSpec const & new_config)
 {
+	A_LOG_CALL (LOG::Export);
+
 	for (boost::ptr_list<Encoder>::iterator it = children.begin(); it != children.end(); ++it) {
 		if (*it == new_config) {
 			it->add_child (new_config);
@@ -394,6 +424,8 @@ ExportGraphBuilder::SFC::add_child (FileSpec const & new_config)
 void
 ExportGraphBuilder::SFC::remove_children (bool remove_out_files)
 {
+	A_LOG_CALL (LOG::Export);
+
 	boost::ptr_list<Encoder>::iterator iter = children.begin ();
 
 	while (iter != children.end() ) {
@@ -418,6 +450,8 @@ ExportGraphBuilder::Intermediate::Intermediate (ExportGraphBuilder & parent, Fil
 	, use_loudness (false)
 	, use_peak (false)
 {
+	A_LOG_CALL (LOG::Export);
+
 	std::string tmpfile_path = parent.session.session_directory().export_path();
 	tmpfile_path = Glib::build_filename(tmpfile_path, "XXXXXX");
 	std::vector<char> tmpfile_path_buf(tmpfile_path.size() + 1);
@@ -429,6 +463,8 @@ ExportGraphBuilder::Intermediate::Intermediate (ExportGraphBuilder & parent, Fil
 	max_samples_out = 4086 - (4086 % channels); // TODO good chunk size
 	use_loudness = config.format->normalize_loudness ();
 	use_peak = config.format->normalize ();
+
+	A_LOG_DATA2 (LOG::Export, use_loudness, use_peak);
 
 	buffer.reset (new AllocatingProcessContext<Sample> (max_samples_out, channels));
 
@@ -480,6 +516,8 @@ ExportGraphBuilder::Intermediate::sink ()
 void
 ExportGraphBuilder::Intermediate::add_child (FileSpec const & new_config)
 {
+	A_LOG_CALL (LOG::Export);
+
 	for (boost::ptr_list<SFC>::iterator it = children.begin(); it != children.end(); ++it) {
 		if (*it == new_config) {
 			it->add_child (new_config);
@@ -532,6 +570,8 @@ ExportGraphBuilder::Intermediate::process()
 void
 ExportGraphBuilder::Intermediate::prepare_post_processing()
 {
+	A_LOG_CALL (LOG::Export);
+
 	// called in sync rt-context
 	float gain;
 	if (use_loudness) {
@@ -554,6 +594,8 @@ ExportGraphBuilder::Intermediate::prepare_post_processing()
 void
 ExportGraphBuilder::Intermediate::start_post_processing()
 {
+	A_LOG_CALL (LOG::Export);
+
 	// called in disk-thread (when exporting in realtime)
 	tmp_file->seek (0, SEEK_SET);
 	if (!AudioEngine::instance()->freewheeling ()) {
@@ -566,6 +608,8 @@ ExportGraphBuilder::Intermediate::start_post_processing()
 ExportGraphBuilder::SRC::SRC (ExportGraphBuilder & parent, FileSpec const & new_config, samplecnt_t max_samples)
 	: parent (parent)
 {
+	A_LOG_CALL (LOG::Export);
+
 	config = new_config;
 	converter.reset (new SampleRateConverter (new_config.channel_config->get_n_chans()));
 	ExportFormatSpecification & format = *new_config.format;
@@ -584,6 +628,8 @@ ExportGraphBuilder::SRC::sink ()
 void
 ExportGraphBuilder::SRC::add_child (FileSpec const & new_config)
 {
+	A_LOG_CALL2 (LOG::Export, new_config.format->normalize(), parent._realtime);
+
 	if (new_config.format->normalize() || parent._realtime) {
 		add_child_to_list (new_config, intermediate_children);
 	} else {
@@ -594,6 +640,8 @@ ExportGraphBuilder::SRC::add_child (FileSpec const & new_config)
 void
 ExportGraphBuilder::SRC::remove_children (bool remove_out_files)
 {
+	A_LOG_CALL1 (LOG::Export, remove_out_files);
+
 	boost::ptr_list<SFC>::iterator sfc_iter = children.begin();
 
 	while (sfc_iter != children.end() ) {
@@ -616,6 +664,8 @@ template<typename T>
 void
 ExportGraphBuilder::SRC::add_child_to_list (FileSpec const & new_config, boost::ptr_list<T> & list)
 {
+	A_LOG_CALL (LOG::Export);
+
 	for (typename boost::ptr_list<T>::iterator it = list.begin(); it != list.end(); ++it) {
 		if (*it == new_config) {
 			it->add_child (new_config);
@@ -637,6 +687,8 @@ ExportGraphBuilder::SRC::operator== (FileSpec const & other_config) const
 ExportGraphBuilder::SilenceHandler::SilenceHandler (ExportGraphBuilder & parent, FileSpec const & new_config, samplecnt_t max_samples)
 	: parent (parent)
 {
+	A_LOG_CALL (LOG::Export);
+
 	config = new_config;
 	max_samples_in = max_samples;
 	samplecnt_t sample_rate = parent.session.nominal_sample_rate();
@@ -674,6 +726,8 @@ ExportGraphBuilder::SilenceHandler::sink ()
 void
 ExportGraphBuilder::SilenceHandler::add_child (FileSpec const & new_config)
 {
+	A_LOG_CALL (LOG::Export);
+
 	for (boost::ptr_list<SRC>::iterator it = children.begin(); it != children.end(); ++it) {
 		if (*it == new_config) {
 			it->add_child (new_config);
@@ -688,6 +742,8 @@ ExportGraphBuilder::SilenceHandler::add_child (FileSpec const & new_config)
 void
 ExportGraphBuilder::SilenceHandler::remove_children (bool remove_out_files)
 {
+	A_LOG_CALL (LOG::Export);
+
 	boost::ptr_list<SRC>::iterator iter = children.begin();
 
 	while (iter != children.end() ) {
@@ -713,6 +769,8 @@ ExportGraphBuilder::SilenceHandler::operator== (FileSpec const & other_config) c
 ExportGraphBuilder::ChannelConfig::ChannelConfig (ExportGraphBuilder & parent, FileSpec const & new_config, ChannelMap & channel_map)
 	: parent (parent)
 {
+	A_LOG_CALL (LOG::Export);
+
 	typedef ExportChannelConfiguration::ChannelList ChannelList;
 
 	config = new_config;
@@ -749,6 +807,8 @@ ExportGraphBuilder::ChannelConfig::ChannelConfig (ExportGraphBuilder & parent, F
 void
 ExportGraphBuilder::ChannelConfig::add_child (FileSpec const & new_config)
 {
+	A_LOG_CALL (LOG::Export);
+
 	assert (*this == new_config);
 
 	for (boost::ptr_list<SilenceHandler>::iterator it = children.begin(); it != children.end(); ++it) {
@@ -765,6 +825,8 @@ ExportGraphBuilder::ChannelConfig::add_child (FileSpec const & new_config)
 void
 ExportGraphBuilder::ChannelConfig::remove_children (bool remove_out_files)
 {
+	A_LOG_CALL (LOG::Export);
+
 	boost::ptr_list<SilenceHandler>::iterator iter = children.begin();
 
 	while(iter != children.end() ) {

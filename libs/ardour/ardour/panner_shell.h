@@ -29,6 +29,7 @@
 #include <boost/noncopyable.hpp>
 
 #include "pbd/cartesian.h"
+#include "pbd/dev_tools.h"
 
 #include "ardour/libardour_visibility.h"
 #include "ardour/types.h"
@@ -101,6 +102,8 @@ public:
 	std::string _user_selected_panner_uri;
 	std::string _panner_gui_uri;
 	bool _force_reselect;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::PannerShell);
 };
 
 } // namespace ARDOUR

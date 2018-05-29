@@ -24,7 +24,6 @@ def options(opt):
     autowaf.set_options(opt)
 
 def configure(conf):
-    conf.load('misc')
     conf.load('compiler_cxx')
     autowaf.configure(conf)
     if conf.env['WINDOWS_VST_SUPPORT'] == True and Options.options.dist_target == 'mingw':
@@ -65,20 +64,20 @@ def build(bld):
         obj.linkflags += bld.env['LDFLAGS']
         obj.target = 'ardour-vst-scanner.exe.so'
         obj.uselib = ['GIOMM', 'DL']
-        obj.use = [ 'libpbd' ]
+        obj.use = [ 'PBD' ]
         obj.cxxflags  = [ '-fPIC' ]
     else:
         obj = bld (features = 'cxx c cxxprogram')
         obj.source = ( 'scanner.cc' )
         obj.target = 'ardour-vst-scanner'
         if bld.is_defined('WINDOWS_VST_SUPPORT'):
-            bld (features = 'c', name='vstwin', source='vstwin.c', uselib = 'GIOMM', includes  = [ '../pbd/', '../ardour/', '.' ])
+            bld (features = 'c', name='VSTWIN', source='vstwin.c', uselib = 'GIOMM', includes  = [ '../pbd/', '../ardour/', '.' ])
             obj.uselib = ['GIOMM', 'DL', 'GDI32']
             obj.linkflags = ['-mwindows']
-            obj.use = [ 'libpbd', 'vstwin' ]
+            obj.use = [ 'PBD', 'VSTWIN' ]
         else:
             obj.uselib = ['GIOMM', 'DL']
-            obj.use = [ 'libpbd' ]
+            obj.use = [ 'PBD' ]
 
     obj.includes  = [ '../pbd/', '../ardour/', '.' ]
     obj.defines = [

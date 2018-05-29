@@ -2,20 +2,18 @@
 
 SCRIPTPATH=$( cd $(dirname $0) ; pwd -P )
 TOP="$SCRIPTPATH/../.."
-LIBS_DIR="$TOP/build/libs"
+PBD_LIBS_DIR=$TOP/build/libs/pbd
 
-export LD_LIBRARY_PATH=$LIBS_DIR/audiographer:$LIBS_DIR/surfaces:$LIBS_DIR/surfaces/control_protocol:$LIBS_DIR/ardour:$LIBS_DIR/midi++2:$LIBS_DIR/pbd:$LIBS_DIR/gtkmm2ext:$LIBS_DIR/appleutility:$LIBS_DIR/evoral:$LIBS_DIR/evoral/src/libsmf:$LD_LIBRARY_PATH
+. $TOP/build/gtk2_ardour/ardev_common_waf.sh
 
-export PBD_TEST_PATH=$TOP/libs/pbd/test
-
-cd $LIBS_DIR/pbd
+cd $PBD_LIBS_DIR
 
 if [ "$1" == "--debug" ]
 then
-        gdb ./run-tests
+        gdb ./run-tests $*
 elif [ "$1" == "--valgrind" ]
 then
         valgrind --tool="memcheck" ./run-tests
 else
-        ./run-tests
+        ./run-tests $*
 fi

@@ -27,7 +27,6 @@
 #include <glibmm/fileutils.h>
 #include <glibmm/miscutils.h>
 
-#include "pbd/debug.h"
 #include "pbd/stateful.h"
 #include "pbd/types_convert.h"
 #include "pbd/property_list.h"
@@ -35,12 +34,15 @@
 #include "pbd/destructible.h"
 #include "pbd/xml++.h"
 #include "pbd/error.h"
+#include "pbd/logging.h"
 
 #include "pbd/i18n.h"
 
 using namespace std;
 
 namespace PBD {
+
+A_DEFINE_CLASS_MEMBERS (PBD::Stateful);
 
 int Stateful::current_state_version = 0;
 int Stateful::loading_state_version = 0;
@@ -113,6 +115,8 @@ Stateful::save_extra_xml (const XMLNode& node)
 void
 Stateful::add_instant_xml (XMLNode& node, const std::string& directory_path)
 {
+	A_CLASS_CALL1 (directory_path);
+
 	if (!Glib::file_test (directory_path, Glib::FILE_TEST_IS_DIR)) {
 		if (g_mkdir_with_parents (directory_path.c_str(), 0755) != 0) {
 			error << string_compose(_("Error: could not create directory %1"), directory_path) << endmsg;
@@ -227,29 +231,27 @@ Stateful::set_values (XMLNode const & node)
 PropertyChange
 Stateful::apply_changes (const PropertyList& property_list)
 {
+	A_CLASS_CALL1 (property_list.size ());
+
 	PropertyChange c;
 	PropertyList::const_iterator p;
 
-	DEBUG_TRACE (DEBUG::Stateful, string_compose ("Stateful %1 setting properties from list of %2\n", this, property_list.size()));
-
 	for (PropertyList::const_iterator pp = property_list.begin(); pp != property_list.end(); ++pp) {
-		DEBUG_TRACE (DEBUG::Stateful, string_compose ("in plist: %1\n", pp->second->property_name()));
+		A_CLASS_MSG (A_FMT ("in plist: {}", pp->second->property_name ()));
 	}
 
 	for (PropertyList::const_iterator i = property_list.begin(); i != property_list.end(); ++i) {
 		if ((p = _properties->find (i->first)) != _properties->end()) {
 
-			DEBUG_TRACE (
-				DEBUG::Stateful,
-				string_compose ("actually setting property %1 using %2\n", p->second->property_name(), i->second->property_name())
-				);
+			A_CLASS_MSG (A_FMT ("Setting property {} using {}", p->second->property_name (),
+			                    i->second->property_name ()));
 
 			if (apply_changes (*i->second)) {
 				c.add (i->first);
 			}
 		} else {
-			DEBUG_TRACE (DEBUG::Stateful, string_compose ("passed in property %1 not found in own property list\n",
-			                                              i->second->property_name()));
+			A_CLASS_MSG (A_FMT ("passed in property {} not found in own property list",
+			                    i->second->property_name ()));
 		}
 	}
 

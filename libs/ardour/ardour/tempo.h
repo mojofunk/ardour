@@ -26,6 +26,7 @@
 #include <cmath>
 #include <glibmm/threads.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/undo.h"
 #include "pbd/enum_convert.h"
 
@@ -97,6 +98,9 @@ class LIBARDOUR_API Tempo {
 	double _note_types_per_minute;
 	double _note_type;
 	double _end_note_types_per_minute;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::Tempo);
 };
 
 /** Meter, or time signature (beats per bar, and which note type is a beat). */
@@ -125,6 +129,9 @@ class LIBARDOUR_API Meter {
 	    a quarter (crotchet) note, 8.0 is an eighth (quaver) note, etc.
 	*/
 	double _note_type;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::Meter);
 };
 
 /** A section of timeline with a certain Tempo or Meter. */
@@ -174,6 +181,9 @@ private:
 	PositionLockStyle  _position_lock_style;
 	const bool         _is_tempo;
 	samplecnt_t         _sample_rate;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::MetricSection);
 };
 
 /** A section of timeline with a certain Meter. */
@@ -200,6 +210,9 @@ class LIBARDOUR_API MeterSection : public MetricSection, public Meter {
 private:
 	Timecode::BBT_Time _bbt;
 	double _beat;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::MeterSection);
 };
 
 /** A section of timeline with a certain Tempo. */
@@ -282,6 +295,9 @@ class LIBARDOUR_API TempoSection : public MetricSection, public Tempo {
 	bool _locked_to_meter;
 	bool _clamped;
 	Timecode::BBT_Time _legacy_bbt;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::TempoSection);
 };
 
 typedef std::list<MetricSection*> Metrics;
@@ -322,6 +338,9 @@ class LIBARDOUR_API TempoMetric {
 	const Tempo*       _tempo;
 	double             _minute;
 	double             _pulse;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::TempoMetric);
 };
 
 /** Tempo Map - mapping of timecode to musical time.
@@ -616,6 +635,9 @@ private:
 
 	TempoSection* copy_metrics_and_point (const Metrics& metrics, Metrics& copy, TempoSection* section) const;
 	MeterSection* copy_metrics_and_point (const Metrics& metrics, Metrics& copy, MeterSection* section) const;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::TempoMap);
 };
 
 }; /* namespace ARDOUR */

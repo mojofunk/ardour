@@ -29,7 +29,6 @@
 #include <gdkmm/general.h>
 
 #include "pbd/base_ui.h"
-#include "pbd/compose.h"
 #include "pbd/convert.h"
 #include "pbd/signals.h"
 #include "pbd/stacktrace.h"
@@ -50,6 +49,7 @@
 
 #include "waveview/wave_view.h"
 #include "waveview/wave_view_private.h"
+#include "waveview/wave_view_logging_macros.h"
 
 #ifdef __APPLE__
 #define Rect ArdourCanvas::Rect
@@ -61,6 +61,8 @@ using namespace ARDOUR;
 using namespace Gtkmm2ext;
 using namespace ArdourCanvas;
 using namespace ArdourWaveView;
+
+A_DEFINE_CLASS_MEMBERS (ArdourWaveView::WaveView);
 
 double WaveView::_global_gradient_depth = 0.6;
 bool WaveView::_global_logscaled = false;
@@ -89,6 +91,7 @@ WaveView::WaveView (Canvas* c, boost::shared_ptr<ARDOUR::AudioRegion> region)
 	, _draw_image_in_gui_thread (false)
 	, _always_draw_image_in_gui_thread (false)
 {
+	A_CLASS_CALL1 (debug_name());
 	init ();
 }
 
@@ -102,6 +105,7 @@ WaveView::WaveView (Item* parent, boost::shared_ptr<ARDOUR::AudioRegion> region)
 	, _draw_image_in_gui_thread (false)
 	, _always_draw_image_in_gui_thread (false)
 {
+	A_CLASS_CALL1 (debug_name());
 	init ();
 }
 
@@ -123,6 +127,8 @@ WaveView::init ()
 
 WaveView::~WaveView ()
 {
+	A_CLASS_CALL1 (debug_name());
+
 #ifdef ENABLE_THREADED_WAVEFORM_RENDERING
 	WaveViewThreads::deinitialize ();
 #endif
@@ -145,6 +151,8 @@ WaveView::set_always_get_image_in_thread (bool yn)
 void
 WaveView::handle_visual_property_change ()
 {
+	A_CLASS_CALL1 (debug_name());
+
 	bool changed = false;
 
 	if (!_shape_independent && (_props->shape != global_shape())) {
@@ -171,6 +179,8 @@ WaveView::handle_visual_property_change ()
 void
 WaveView::handle_clip_level_change ()
 {
+	A_CLASS_CALL1 (debug_name());
+
 	begin_visual_change ();
 	end_visual_change ();
 }
@@ -178,6 +188,8 @@ WaveView::handle_clip_level_change ()
 void
 WaveView::set_fill_color (Color c)
 {
+	A_CLASS_CALL1 (debug_name());
+
 	if (c != _fill_color) {
 		begin_visual_change ();
 		Fill::set_fill_color (c);
@@ -189,6 +201,8 @@ WaveView::set_fill_color (Color c)
 void
 WaveView::set_outline_color (Color c)
 {
+	A_CLASS_CALL1 (debug_name());
+
 	if (c != _outline_color) {
 		begin_visual_change ();
 		Outline::set_outline_color (c);
@@ -200,6 +214,8 @@ WaveView::set_outline_color (Color c)
 void
 WaveView::set_samples_per_pixel (double samples_per_pixel)
 {
+	A_CLASS_CALL1 (debug_name());
+
 	if (_props->samples_per_pixel != samples_per_pixel) {
 		begin_change ();
 
@@ -235,6 +251,8 @@ WaveView::set_clip_level (double dB)
 boost::shared_ptr<WaveViewDrawRequest>
 WaveView::create_draw_request (WaveViewProperties const& props) const
 {
+	A_CLASS_CALL1 (debug_name());
+
 	assert (props.is_valid());
 
 	boost::shared_ptr<WaveViewDrawRequest> request (new WaveViewDrawRequest);
@@ -246,8 +264,14 @@ WaveView::create_draw_request (WaveViewProperties const& props) const
 void
 WaveView::prepare_for_render (Rect const& area) const
 {
+	A_CLASS_CALL5 (debug_name(), area.x0, area.y0, area.x1, area.y1);
+
+	if (!_image) {
+		A_CLASS_MSG (A_FMT ("{}: No current Image", debug_name ()));
+	}
+
 	if (draw_image_in_gui_thread()) {
-		// Drawing image in GUI thread in WaveView::render
+		A_CLASS_MSG ("Drawing image in GUI thread in WaveView::render");
 		return;
 	}
 
@@ -262,20 +286,26 @@ WaveView::prepare_for_render (Rect const& area) const
 	double const image_start_pixel_offset = draw_rect.x0 - self_rect.x0;
 	double const image_end_pixel_offset = draw_rect.x1 - self_rect.x0;
 
+	A_CLASS_DATA2 (image_start_pixel_offset, image_end_pixel_offset);
+
 	WaveViewProperties required_props = *_props;
 
 	required_props.set_sample_positions_from_pixel_offsets (image_start_pixel_offset,
 	                                                        image_end_pixel_offset);
 
 	if (!required_props.is_valid ()) {
+		LOG_PROPERTIES (required_props);
+		A_CLASS_MSG ("Invalid WaveView properties, not creating DrawRequest");
 		return;
 	}
 
 	if (_image) {
 		if (_image->props.is_equivalent (required_props)) {
+			A_CLASS_MSG (A_FMT ("{}: Image contains sample area required", debug_name ()));
 			return;
 		} else {
-			// Image does not contain sample area required
+			A_CLASS_MSG (A_FMT ("{}: Image does not contain sample area required", debug_name ()));
+			LOG_PROPERTY_DIFF (required_props, _image->props);
 		}
 	}
 
@@ -309,12 +339,14 @@ WaveView::get_item_and_draw_rect_in_window_coords (Rect const& canvas_rect, Rect
 	double const width = region_length() / _props->samples_per_pixel;
 	item_rect = item_to_window (Rect (0.0, 0.0, width, _props->height));
 
+	A_CLASS_DATA5 (debug_name (), item_rect.x0, item_rect.y0, item_rect.x1, item_rect.y1);
+
 	/* Now lets get the intersection with the area we've been asked to draw */
 
 	draw_rect = item_rect.intersection (canvas_rect);
 
 	if (!draw_rect) {
-		// No intersection with drawing area
+		A_CLASS_MSG ("No intersection with drawing area");
 		return false;
 	}
 
@@ -327,20 +359,26 @@ WaveView::get_item_and_draw_rect_in_window_coords (Rect const& canvas_rect, Rect
 	draw_rect.x0 = floor (draw_rect.x0);
 	draw_rect.x1 = floor (draw_rect.x1);
 
+	A_CLASS_DATA5 (debug_name (), draw_rect.x0, draw_rect.y0, draw_rect.x1, draw_rect.y1);
+
 	return true;
 }
 
 void
 WaveView::queue_draw_request (boost::shared_ptr<WaveViewDrawRequest> const& request) const
 {
+	A_CLASS_CALL1 (debug_name());
+
 	// Don't enqueue any requests without a thread to dequeue them.
 	assert (WaveViewThreads::enabled());
 
 	if (!request || !request->is_valid()) {
+		A_CLASS_MSG ("Invalid DrawRequest, dropping");
 		return;
 	}
 
 	if (current_request) {
+		A_CLASS_MSG (A_FMT ("{}: Cancelling current request", debug_name ()));
 		current_request->cancel ();
 	}
 
@@ -361,6 +399,8 @@ WaveView::queue_draw_request (boost::shared_ptr<WaveViewDrawRequest> const& requ
 
 		// Add it to the cache so that other WaveViews can refer to the same image
 		get_cache_group()->add_image (current_request->image);
+
+		LOG_PROPERTIES (current_request->image->props);
 
 		WaveViewThreads::enqueue_draw_request (current_request);
 	}
@@ -430,6 +470,8 @@ WaveView::y_extent (double s, Shape const shape, double const height)
 void
 WaveView::draw_absent_image (Cairo::RefPtr<Cairo::ImageSurface>& image, PeakData* peaks, int n_peaks)
 {
+	A_CLASS_STATIC_CALL ();
+
 	const double height = image->get_height();
 
 	Cairo::RefPtr<Cairo::ImageSurface> stripe = Cairo::ImageSurface::create (Cairo::FORMAT_A8, n_peaks, height);
@@ -851,6 +893,8 @@ WaveView::draw_image (Cairo::RefPtr<Cairo::ImageSurface>& image, PeakData* peaks
 samplecnt_t
 WaveView::optimal_image_width_samples () const
 {
+	A_CLASS_CALL1 (debug_name());
+
 	/* Compute how wide the image should be in samples.
 	 *
 	 * The resulting image should be wider than the canvas width so that the
@@ -925,21 +969,31 @@ WaveView::set_image (boost::shared_ptr<WaveViewImage> img) const
 void
 WaveView::process_draw_request (boost::shared_ptr<WaveViewDrawRequest> req)
 {
+	A_CLASS_STATIC_CALL ();
+
 	boost::shared_ptr<const ARDOUR::AudioRegion> region = req->image->region.lock();
 
 	if (!region) {
+		A_CLASS_STATIC_MSG ("Invalid region, aborting draw request");
 		return;
 	}
 
+	A_CLASS_STATIC_DATA2 (region->name (), req->image->props.channel);
+
 	if (req->stopped()) {
+		A_CLASS_STATIC_MSG (A_FMT ("{}: Request stopped before reading peaks", region->name ()));
 		return;
 	}
 
 	WaveViewProperties const& props = req->image->props;
 
+	LOG_PROPERTIES (props);
+
 	const int n_peaks = props.get_width_pixels ();
 
 	assert (n_peaks > 0 && n_peaks < 32767);
+
+	A_CLASS_STATIC_MSG (A_FMT ("{}: Allocating PeakData array of size: {}", region->name (), n_peaks));
 
 	boost::scoped_array<ARDOUR::PeakData> peaks (new PeakData[n_peaks]);
 
@@ -953,6 +1007,7 @@ WaveView::process_draw_request (boost::shared_ptr<WaveViewDrawRequest> req)
 	                        props.get_length_samples (), props.channel, props.samples_per_pixel);
 
 	if (req->stopped()) {
+		A_CLASS_STATIC_MSG (A_FMT ("{}: Request stopped after reading peaks", region->name ()));
 		return;
 	}
 
@@ -976,6 +1031,8 @@ WaveView::process_draw_request (boost::shared_ptr<WaveViewDrawRequest> req)
 		const double amplitude_above_axis = props.amplitude_above_axis;
 
 		if (amplitude_above_axis != 1.0) {
+			A_CLASS_STATIC_MSG (
+			    A_FMT ("Modifying peaks by amplitude_above_axis: {}", amplitude_above_axis));
 			for (samplecnt_t i = 0; i < n_peaks; ++i) {
 				peaks[i].max *= amplitude_above_axis;
 				peaks[i].min *= amplitude_above_axis;
@@ -989,6 +1046,7 @@ WaveView::process_draw_request (boost::shared_ptr<WaveViewDrawRequest> req)
 	}
 
 	if (req->stopped ()) {
+		A_CLASS_STATIC_MSG (A_FMT ("{}: Request stopped after drawing complete", region->name ()));
 		return;
 	}
 
@@ -1007,6 +1065,8 @@ WaveView::draw_image_in_gui_thread () const
 void
 WaveView::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) const
 {
+	A_CLASS_CALL5 (debug_name(), area.x0, area.y0, area.x1, area.y1);
+
 	assert (_props->samples_per_pixel != 0);
 
 	if (!_region) { // assert?
@@ -1023,6 +1083,8 @@ WaveView::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) cons
 
 	double const image_start_pixel_offset = draw.x0 - self.x0;
 	double const image_end_pixel_offset = draw.x1 - self.x0;
+
+	A_CLASS_DATA2 (image_start_pixel_offset, image_end_pixel_offset);
 
 	if (image_start_pixel_offset == image_end_pixel_offset) {
 		// this may happen if zoomed very far out with a small region
@@ -1046,36 +1108,47 @@ WaveView::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) cons
 			current_request->cancel ();
 			current_request.reset ();
 		} else if (current_request->finished ()) {
+			A_CLASS_MSG (
+			    A_FMT ("{}: Current request finished {}", debug_name (), current_request->finished ()));
 			image_to_draw = current_request->image;
 			current_request.reset ();
 		}
 	} else {
-		// No current Request
+		A_CLASS_MSG (A_FMT ("{}: No current Request", debug_name ()));
+	}
+
+	if (!_image) {
+		A_CLASS_MSG (A_FMT ("{}: No current Image", debug_name ()));
 	}
 
 	if (!image_to_draw && _image) {
 		if (_image->props.is_equivalent (required_props)) {
-			// Image contains required properties
+
+			A_CLASS_MSG (A_FMT ("{}: Image contains required properties", debug_name ()));
+
 			image_to_draw = _image;
 		} else {
-			// Image does not contain properties required
+			A_CLASS_MSG (A_FMT ("{}: Image does not contain properties required", debug_name ()));
+			LOG_PROPERTY_DIFF (required_props, _image->props);
 		}
 	}
 
 	if (!image_to_draw) {
 		image_to_draw = get_cache_group ()->lookup_image (required_props);
 		if (image_to_draw && !image_to_draw->finished ()) {
-			// Found equivalent but unfinished Image in cache
+			A_CLASS_MSG ("Found equivalent but unfinished Image in cache");
 			image_to_draw.reset ();
 		}
 	}
 
 	if (!image_to_draw) {
-		// No existing image to draw
+		A_CLASS_MSG (A_FMT ("{}: No existing image to draw", debug_name ()));
+		LOG_PROPERTIES (required_props);
 
 		boost::shared_ptr<WaveViewDrawRequest> const request = create_draw_request (required_props);
 
 		if (draw_image_in_gui_thread ()) {
+			A_CLASS_MSG (A_FMT ("{}: Drawing image in GUI thread", name));
 			// now that we have to draw something, draw more than required.
 			request->image->props.set_width_samples (optimal_image_width_samples ());
 
@@ -1089,10 +1162,11 @@ WaveView::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) cons
 				image_to_draw = current_request->image;
 				current_request.reset ();
 			} else if (_canvas->get_microseconds_since_render_start () < 15000) {
+				A_CLASS_MSG (A_FMT ("{}: Cancelling current request", debug_name ()));
 				current_request->cancel ();
 				current_request.reset ();
 
-				// Drawing image in GUI thread as we have time
+				A_CLASS_MSG (A_FMT ("{}: Drawing image in GUI thread as we have time", debug_name ()));
 
 				// now that we have to draw something, draw more than required.
 				request->image->props.set_width_samples (optimal_image_width_samples ());
@@ -1101,11 +1175,13 @@ WaveView::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) cons
 
 				image_to_draw = request->image;
 			} else {
-				// Waiting for current request to finish
+				A_CLASS_MSG (A_FMT ("{}: Waiting for current request to finish", debug_name ()));
 				redraw ();
 				return;
 			}
 		} else {
+			A_CLASS_MSG (A_FMT ("{}: Queue DrawRequest and redraw", debug_name ()));
+
 			// Defer the rendering to another thread or perhaps render pass if
 			// a thread cannot generate it in time.
 			queue_draw_request (request);
@@ -1136,6 +1212,8 @@ WaveView::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) cons
 
 	double draw_width_pixels = draw_end_pixel - draw_start_pixel;
 
+	A_CLASS_DATA3 (draw_start_pixel, draw_end_pixel, draw_width_pixels);
+
 	if (image_to_draw != _image) {
 
 		/* the image is guaranteed to start at or before
@@ -1149,6 +1227,8 @@ WaveView::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) cons
 
 		set_image (image_to_draw);
 	}
+
+	A_CLASS_DATA1 (draw_width_pixels);
 
 	context->rectangle (draw_start_pixel, draw.y0, draw_width_pixels, draw.height());
 
@@ -1188,6 +1268,8 @@ WaveView::compute_bounding_box () const
 void
 WaveView::set_height (Distance height)
 {
+	A_CLASS_CALL1 (height);
+
 	if (_props->height != height) {
 		begin_change ();
 
@@ -1202,6 +1284,8 @@ WaveView::set_height (Distance height)
 void
 WaveView::set_channel (int channel)
 {
+	A_CLASS_CALL2 (debug_name(), channel);
+
 	if (_props->channel != channel) {
 		begin_change ();
 		_props->channel = channel;
@@ -1214,6 +1298,8 @@ WaveView::set_channel (int channel)
 void
 WaveView::set_logscaled (bool yn)
 {
+	A_CLASS_CALL2 (debug_name(), yn);
+
 	if (_props->logscaled != yn) {
 		begin_visual_change ();
 		_props->logscaled = yn;
@@ -1236,6 +1322,8 @@ WaveView::gradient_depth () const
 void
 WaveView::gain_changed ()
 {
+	A_CLASS_CALL1 (debug_name());
+
 	begin_visual_change ();
 	_props->amplitude = _region->scale_amplitude ();
 	_draw_image_in_gui_thread = true;
@@ -1245,6 +1333,8 @@ WaveView::gain_changed ()
 void
 WaveView::set_zero_color (Color c)
 {
+	A_CLASS_CALL1 (debug_name());
+
 	if (_props->zero_color != c) {
 		begin_visual_change ();
 		_props->zero_color = c;
@@ -1255,6 +1345,8 @@ WaveView::set_zero_color (Color c)
 void
 WaveView::set_clip_color (Color c)
 {
+	A_CLASS_CALL1 (debug_name());
+
 	if (_props->clip_color != c) {
 		begin_visual_change ();
 		_props->clip_color = c;
@@ -1265,6 +1357,8 @@ WaveView::set_clip_color (Color c)
 void
 WaveView::set_show_zero_line (bool yn)
 {
+	A_CLASS_CALL1 (debug_name());
+
 	if (_props->show_zero != yn) {
 		begin_visual_change ();
 		_props->show_zero = yn;
@@ -1281,6 +1375,8 @@ WaveView::show_zero_line () const
 void
 WaveView::set_shape (Shape s)
 {
+	A_CLASS_CALL1 (debug_name());
+
 	if (_props->shape != s) {
 		begin_visual_change ();
 		_props->shape = s;
@@ -1291,6 +1387,8 @@ WaveView::set_shape (Shape s)
 void
 WaveView::set_amplitude_above_axis (double a)
 {
+	A_CLASS_CALL1 (debug_name());
+
 	if (fabs (_props->amplitude_above_axis - a) > 0.01) {
 		begin_visual_change ();
 		_props->amplitude_above_axis = a;
@@ -1308,6 +1406,8 @@ WaveView::amplitude_above_axis () const
 void
 WaveView::set_global_shape (Shape s)
 {
+	A_CLASS_STATIC_CALL ();
+
 	if (_global_shape != s) {
 		_global_shape = s;
 		WaveViewCache::get_instance()->clear_cache ();
@@ -1318,6 +1418,8 @@ WaveView::set_global_shape (Shape s)
 void
 WaveView::set_global_logscaled (bool yn)
 {
+	A_CLASS_STATIC_CALL ();
+
 	if (_global_logscaled != yn) {
 		_global_logscaled = yn;
 		WaveViewCache::get_instance()->clear_cache ();
@@ -1340,6 +1442,8 @@ WaveView::region_end() const
 void
 WaveView::set_region_start (sampleoffset_t start)
 {
+	A_CLASS_CALL1 (debug_name());
+
 	if (!_region) {
 		return;
 	}
@@ -1357,6 +1461,8 @@ WaveView::set_region_start (sampleoffset_t start)
 void
 WaveView::region_resized ()
 {
+	A_CLASS_CALL1 (debug_name());
+
 	/* Called when the region start or end (thus length) has changed.
 	*/
 

@@ -51,8 +51,8 @@
 
 #include "pbd/compose.h"
 #include "pbd/file_utils.h"
-#include "pbd/debug.h"
 #include "pbd/error.h"
+#include "pbd/logging.h"
 #include "pbd/pathexpand.h"
 #include "pbd/scoped_file_descriptor.h"
 #include "pbd/stl_delete.h"
@@ -63,6 +63,10 @@ using namespace std;
 
 namespace PBD {
 
+namespace LOG {
+A_DEFINE_LOG_CATEGORY (FileUtils, "PBD::FileUtils");
+}
+
 static void
 run_functor_for_paths (vector<string>& result,
                        const Searchpath& paths,
@@ -72,10 +76,13 @@ run_functor_for_paths (vector<string>& result,
                        bool pass_fullpath, bool return_fullpath,
                        bool recurse)
 {
+	A_LOG_CALL5 (LOG::FileUtils, paths.to_string (), pass_files_only, pass_fullpath,
+	                      return_fullpath, recurse);
+
 	for (vector<string>::const_iterator i = paths.begin(); i != paths.end(); ++i) {
 		string expanded_path = path_expand (*i);
-		DEBUG_TRACE (DEBUG::FileUtils,
-				string_compose("Find files in expanded path: %1\n", expanded_path));
+
+		A_LOG_DATA1 (LOG::FileUtils, expanded_path);
 
 		if (!Glib::file_test (expanded_path, Glib::FILE_TEST_IS_DIR)) continue;
 
@@ -91,9 +98,6 @@ run_functor_for_paths (vector<string>& result,
 				bool is_dir = Glib::file_test (fullpath, Glib::FILE_TEST_IS_DIR);
 
 				if (is_dir && recurse) {
-					DEBUG_TRACE (DEBUG::FileUtils,
-							string_compose("Descending into directory:  %1\n",
-								fullpath));
 					run_functor_for_paths (result, fullpath, functor, arg, pass_files_only,
 					                       pass_fullpath, return_fullpath, recurse);
 				}
@@ -110,15 +114,11 @@ run_functor_for_paths (vector<string>& result,
 					functor_str = basename;
 				}
 
-				DEBUG_TRACE (DEBUG::FileUtils,
-						string_compose("Run Functor using string: %1\n", functor_str));
-
 				if (!functor(functor_str, arg)) {
 					continue;
 				}
 
-				DEBUG_TRACE (DEBUG::FileUtils,
-						string_compose("Found file %1 matching functor\n", functor_str));
+				A_LOG_MSG (LOG::FileUtils, A_FMT ("Found matching file {}", functor_str));
 
 				if (return_fullpath) {
 					result.push_back(fullpath);
@@ -188,28 +188,26 @@ find_file (const Searchpath& search_path,
            const string& filename,
            std::string& result)
 {
+	A_LOG_CALL (LOG::FileUtils);
+
 	vector<std::string> tmp;
 
 	find_files_matching_pattern (tmp, search_path, filename);
 
 	if (tmp.size() == 0) {
-		DEBUG_TRACE (DEBUG::FileUtils,
-		             string_compose("No file matching %1 found in Path: %2\n",
-		             filename, search_path.to_string()));
+		A_LOG_MSG (LOG::FileUtils,
+		           A_FMT ("No file matching {} found in path: {}", filename, search_path.to_string ()));
 		return false;
 	}
 
 	if (tmp.size() != 1) {
-		DEBUG_TRACE (DEBUG::FileUtils,
-		             string_compose("Found more that one file matching %1 in Path: %2\n",
-		             filename, search_path.to_string()));
+		A_LOG_MSG (LOG::FileUtils, A_FMT ("Found more that one file matching {} in Path: {}", filename,
+		                                  search_path.to_string ()));
 	}
 
 	result = tmp.front();
 
-	DEBUG_TRACE (DEBUG::FileUtils,
-	             string_compose("Found file %1 in Path: %2\n",
-	             filename, search_path.to_string()));
+	A_LOG_MSG (LOG::FileUtils, A_FMT ("Found file {} in Path: {}", filename, search_path.to_string ()));
 
 	return true;
 }
@@ -228,6 +226,8 @@ find_files_matching_regex (vector<string>& result,
                            const std::string& regexp,
                            bool recurse)
 {
+	A_LOG_CALL (LOG::FileUtils);
+
 	int err;
 	char msg[256];
 	regex_t compiled_pattern;
@@ -245,9 +245,6 @@ find_files_matching_regex (vector<string>& result,
 
 		return;
 	}
-
-	DEBUG_TRACE (DEBUG::FileUtils,
-			string_compose("Matching files using regexp: %1\n", regexp));
 
 	find_files_matching_filter (result, paths,
 	                            regexp_filter, &compiled_pattern,
@@ -281,6 +278,8 @@ find_files_matching_filter (vector<string>& result,
 bool
 copy_file(const std::string & from_path, const std::string & to_path)
 {
+	A_LOG_CALL2 (LOG::FileUtils, from_path, to_path);
+
 	if (!Glib::file_test (from_path, Glib::FILE_TEST_EXISTS)) return false;
 
 	PBD::ScopedFileDescriptor fd_from (g_open (from_path.c_str(), O_RDONLY, 0444));
@@ -318,6 +317,8 @@ copy_file(const std::string & from_path, const std::string & to_path)
 void
 copy_files(const std::string & from_path, const std::string & to_dir)
 {
+	A_LOG_CALL2 (LOG::FileUtils, from_path, to_dir);
+
 	vector<string> files;
 	find_files_matching_filter (files, from_path, accept_all_files, 0, true, false);
 
@@ -331,6 +332,8 @@ copy_files(const std::string & from_path, const std::string & to_dir)
 void
 copy_recurse(const std::string & from_path, const std::string & to_dir)
 {
+	A_LOG_CALL2 (LOG::FileUtils, from_path, to_dir);
+
 	vector<string> files;
 	find_files_matching_filter (files, from_path, accept_all_files, 0, false, true, true);
 
@@ -346,6 +349,8 @@ copy_recurse(const std::string & from_path, const std::string & to_dir)
 bool
 touch_file (const std::string& path)
 {
+	A_LOG_CALL1 (LOG::FileUtils, path);
+
 	int fd = g_open (path.c_str(), O_RDWR|O_CREAT, 0660);
 	if (fd >= 0) {
 		close (fd);
@@ -364,6 +369,8 @@ get_absolute_path (const std::string & p)
 string
 canonical_path (const std::string& path)
 {
+	A_LOG_CALL1 (LOG::FileUtils, path);
+
 #ifdef PLATFORM_WINDOWS
 	wchar_t resolved_wpath[_MAX_PATH];
 
@@ -373,16 +380,12 @@ canonical_path (const std::string& path)
 	wchar_t* wfilepath = (wchar_t*)g_utf8_to_utf16 (path.c_str(), -1, NULL, NULL, NULL);
 
 	if (wfilepath == NULL) {
-		DEBUG_TRACE (
-		    DEBUG::FileUtils,
-		    string_compose ("PBD::canonical_path: Unable to convert path from utf8 to utf16 : %1\n",
-		                    path));
+		A_LOG_MSG (LOG::FileUtils, A_FMT ("Unable to convert path from utf8 to utf16 : {}", path));
 		return path;
 	}
 
 	if (_wfullpath (resolved_wpath, wfilepath, _MAX_PATH) == NULL) {
-		DEBUG_TRACE (DEBUG::FileUtils,
-		             string_compose ("PBD::canonical_path: Unable to resolve %1\n", wfilepath));
+		A_LOG_MSG (LOG::FileUtils, A_FMT ("Unable to resolve {}", path));
 		return path;
 	}
 
@@ -390,10 +393,7 @@ canonical_path (const std::string& path)
 	    g_utf16_to_utf8 (reinterpret_cast<const gunichar2*>(resolved_wpath), -1, NULL, NULL, NULL);
 
 	if (resolved_utf8_path == NULL) {
-		DEBUG_TRACE (
-		    DEBUG::FileUtils,
-		    string_compose ("PBD::canonical_path: Unable to convert path from utf16 to utf8 : %1\n",
-		                    resolved_wpath));
+		A_LOG_MSG (LOG::FileUtils, A_FMT ("Unable to convert path from utf16 to utf8 : {}", path));
 		return path;
 	}
 
@@ -408,13 +408,10 @@ canonical_path (const std::string& path)
 	char buf[PATH_MAX+1];
 
 	if (realpath (path.c_str(), buf) == NULL) {
-		DEBUG_TRACE (DEBUG::FileUtils,
-		             string_compose ("PBD::canonical_path: Unable to resolve %1: %2\n", path,
-		                             g_strerror (errno)));
+		A_LOG_MSG (LOG::FileUtils, A_FMT ("Unable to resolve {} : {}", path, g_strerror (errno)));
 		return path;
 	}
-	DEBUG_TRACE (DEBUG::FileUtils,
-	             string_compose ("PBD::canonical_path %1 resolved to: %2\n", path, string (buf)));
+	A_LOG_MSG (LOG::FileUtils, A_FMT ("{} resolved to: {}", path, string (buf)));
 
 	return string (buf);
 #endif
@@ -492,6 +489,8 @@ int
 remove_directory_internal (const string& dir, size_t* size, vector<string>* paths,
                            bool just_remove_files)
 {
+	A_LOG_CALL2 (LOG::FileUtils, dir, just_remove_files);
+
 	vector<string> tmp_paths;
 	GStatBuf statbuf;
 	int ret = 0;
@@ -506,7 +505,7 @@ remove_directory_internal (const string& dir, size_t* size, vector<string>* path
 		}
 
 		if (::g_remove (i->c_str())) {
-			error << string_compose (_("cannot remove path %1 (%2)"), *i, strerror (errno))
+			error << string_compose (_("cannot remove path %1 (%2)"), *i, g_strerror (errno))
 				<< endmsg;
 			ret = 1;
 			continue;

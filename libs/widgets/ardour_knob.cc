@@ -48,6 +48,8 @@ using std::max;
 using std::min;
 using namespace std;
 
+A_DEFINE_CLASS_AS_MEMBERS (ArdourKnob, "ArdourWidgets::ArdourKnob");
+
 ArdourKnob::Element ArdourKnob::default_elements = ArdourKnob::Element (ArdourKnob::Arc);
 
 ArdourKnob::ArdourKnob (Element e, Flags flags)
@@ -75,6 +77,8 @@ ArdourKnob::~ArdourKnob()
 void
 ArdourKnob::render (Cairo::RefPtr<Cairo::Context> const& ctx, cairo_rectangle_t*)
 {
+	A_CLASS_CALL ();
+
 	cairo_t* cr = ctx->cobj();
 	cairo_pattern_t* shade_pattern;
 
@@ -273,6 +277,8 @@ ArdourKnob::render (Cairo::RefPtr<Cairo::Context> const& ctx, cairo_rectangle_t*
 void
 ArdourKnob::on_size_request (Gtk::Requisition* req)
 {
+	A_CLASS_CALL ();
+
 	// see ardour-button VectorIcon size, use font scaling as default
 	CairoWidget::on_size_request (req); // allow to override
 
@@ -288,6 +294,8 @@ ArdourKnob::on_size_request (Gtk::Requisition* req)
 bool
 ArdourKnob::on_scroll_event (GdkEventScroll* ev)
 {
+	A_CLASS_CALL ();
+
 	/* mouse wheel */
 
 	float scale = 0.05;  //by default, we step in 1/20ths of the knob travel
@@ -317,6 +325,8 @@ ArdourKnob::on_scroll_event (GdkEventScroll* ev)
 bool
 ArdourKnob::on_motion_notify_event (GdkEventMotion *ev)
 {
+	A_CLASS_CALL ();
+
 	if (!(ev->state & Gdk::BUTTON1_MASK)) {
 		return true;
 	}
@@ -386,6 +396,8 @@ ArdourKnob::on_motion_notify_event (GdkEventMotion *ev)
 bool
 ArdourKnob::on_button_press_event (GdkEventButton *ev)
 {
+	A_CLASS_CALL ();
+
 	_grabbed_x = ev->x;
 	_grabbed_y = ev->y;
 	_dead_zone_delta = 0;
@@ -422,6 +434,8 @@ ArdourKnob::on_button_press_event (GdkEventButton *ev)
 bool
 ArdourKnob::on_button_release_event (GdkEventButton *ev)
 {
+	A_CLASS_CALL ();
+
 	_tooltip.stop_drag();
 	_grabbed = false;
 	StopGesture ();
@@ -471,6 +485,8 @@ ArdourKnob::set_controllable (boost::shared_ptr<Controllable> c)
 void
 ArdourKnob::controllable_changed (bool force_update)
 {
+	A_CLASS_CALL1 (force_update);
+
 	boost::shared_ptr<PBD::Controllable> c = binding_proxy.get_controllable();
 	if (!c) return;
 

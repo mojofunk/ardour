@@ -42,6 +42,9 @@ public:
 private:
 	boost::shared_ptr<ARDOUR::MidiSource> _source;
 	Evoral::Parameter _parameter;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::MidiAutomationListBinder);
 };
 
 } // namespace ARDOUR

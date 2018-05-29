@@ -1,0 +1,5 @@
+#include "sha1.c"
+#include "lua_api.cc"
+#include "luabindings.cc"
+#include "luaproc.cc"
+#include "luascripting.cc"

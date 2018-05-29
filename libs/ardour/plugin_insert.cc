@@ -33,6 +33,7 @@
 #include "ardour/debug.h"
 #include "ardour/event_type_map.h"
 #include "ardour/ladspa_plugin.h"
+#include "ardour/logging.h"
 #include "ardour/luaproc.h"
 #include "ardour/plugin.h"
 #include "ardour/plugin_insert.h"
@@ -64,8 +65,13 @@
 #include "pbd/i18n.h"
 
 using namespace std;
-using namespace ARDOUR;
 using namespace PBD;
+
+namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::PluginInsert);
+A_DEFINE_CLASS_MEMBERS (ARDOUR::PluginInsert::PluginControl);
+A_DEFINE_CLASS_MEMBERS (ARDOUR::PluginInsert::PluginPropertyControl);
 
 const string PluginInsert::port_automation_node_name = "PortAutomation";
 
@@ -428,6 +434,8 @@ PluginInsert::has_output_presets (ChanCount in, ChanCount out)
 void
 PluginInsert::create_automatable_parameters ()
 {
+	A_CLASS_CALL ();
+
 	assert (!_plugins.empty());
 
 	boost::shared_ptr<Plugin> plugin = _plugins.front();
@@ -798,6 +806,8 @@ PluginInsert::inplace_silence_unconnected (BufferSet& bufs, const PinMappings& o
 void
 PluginInsert::connect_and_run (BufferSet& bufs, samplepos_t start, samplepos_t end, double speed, pframes_t nframes, samplecnt_t offset, bool with_auto)
 {
+	A_CLASS_CALL6 (start, end, speed, nframes, offset, with_auto);
+
 	// TODO: atomically copy maps & _no_inplace
 	PinMappings in_map (_in_map);
 	PinMappings out_map (_out_map);
@@ -1061,6 +1071,8 @@ PluginInsert::connect_and_run (BufferSet& bufs, samplepos_t start, samplepos_t e
 void
 PluginInsert::bypass (BufferSet& bufs, pframes_t nframes)
 {
+	A_CLASS_CALL1 (nframes);
+
 	/* bypass the plugin(s) not the whole processor.
 	 * -> use mappings just like connect_and_run
 	 */
@@ -1172,6 +1184,8 @@ PluginInsert::bypass (BufferSet& bufs, pframes_t nframes)
 void
 PluginInsert::silence (samplecnt_t nframes, samplepos_t start_sample)
 {
+	A_CLASS_CALL2 (nframes, start_sample);
+
 	automation_run (start_sample, nframes); // evaluate automation only
 
 	if (!active ()) {
@@ -1199,6 +1213,8 @@ PluginInsert::silence (samplecnt_t nframes, samplepos_t start_sample)
 void
 PluginInsert::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_sample, double speed, pframes_t nframes, bool)
 {
+	A_CLASS_CALL4 (start_sample, end_sample, speed, nframes);
+
 	if (_sidechain) {
 		// collect sidechain input for complete cycle (!)
 		// TODO we need delaylines here for latency compensation
@@ -1236,6 +1252,8 @@ PluginInsert::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_sa
 void
 PluginInsert::automate_and_run (BufferSet& bufs, samplepos_t start, samplepos_t end, double speed, pframes_t nframes)
 {
+	A_CLASS_CALL ();
+
 	Evoral::ControlEvent next_event (0, 0.0f);
 	samplecnt_t offset = 0;
 
@@ -2484,6 +2502,8 @@ PluginInsert::set_control_ids (const XMLNode& node, int version)
 int
 PluginInsert::set_state(const XMLNode& node, int version)
 {
+	A_CLASS_CALL ();
+
 	XMLNodeList nlist = node.children();
 	XMLNodeIterator niter;
 	XMLPropertyList plist;
@@ -2882,6 +2902,8 @@ PluginInsert::PluginControl::PluginControl (PluginInsert*                     p,
 	: AutomationControl (p->session(), param, desc, list, p->describe_parameter(param))
 	, _plugin (p)
 {
+	A_CLASS_CALL1 (Controllable::name());
+
 	if (alist()) {
 		if (desc.toggled) {
 			list->set_interpolation(Evoral::ControlList::Discrete);
@@ -2917,6 +2939,8 @@ PluginInsert::PluginControl::catch_up_with_external_value (double user_val)
 XMLNode&
 PluginInsert::PluginControl::get_state ()
 {
+	A_CLASS_CALL1 (Controllable::name());
+
 	XMLNode& node (AutomationControl::get_state());
 	node.set_property (X_("parameter"), parameter().id());
 #ifdef LV2_SUPPORT
@@ -3137,8 +3161,12 @@ PluginInsert::get_stats (uint64_t& min, uint64_t& max, double& avg, double& dev)
 	return _timing_stats.get_stats (min, max, avg, dev);
 }
 
+} // namespace ARDOUR
+
 std::ostream& operator<<(std::ostream& o, const ARDOUR::PluginInsert::Match& m)
 {
+	using namespace ARDOUR;
+
 	switch (m.method) {
 		case PluginInsert::Impossible: o << "Impossible"; break;
 		case PluginInsert::Delegate:   o << "Delegate"; break;

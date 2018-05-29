@@ -50,8 +50,14 @@ namespace PBD {
 }
 
 using namespace std;
-using namespace ARDOUR;
 using namespace PBD;
+
+namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::MidiModel);
+A_DEFINE_CLASS_MEMBERS (ARDOUR::MidiModel::NoteDiffCommand);
+A_DEFINE_CLASS_MEMBERS (ARDOUR::MidiModel::SysExDiffCommand);
+A_DEFINE_CLASS_MEMBERS (ARDOUR::MidiModel::PatchChangeDiffCommand);
 
 MidiModel::MidiModel (boost::shared_ptr<MidiSource> s)
 	: AutomatableSequence<TimeType>(s->session())
@@ -68,6 +74,8 @@ MidiModel::MidiModel (boost::shared_ptr<MidiSource> s)
 MidiModel::NoteDiffCommand*
 MidiModel::new_note_diff_command (const string& name)
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<MidiSource> ms = _midi_source.lock ();
 	assert (ms);
 
@@ -78,6 +86,8 @@ MidiModel::new_note_diff_command (const string& name)
 MidiModel::SysExDiffCommand*
 MidiModel::new_sysex_diff_command (const string& name)
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<MidiSource> ms = _midi_source.lock ();
 	assert (ms);
 
@@ -88,6 +98,8 @@ MidiModel::new_sysex_diff_command (const string& name)
 MidiModel::PatchChangeDiffCommand*
 MidiModel::new_patch_change_diff_command (const string& name)
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<MidiSource> ms = _midi_source.lock ();
 	assert (ms);
 
@@ -103,6 +115,8 @@ MidiModel::new_patch_change_diff_command (const string& name)
 void
 MidiModel::apply_command(Session& session, Command* cmd)
 {
+	A_CLASS_CALL ();
+
 	session.begin_reversible_command (cmd->name());
 	(*cmd)();
 	session.commit_reversible_command (cmd);
@@ -117,6 +131,8 @@ MidiModel::apply_command(Session& session, Command* cmd)
 void
 MidiModel::apply_command_as_subcommand(Session& session, Command* cmd)
 {
+	A_CLASS_CALL ();
+
 	(*cmd)();
 	session.add_command (cmd);
 	set_edited (true);
@@ -154,6 +170,8 @@ MidiModel::NoteDiffCommand::NoteDiffCommand (boost::shared_ptr<MidiModel> m, con
 void
 MidiModel::NoteDiffCommand::add (const NotePtr note)
 {
+	A_CLASS_CALL ();
+
 	_removed_notes.remove(note);
 	_added_notes.push_back(note);
 }
@@ -161,6 +179,8 @@ MidiModel::NoteDiffCommand::add (const NotePtr note)
 void
 MidiModel::NoteDiffCommand::remove (const NotePtr note)
 {
+	A_CLASS_CALL ();
+
 	_added_notes.remove(note);
 	_removed_notes.push_back(note);
 }
@@ -211,6 +231,8 @@ MidiModel::NoteDiffCommand::change (const NotePtr  note,
                                     Property       prop,
                                     const Variant& new_value)
 {
+	A_CLASS_CALL ();
+
 	assert (note);
 
 	const NoteChange change = {
@@ -227,6 +249,8 @@ MidiModel::NoteDiffCommand::change (const NotePtr  note,
 MidiModel::NoteDiffCommand &
 MidiModel::NoteDiffCommand::operator+= (const NoteDiffCommand& other)
 {
+	A_CLASS_CALL ();
+
 	if (this == &other) {
 		return *this;
 	}
@@ -246,6 +270,8 @@ MidiModel::NoteDiffCommand::operator+= (const NoteDiffCommand& other)
 void
 MidiModel::NoteDiffCommand::operator() ()
 {
+	A_CLASS_CALL ();
+
 	{
 		MidiModel::WriteLock lock(_model->edit_lock());
 
@@ -343,6 +369,8 @@ MidiModel::NoteDiffCommand::operator() ()
 void
 MidiModel::NoteDiffCommand::undo ()
 {
+	A_CLASS_CALL ();
+
 	{
 		MidiModel::WriteLock lock(_model->edit_lock());
 
@@ -453,6 +481,8 @@ MidiModel::NoteDiffCommand::undo ()
 XMLNode&
 MidiModel::NoteDiffCommand::marshal_note(const NotePtr note)
 {
+	A_CLASS_CALL ();
+
 	XMLNode* xml_note = new XMLNode("note");
 
 	xml_note->set_property ("id", note->id ());
@@ -468,6 +498,8 @@ MidiModel::NoteDiffCommand::marshal_note(const NotePtr note)
 Evoral::Sequence<MidiModel::TimeType>::NotePtr
 MidiModel::NoteDiffCommand::unmarshal_note (XMLNode *xml_note)
 {
+	A_CLASS_CALL ();
+
 	Evoral::event_id_t id;
 	if (!xml_note->get_property ("id", id)) {
 		error << "note information missing ID value" << endmsg;
@@ -513,6 +545,8 @@ MidiModel::NoteDiffCommand::unmarshal_note (XMLNode *xml_note)
 XMLNode&
 MidiModel::NoteDiffCommand::marshal_change (const NoteChange& change)
 {
+	A_CLASS_CALL ();
+
 	XMLNode* xml_change = new XMLNode("Change");
 
 	/* first, the change itself */
@@ -546,6 +580,8 @@ MidiModel::NoteDiffCommand::marshal_change (const NoteChange& change)
 MidiModel::NoteDiffCommand::NoteChange
 MidiModel::NoteDiffCommand::unmarshal_change (XMLNode *xml_change)
 {
+	A_CLASS_CALL ();
+
 	NoteChange change;
 	change.note_id = 0;
 
@@ -599,6 +635,8 @@ MidiModel::NoteDiffCommand::unmarshal_change (XMLNode *xml_change)
 int
 MidiModel::NoteDiffCommand::set_state (const XMLNode& diff_command, int /*version*/)
 {
+	A_CLASS_CALL ();
+
 	if (diff_command.name() != string (NOTE_DIFF_COMMAND_ELEMENT)) {
 		return 1;
 	}
@@ -657,6 +695,8 @@ MidiModel::NoteDiffCommand::set_state (const XMLNode& diff_command, int /*versio
 XMLNode&
 MidiModel::NoteDiffCommand::get_state ()
 {
+	A_CLASS_CALL ();
+
 	XMLNode* diff_command = new XMLNode (NOTE_DIFF_COMMAND_ELEMENT);
 	diff_command->set_property("midi-source", _model->midi_source()->id().to_s());
 
@@ -695,6 +735,8 @@ MidiModel::NoteDiffCommand::get_state ()
 MidiModel::SysExDiffCommand::SysExDiffCommand (boost::shared_ptr<MidiModel> m, const XMLNode& node)
 	: DiffCommand (m, "")
 {
+	A_CLASS_CALL ();
+
 	assert (_model);
 	set_state (node, Stateful::loading_state_version);
 }
@@ -702,6 +744,8 @@ MidiModel::SysExDiffCommand::SysExDiffCommand (boost::shared_ptr<MidiModel> m, c
 void
 MidiModel::SysExDiffCommand::change (boost::shared_ptr<Evoral::Event<TimeType> > s, TimeType new_time)
 {
+	A_CLASS_CALL ();
+
 	Change change;
 
 	change.sysex = s;
@@ -715,6 +759,8 @@ MidiModel::SysExDiffCommand::change (boost::shared_ptr<Evoral::Event<TimeType> >
 void
 MidiModel::SysExDiffCommand::operator() ()
 {
+	A_CLASS_CALL ();
+
 	{
 		MidiModel::WriteLock lock (_model->edit_lock ());
 
@@ -745,6 +791,8 @@ MidiModel::SysExDiffCommand::operator() ()
 void
 MidiModel::SysExDiffCommand::undo ()
 {
+	A_CLASS_CALL ();
+
 	{
 		MidiModel::WriteLock lock (_model->edit_lock ());
 
@@ -783,6 +831,8 @@ MidiModel::SysExDiffCommand::remove (SysExPtr sysex)
 XMLNode&
 MidiModel::SysExDiffCommand::marshal_change (const Change& change)
 {
+	A_CLASS_CALL ();
+
 	XMLNode* xml_change = new XMLNode ("Change");
 
 	/* first, the change itself */
@@ -798,6 +848,8 @@ MidiModel::SysExDiffCommand::marshal_change (const Change& change)
 MidiModel::SysExDiffCommand::Change
 MidiModel::SysExDiffCommand::unmarshal_change (XMLNode *xml_change)
 {
+	A_CLASS_CALL ();
+
 	Change change;
 
 	if (!xml_change->get_property ("property", change.property)) {
@@ -834,6 +886,8 @@ MidiModel::SysExDiffCommand::unmarshal_change (XMLNode *xml_change)
 int
 MidiModel::SysExDiffCommand::set_state (const XMLNode& diff_command, int /*version*/)
 {
+	A_CLASS_CALL ();
+
 	if (diff_command.name() != string (SYSEX_DIFF_COMMAND_ELEMENT)) {
 		return 1;
 	}
@@ -857,6 +911,8 @@ MidiModel::SysExDiffCommand::set_state (const XMLNode& diff_command, int /*versi
 XMLNode&
 MidiModel::SysExDiffCommand::get_state ()
 {
+	A_CLASS_CALL ();
+
 	XMLNode* diff_command = new XMLNode (SYSEX_DIFF_COMMAND_ELEMENT);
 	diff_command->set_property ("midi-source", _model->midi_source()->id().to_s());
 
@@ -947,6 +1003,8 @@ MidiModel::PatchChangeDiffCommand::change_bank (PatchChangePtr patch, int bank)
 void
 MidiModel::PatchChangeDiffCommand::operator() ()
 {
+	A_CLASS_CALL ();
+
 	{
 		MidiModel::WriteLock lock (_model->edit_lock ());
 
@@ -1004,6 +1062,8 @@ MidiModel::PatchChangeDiffCommand::operator() ()
 void
 MidiModel::PatchChangeDiffCommand::undo ()
 {
+	A_CLASS_CALL ();
+
 	{
 		MidiModel::WriteLock lock (_model->edit_lock());
 
@@ -1062,6 +1122,8 @@ MidiModel::PatchChangeDiffCommand::undo ()
 XMLNode &
 MidiModel::PatchChangeDiffCommand::marshal_patch_change (constPatchChangePtr p)
 {
+	A_CLASS_CALL ();
+
 	XMLNode* n = new XMLNode ("patch-change");
 
 	n->set_property ("id", p->id ());
@@ -1076,6 +1138,8 @@ MidiModel::PatchChangeDiffCommand::marshal_patch_change (constPatchChangePtr p)
 XMLNode&
 MidiModel::PatchChangeDiffCommand::marshal_change (const Change& c)
 {
+	A_CLASS_CALL ();
+
 	XMLNode* n = new XMLNode (X_("Change"));
 
 	n->set_property (X_("property"), c.property);
@@ -1108,6 +1172,8 @@ MidiModel::PatchChangeDiffCommand::marshal_change (const Change& c)
 MidiModel::PatchChangePtr
 MidiModel::PatchChangeDiffCommand::unmarshal_patch_change (XMLNode* n)
 {
+	A_CLASS_CALL ();
+
 	Evoral::event_id_t id = 0;
 	if (!n->get_property ("id", id)) {
 		assert(false);
@@ -1141,6 +1207,8 @@ MidiModel::PatchChangeDiffCommand::unmarshal_patch_change (XMLNode* n)
 MidiModel::PatchChangeDiffCommand::Change
 MidiModel::PatchChangeDiffCommand::unmarshal_change (XMLNode* n)
 {
+	A_CLASS_CALL ();
+
 	Change c;
 	Evoral::event_id_t id;
 
@@ -1171,6 +1239,8 @@ MidiModel::PatchChangeDiffCommand::unmarshal_change (XMLNode* n)
 int
 MidiModel::PatchChangeDiffCommand::set_state (const XMLNode& diff_command, int /*version*/)
 {
+	A_CLASS_CALL ();
+
 	if (diff_command.name() != PATCH_CHANGE_DIFF_COMMAND_ELEMENT) {
 		return 1;
 	}
@@ -1202,6 +1272,8 @@ MidiModel::PatchChangeDiffCommand::set_state (const XMLNode& diff_command, int /
 XMLNode &
 MidiModel::PatchChangeDiffCommand::get_state ()
 {
+	A_CLASS_CALL ();
+
 	XMLNode* diff_command = new XMLNode (PATCH_CHANGE_DIFF_COMMAND_ELEMENT);
 	diff_command->set_property("midi-source", _model->midi_source()->id().to_s());
 
@@ -1246,6 +1318,8 @@ bool
 MidiModel::write_to (boost::shared_ptr<MidiSource>     source,
                      const Glib::Threads::Mutex::Lock& source_lock)
 {
+	A_CLASS_CALL ();
+
 	ReadLock lock(read_lock());
 
 	const bool old_percussive = percussive();
@@ -1274,6 +1348,8 @@ MidiModel::write_to (boost::shared_ptr<MidiSource>     source,
 bool
 MidiModel::sync_to_source (const Glib::Threads::Mutex::Lock& source_lock)
 {
+	A_CLASS_CALL ();
+
 	ReadLock lock(read_lock());
 
 	const bool old_percussive = percussive();
@@ -1317,6 +1393,8 @@ MidiModel::write_section_to (boost::shared_ptr<MidiSource>     source,
                              TimeType                          end_time,
                              bool                              offset_events)
 {
+	A_CLASS_CALL ();
+
 	ReadLock lock(read_lock());
 	MidiStateTracker mst;
 
@@ -1380,6 +1458,8 @@ MidiModel::get_state()
 Evoral::Sequence<MidiModel::TimeType>::NotePtr
 MidiModel::find_note (NotePtr other)
 {
+	A_CLASS_CALL ();
+
 	Notes::iterator l = notes().lower_bound(other);
 
 	if (l != notes().end()) {
@@ -1401,6 +1481,8 @@ MidiModel::find_note (NotePtr other)
 Evoral::Sequence<MidiModel::TimeType>::NotePtr
 MidiModel::find_note (gint note_id)
 {
+	A_CLASS_CALL ();
+
 	/* used only for looking up notes when reloading history from disk,
 	   so we don't care about performance *too* much.
 	*/
@@ -1417,6 +1499,8 @@ MidiModel::find_note (gint note_id)
 MidiModel::PatchChangePtr
 MidiModel::find_patch_change (Evoral::event_id_t id)
 {
+	A_CLASS_CALL ();
+
 	for (PatchChanges::iterator i = patch_changes().begin(); i != patch_changes().end(); ++i) {
 		if ((*i)->id() == id) {
 			return *i;
@@ -1429,6 +1513,8 @@ MidiModel::find_patch_change (Evoral::event_id_t id)
 boost::shared_ptr<Evoral::Event<MidiModel::TimeType> >
 MidiModel::find_sysex (gint sysex_id)
 {
+	A_CLASS_CALL ();
+
 	/* used only for looking up notes when reloading history from disk,
 	   so we don't care about performance *too* much.
 	*/
@@ -1448,6 +1534,8 @@ MidiModel::find_sysex (gint sysex_id)
 MidiModel::WriteLock
 MidiModel::edit_lock()
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<MidiSource> ms          = _midi_source.lock();
 	Glib::Threads::Mutex::Lock*   source_lock = 0;
 
@@ -1465,6 +1553,8 @@ MidiModel::edit_lock()
 int
 MidiModel::resolve_overlaps_unlocked (const NotePtr note, void* arg)
 {
+	A_CLASS_CALL ();
+
 	using namespace Evoral;
 
 	if (_writing || insert_merge_policy() == InsertMergeRelax) {
@@ -1667,6 +1757,8 @@ MidiModel::insert_merge_policy () const
 void
 MidiModel::set_midi_source (boost::shared_ptr<MidiSource> s)
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<MidiSource> old = _midi_source.lock ();
 
 	if (old) {
@@ -1732,6 +1824,8 @@ MidiModel::automation_list_automation_state_changed (Evoral::Parameter p, AutoSt
 boost::shared_ptr<Evoral::Control>
 MidiModel::control_factory (Evoral::Parameter const & p)
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<Evoral::Control> c = Automatable::control_factory (p);
 
 	/* Set up newly created control's lists to the appropriate interpolation and
@@ -1763,6 +1857,8 @@ MidiModel::midi_source ()
 void
 MidiModel::insert_silence_at_start (TimeType t)
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<MidiSource> s = _midi_source.lock ();
 	assert (s);
 
@@ -1836,3 +1932,5 @@ MidiModel::control_list_marked_dirty ()
 
 	ContentsChanged (); /* EMIT SIGNAL */
 }
+
+} // namespace ARDOUR

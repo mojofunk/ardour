@@ -21,6 +21,8 @@
 
 #include <string>
 
+#include "pbd/dev_tools.h"
+
 #include "ardour/libardour_visibility.h"
 #include "ardour/types.h"
 #include "ardour/chan_count.h"
@@ -124,6 +126,8 @@ private:
 	void output_changed (IOChange, void*);
 
 	bool _no_panner_reset;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::Delivery);
 };
 
 

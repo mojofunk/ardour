@@ -51,6 +51,10 @@
 using namespace std;
 using namespace ArdourCanvas;
 
+A_DEFINE_CLASS_MEMBERS (ArdourCanvas::Canvas);
+A_DEFINE_CLASS_MEMBERS (ArdourCanvas::GtkCanvas);
+A_DEFINE_CLASS_MEMBERS (ArdourCanvas::GtkCanvasViewport);
+
 uint32_t Canvas::tooltip_timeout_msecs = 750;
 
 /** Construct a new Canvas */
@@ -65,6 +69,8 @@ Canvas::Canvas ()
 void
 Canvas::scroll_to (Coord x, Coord y)
 {
+	A_CLASS_CALL2 (x, y);
+
 	/* We do things this way because we do not want to recurse through
 	   the canvas for every scroll. In the presence of large MIDI
 	   tracks this means traversing item lists that include
@@ -101,6 +107,8 @@ Canvas::zoomed ()
 void
 Canvas::render (Rect const & area, Cairo::RefPtr<Cairo::Context> const & context) const
 {
+	A_CLASS_CALL4 (area.x0, area.y0, area.x1, area.y1);
+
 	PreRender (); // emit signal
 
 	_last_render_start_timestamp = g_get_monotonic_time();
@@ -149,6 +157,8 @@ Canvas::render (Rect const & area, Cairo::RefPtr<Cairo::Context> const & context
 void
 Canvas::prepare_for_render (Rect const & area) const
 {
+	A_CLASS_CALL4 (area.x0, area.y0, area.x1, area.y1);
+
 	Rect root_bbox = _root.bounding_box();
 	if (!root_bbox) {
 		/* the root has no bounding box, so there's nothing to render */
@@ -249,7 +259,11 @@ Canvas::item_visual_property_changed (Item* item)
 void
 Canvas::item_changed (Item* item, Rect pre_change_bounding_box)
 {
+	A_CLASS_CALL ();
+
 	Rect window_bbox = visible_area ();
+
+	A_CLASS_DATA4 (window_bbox.x0, window_bbox.y0, window_bbox.x1, window_bbox.y1);
 
 	if (pre_change_bounding_box) {
 		if (item->item_to_window (pre_change_bounding_box).intersection (window_bbox)) {
@@ -268,10 +282,13 @@ Canvas::item_changed (Item* item, Rect pre_change_bounding_box)
 			/* request a redraw of the item's new bounding box */
 			queue_draw_item_area (item, post_change_bounding_box);
 
+			A_CLASS_DATA4 (window_intersection.x0, window_intersection.y0, window_intersection.x1,
+			               window_intersection.y1);
+
 			// Allow item to do any work necessary to prepare for being rendered.
 			item->prepare_for_render (window_intersection);
 		} else {
-			// No intersection with visible window area
+			A_CLASS_DATA1 (item);
 		}
 	}
 }
@@ -279,6 +296,8 @@ Canvas::item_changed (Item* item, Rect pre_change_bounding_box)
 Duple
 Canvas::window_to_canvas (Duple const & d) const
 {
+	A_CLASS_CALL2 (d.x, d.y);
+
 	ScrollGroup* best_group = 0;
 	ScrollGroup* sg = 0;
 
@@ -321,7 +340,9 @@ Canvas::window_to_canvas (Duple const & d) const
 	}
 
 	if (best_group) {
-		return d.translate (best_group->scroll_offset());
+		Duple d_translated = d.translate (best_group->scroll_offset ());
+		A_CLASS_DATA2 (d_translated.x, d_translated.y);
+		return d_translated;
 	}
 
 	return d;
@@ -447,7 +468,7 @@ void
 GtkCanvas::use_nsglview ()
 {
 	assert (!_nsglview);
-	assert (!is_realized());
+	assert (!get_realized());
 #ifdef ARDOUR_CANVAS_NSVIEW_TAG // patched gdkquartz.h
 	_nsglview = Gtkmm2ext::nsglview_create (this);
 #endif
@@ -834,6 +855,8 @@ GtkCanvas::on_realize ()
 void
 GtkCanvas::on_size_allocate (Gtk::Allocation& a)
 {
+	A_CLASS_CALL4 (a.get_x (), a.get_y (), a.get_width (), a.get_height ());
+
 	EventBox::on_size_allocate (a);
 #ifdef OPTIONAL_CAIRO_IMAGE_SURFACE
 	if (getenv("ARDOUR_IMAGE_SURFACE")) {
@@ -868,6 +891,8 @@ GtkCanvas::on_size_allocate (Gtk::Allocation& a)
 bool
 GtkCanvas::on_expose_event (GdkEventExpose* ev)
 {
+	A_CLASS_CALL4 (ev->area.x, ev->area.y, ev->area.width, ev->area.height);
+
 	if (_in_dtor) {
 		return true;
 	}
@@ -988,6 +1013,8 @@ GtkCanvas::prepare_for_render () const
 bool
 GtkCanvas::on_scroll_event (GdkEventScroll* ev)
 {
+	A_CLASS_CALL2 (ev->x, ev->y);
+
 	/* translate event coordinates from window to canvas */
 
 	GdkEvent copy = *((GdkEvent*)ev);
@@ -1003,7 +1030,8 @@ GtkCanvas::on_scroll_event (GdkEventScroll* ev)
 	   for scroll if this GtkCanvas is in a GtkCanvasViewport.
 	*/
 
-	DEBUG_TRACE (PBD::DEBUG::CanvasEvents, string_compose ("canvas scroll @ %1, %2 => %3\n", ev->x, ev->y, where));
+	A_CLASS_DATA2 (where.x, where.y);
+
 	return deliver_event (reinterpret_cast<GdkEvent*>(&copy));
 }
 
@@ -1014,7 +1042,8 @@ GtkCanvas::on_scroll_event (GdkEventScroll* ev)
 bool
 GtkCanvas::on_key_press_event (GdkEventKey* ev)
 {
-	DEBUG_TRACE (PBD::DEBUG::CanvasEvents, "canvas key press\n");
+	A_CLASS_CALL ();
+
 	return deliver_event (reinterpret_cast<GdkEvent*>(ev));
 }
 
@@ -1025,7 +1054,8 @@ GtkCanvas::on_key_press_event (GdkEventKey* ev)
 bool
 GtkCanvas::on_key_release_event (GdkEventKey* ev)
 {
-	DEBUG_TRACE (PBD::DEBUG::CanvasEvents, "canvas key release\n");
+	A_CLASS_CALL ();
+
 	return deliver_event (reinterpret_cast<GdkEvent*>(ev));
 }
 
@@ -1036,6 +1066,8 @@ GtkCanvas::on_key_release_event (GdkEventKey* ev)
 bool
 GtkCanvas::on_button_press_event (GdkEventButton* ev)
 {
+	A_CLASS_CALL ();
+
 	/* translate event coordinates from window to canvas */
 
 	GdkEvent copy = *((GdkEvent*)ev);
@@ -1051,7 +1083,8 @@ GtkCanvas::on_button_press_event (GdkEventButton* ev)
 	   for scroll if this GtkCanvas is in a GtkCanvasViewport.
 	*/
 
-	DEBUG_TRACE (PBD::DEBUG::CanvasEvents, string_compose ("canvas button press %1 @ %2, %3 => %4\n", ev->button, ev->x, ev->y, where));
+	A_CLASS_DATA2 (where.x, where.y);
+
 	return deliver_event (reinterpret_cast<GdkEvent*>(&copy));
 }
 
@@ -1062,6 +1095,8 @@ GtkCanvas::on_button_press_event (GdkEventButton* ev)
 bool
 GtkCanvas::on_button_release_event (GdkEventButton* ev)
 {
+	A_CLASS_CALL3 (ev->x, ev->y, ev->button);
+
 	/* translate event coordinates from window to canvas */
 
 	GdkEvent copy = *((GdkEvent*)ev);
@@ -1077,13 +1112,16 @@ GtkCanvas::on_button_release_event (GdkEventButton* ev)
 	   for scroll if this GtkCanvas is in a GtkCanvasViewport.
 	*/
 
-	DEBUG_TRACE (PBD::DEBUG::CanvasEvents, string_compose ("canvas button release %1 @ %2, %3 => %4\n", ev->button, ev->x, ev->y, where));
+	A_CLASS_DATA2 (where.x, where.y);
+
 	return deliver_event (reinterpret_cast<GdkEvent*>(&copy));
 }
 
 bool
 GtkCanvas::get_mouse_position (Duple& winpos) const
 {
+	A_CLASS_CALL2 (winpos.x, winpos.y);
+
 	int x;
 	int y;
 	Gdk::ModifierType mask;
@@ -1110,6 +1148,8 @@ GtkCanvas::get_mouse_position (Duple& winpos) const
 bool
 GtkCanvas::on_motion_notify_event (GdkEventMotion* ev)
 {
+	A_CLASS_CALL2 (ev->x, ev->y);
+
 	hide_tooltip ();
 
 	/* translate event coordinates from window to canvas */
@@ -1124,7 +1164,7 @@ GtkCanvas::on_motion_notify_event (GdkEventMotion* ev)
 	/* Coordinates in "copy" will be canvas coordinates,
 	*/
 
-	DEBUG_TRACE (PBD::DEBUG::CanvasEvents, string_compose ("canvas motion @ %1, %2 canvas @ %3, %4\n", ev->x, ev->y, copy.motion.x, copy.motion.y));
+	A_CLASS_DATA2 (copy.motion.x, copy.motion.y);
 
 	MouseMotion (point); /* EMIT SIGNAL */
 
@@ -1149,6 +1189,8 @@ GtkCanvas::on_enter_notify_event (GdkEventCrossing* ev)
 bool
 GtkCanvas::on_leave_notify_event (GdkEventCrossing* ev)
 {
+	A_CLASS_CALL2 (ev->x, ev->y);
+
 	switch (ev->detail) {
 	case GDK_NOTIFY_ANCESTOR:
 	case GDK_NOTIFY_UNKNOWN:
@@ -1230,6 +1272,8 @@ GtkCanvas::queue_draw_area (int x, int y, int width, int height)
 void
 GtkCanvas::request_redraw (Rect const & request)
 {
+	A_CLASS_CALL4 (request.x0, request.y0, request.width (), request.height ());
+
 	if (_in_dtor) {
 		return;
 	}
@@ -1238,14 +1282,16 @@ GtkCanvas::request_redraw (Rect const & request)
 
 	Rect real_area = request.intersection (visible_area());
 
+	A_CLASS_DATA4 (real_area.x0, real_area.y0, real_area.width (), real_area.height ());
+
 	if (real_area) {
 		if (real_area.width () && real_area.height ()) {
-			// Item intersects with visible canvas area
+			A_CLASS_MSG ("Item intersects with visible canvas area");
 			queue_draw_area (real_area.x0, real_area.y0, real_area.width(), real_area.height());
 		}
 
 	} else {
-		// Item does not intersect with visible canvas area
+		A_CLASS_MSG ("Item does not intersect with visible canvas area");
 	}
 }
 
@@ -1255,6 +1301,8 @@ GtkCanvas::request_redraw (Rect const & request)
 void
 GtkCanvas::request_size (Duple size)
 {
+	A_CLASS_CALL2 (size.x, size.y);
+
 	Duple req = size;
 
 	if (req.x > INT_MAX) {
@@ -1276,6 +1324,8 @@ GtkCanvas::request_size (Duple size)
 void
 GtkCanvas::grab (Item* item)
 {
+	A_CLASS_CALL1 (item);
+
 	/* XXX: should this be doing gdk_pointer_grab? */
 	_grabbed_item = item;
 }
@@ -1285,6 +1335,8 @@ GtkCanvas::grab (Item* item)
 void
 GtkCanvas::ungrab ()
 {
+	A_CLASS_CALL1 (_grabbed_item);
+
 	/* XXX: should this be doing gdk_pointer_ungrab? */
 	_grabbed_item = 0;
 }
@@ -1296,12 +1348,16 @@ GtkCanvas::ungrab ()
 void
 GtkCanvas::focus (Item* item)
 {
+	A_CLASS_CALL1 (item);
+
 	_focused_item = item;
 }
 
 void
 GtkCanvas::unfocus (Item* item)
 {
+	A_CLASS_CALL1 (_focused_item);
+
 	if (item == _focused_item) {
 		_focused_item = 0;
 	}
@@ -1467,6 +1523,7 @@ GtkCanvasViewport::GtkCanvasViewport (Gtk::Adjustment& hadj, Gtk::Adjustment& va
 void
 GtkCanvasViewport::scrolled ()
 {
+	A_CLASS_CALL ();
 	_canvas.scroll_to (hadjustment.get_value(), vadjustment.get_value());
 	queue_draw ();
 }

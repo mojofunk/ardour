@@ -92,6 +92,7 @@
 #include "ardour/filename_extensions.h"
 #include "ardour/graph.h"
 #include "ardour/location.h"
+#include "ardour/logging.h"
 #ifdef LV2_SUPPORT
 #include "ardour/lv2_plugin.h"
 #endif
@@ -143,8 +144,6 @@
 using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
-
-#define DEBUG_UNDO_HISTORY(msg) DEBUG_TRACE (PBD::DEBUG::UndoHistory, string_compose ("%1: %2\n", __LINE__, msg));
 
 void
 Session::pre_engine_init (string fullpath)
@@ -1132,6 +1131,8 @@ struct route_id_compare {
 XMLNode&
 Session::state (bool save_template, snapshot_t snapshot_type, bool only_used_assets)
 {
+	A_LOG_CLASS_CALL3 (LOG::Serialization, save_template, snapshot_type, only_used_assets);
+
 	LocaleGuard lg;
 	XMLNode* node = new XMLNode("Session");
 	XMLNode* child;
@@ -1504,6 +1505,8 @@ Session::get_control_protocol_state ()
 int
 Session::set_state (const XMLNode& node, int version)
 {
+	A_LOG_CLASS_CALL1 (LOG::Serialization, version);
+
 	LocaleGuard lg;
 	XMLNodeList nlist;
 	XMLNode* child;
@@ -2933,7 +2936,10 @@ Session::all_route_group() const
 void
 Session::add_commands (vector<Command*> const & cmds)
 {
+	A_LOG_CLASS_CALL1 (LOG::SessionHistory, _current_trans->name());
+
 	for (vector<Command*>::const_iterator i = cmds.begin(); i != cmds.end(); ++i) {
+		A_LOG_DATA1 (LOG::SessionHistory, (*i)->name());
 		add_command (*i);
 	}
 }
@@ -2941,11 +2947,9 @@ Session::add_commands (vector<Command*> const & cmds)
 void
 Session::add_command (Command* const cmd)
 {
+	A_LOG_CLASS_CALL2 (LOG::SessionHistory, _current_trans->name(), cmd->name());
+
 	assert (_current_trans);
-	DEBUG_UNDO_HISTORY (
-	    string_compose ("Current Undo Transaction %1, adding command: %2",
-	                    _current_trans->name (),
-	                    cmd->name ()));
 	_current_trans->add_command (cmd);
 }
 
@@ -2970,23 +2974,23 @@ Session::begin_reversible_command (const string& name)
 void
 Session::begin_reversible_command (GQuark q)
 {
+	A_LOG_CLASS_CALL1 (LOG::SessionHistory, g_quark_to_string (q));
+
 	/* If nested begin/commit pairs are used, we create just one UndoTransaction
 	   to hold all the commands that are committed.  This keeps the order of
 	   commands correct in the history.
 	*/
 
 	if (_current_trans == 0) {
-		DEBUG_UNDO_HISTORY (string_compose (
-		    "Begin Reversible Command, new transaction: %1", g_quark_to_string (q)));
+		std::string new_transaction_name = g_quark_to_string (q);
+		A_LOG_DATA1 (LOG::SessionHistory, new_transaction_name);
 
 		/* start a new transaction */
 		assert (_current_trans_quarks.empty ());
 		_current_trans = new UndoTransaction();
 		_current_trans->set_name (g_quark_to_string (q));
 	} else {
-		DEBUG_UNDO_HISTORY (
-		    string_compose ("Begin Reversible Command, current transaction: %1",
-		                    _current_trans->name ()));
+		A_LOG_DATA1 (LOG::SessionHistory, _current_trans->name ());
 	}
 
 	_current_trans_quarks.push_front (q);
@@ -2995,9 +2999,10 @@ Session::begin_reversible_command (GQuark q)
 void
 Session::abort_reversible_command ()
 {
+	A_LOG_CLASS_CALL (LOG::SessionHistory);
+
 	if (_current_trans != 0) {
-		DEBUG_UNDO_HISTORY (
-		    string_compose ("Abort Reversible Command: %1", _current_trans->name ()));
+		A_LOG_DATA1 (LOG::SessionHistory, _current_trans->name ());
 		_current_trans->clear();
 		delete _current_trans;
 		_current_trans = 0;
@@ -3008,40 +3013,33 @@ Session::abort_reversible_command ()
 void
 Session::commit_reversible_command (Command *cmd)
 {
+	A_LOG_CLASS_CALL (LOG::SessionHistory);
+
 	assert (_current_trans);
 	assert (!_current_trans_quarks.empty ());
 
 	struct timeval now;
 
 	if (cmd) {
-		DEBUG_UNDO_HISTORY (
-		    string_compose ("Current Undo Transaction %1, adding command: %2",
-		                    _current_trans->name (),
-		                    cmd->name ()));
+		A_LOG_DATA1 (LOG::SessionHistory, cmd->name ());
 		_current_trans->add_command (cmd);
 	}
 
-	DEBUG_UNDO_HISTORY (
-	    string_compose ("Commit Reversible Command, current transaction: %1",
-	                    _current_trans->name ()));
+	A_LOG_DATA1 (LOG::SessionHistory, _current_trans->name ());
 
 	_current_trans_quarks.pop_front ();
 
 	if (!_current_trans_quarks.empty ()) {
-		DEBUG_UNDO_HISTORY (
-		    string_compose ("Commit Reversible Command, transaction is not "
-		                    "top-level, current transaction: %1",
-		                    _current_trans->name ()));
+		A_LOG_MSG (LOG::SessionHistory, A_FMT ("Transaction is not top-level, current transaction: {}",
+		                                       _current_trans->name ()));
 		/* the transaction we're committing is not the top-level one */
 		return;
 	}
 
 	if (_current_trans->empty()) {
 		/* no commands were added to the transaction, so just get rid of it */
-		DEBUG_UNDO_HISTORY (
-		    string_compose ("Commit Reversible Command, No commands were "
-		                    "added to current transaction: %1",
-		                    _current_trans->name ()));
+		A_LOG_MSG (LOG::SessionHistory, A_FMT ("No commands were added to current transaction: {}",
+		                                       _current_trans->name ()));
 		delete _current_trans;
 		_current_trans = 0;
 		return;
@@ -3150,6 +3148,8 @@ Session::find_all_sources (string path, set<string>& result)
 int
 Session::find_all_sources_across_snapshots (set<string>& result, bool exclude_this_snapshot)
 {
+	A_LOG_CLASS_CALL (LOG::SessionCleanup);
+
 	vector<string> state_files;
 	string ripped;
 	string this_snapshot_path;
@@ -3209,6 +3209,8 @@ Session::ask_about_playlist_deletion (boost::shared_ptr<Playlist> p)
 void
 Session::cleanup_regions ()
 {
+	A_LOG_CLASS_CALL (LOG::SessionCleanup);
+
 	bool removed = false;
 	const RegionFactory::RegionMap& regions (RegionFactory::regions());
 
@@ -3313,6 +3315,8 @@ Session::cleanup_peakfiles ()
 int
 Session::cleanup_sources (CleanupReport& rep)
 {
+	A_LOG_CLASS_CALL (LOG::SessionCleanup);
+
 	// FIXME: needs adaptation to midi
 
 	vector<boost::shared_ptr<Source> > dead_sources;

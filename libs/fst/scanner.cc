@@ -105,7 +105,7 @@ int main (int argc, char **argv) {
 		dllpath = argv[1];
 	}
 
-	PBD::init();
+	if (!PBD::init (&argc, &argv)) return 1;
 
 	dummy_receiver.listen_to (error);
 	dummy_receiver.listen_to (info);

@@ -11,7 +11,7 @@ MICRO = '6'
 LIBFLUIDSYNTH_VERSION = "%s.%s.%s" % (MAJOR, MINOR, MICRO)
 
 # Variables for 'waf dist'
-APPNAME = 'libltc'
+APPNAME = 'libfluidsynth'
 VERSION = LIBFLUIDSYNTH_VERSION
 I18N_PACKAGE = 'libfluidsynth'
 
@@ -19,55 +19,56 @@ I18N_PACKAGE = 'libfluidsynth'
 top = '.'
 out = 'build'
 
+fluidsynth_sources = [
+    'src/fluid_midi.c',
+    'src/fluid_adsr_env.c',
+    'src/fluid_chorus.c',
+    'src/fluid_iir_filter.c',
+    'src/fluid_lfo.c',
+    'src/fluid_rev.c',
+    'src/fluid_rvoice.c',
+    'src/fluid_rvoice_dsp.c',
+    'src/fluid_rvoice_event.c',
+    'src/fluid_rvoice_mixer.c',
+    'src/fluid_defsfont.c',
+    'src/fluid_chan.c',
+    'src/fluid_event.c',
+    'src/fluid_gen.c',
+    'src/fluid_mod.c',
+    'src/fluid_synth.c',
+    'src/fluid_tuning.c',
+    'src/fluid_voice.c',
+    'src/fluid_conv.c',
+    'src/fluid_hash.c',
+    'src/fluid_list.c',
+    'src/fluid_ringbuffer.c',
+    'src/fluid_settings.c',
+    'src/fluid_sys.c'
+]
+
+fluidsynth_amalgamated_sources = [ 'src/fluidsynth.c' ]
+
 def options(opt):
     autowaf.set_options(opt)
 
 def configure(conf):
-    if conf.is_defined('USE_EXTERNAL_LIBS'):
-        autowaf.check_pkg(conf, 'fluidsynth', uselib_store='LIBFLUIDSYNTH', atleast_version=LIBFLUIDSYNTH_VERSION, mandatory=True)
-    else:
-        conf.load('compiler_c')
-        autowaf.configure(conf)
+    conf.load('compiler_c')
+    autowaf.configure(conf)
 
 def build(bld):
-    if bld.is_defined('USE_EXTERNAL_LIBS'):
-        return
-    bld (export_includes = ['fluidsynth'],
-         name = 'libfluidsynth_includes'
-         )
-    obj = bld.stlib (source = [
-        'src/fluid_midi.c',
-        'src/fluid_adsr_env.c',
-        'src/fluid_chorus.c',
-        'src/fluid_iir_filter.c',
-        'src/fluid_lfo.c',
-        'src/fluid_rev.c',
-        'src/fluid_rvoice.c',
-        'src/fluid_rvoice_dsp.c',
-        'src/fluid_rvoice_event.c',
-        'src/fluid_rvoice_mixer.c',
-        'src/fluid_defsfont.c',
-        'src/fluid_chan.c',
-        'src/fluid_event.c',
-        'src/fluid_gen.c',
-        'src/fluid_mod.c',
-        'src/fluid_synth.c',
-        'src/fluid_tuning.c',
-        'src/fluid_voice.c',
-        'src/fluid_conv.c',
-        'src/fluid_hash.c',
-        'src/fluid_list.c',
-        'src/fluid_ringbuffer.c',
-        'src/fluid_settings.c',
-        'src/fluid_sys.c'
-        ],
-        cflags = [ '-fPIC', '-fvisibility=hidden' ],
-        includes = ['.', 'src/' ],
-               target = 'libfluidsynth',
-               use    = 'libfluidsynth_includes',
-               uselib = 'GLIB',
-               defines = [ 'HAVE_CONFIG_H', 'DEFAULT_SOUNDFONT=""' ]
-               )
+    sources = list(fluidsynth_sources)
+    if bld.env['AMALGAMATE']:
+        sources = list(fluidsynth_amalgamated_sources)
+
+    obj = bld.stlib (source = sources,
+                     cflags = [ '-fPIC', '-fvisibility=hidden' ],
+                     includes = ['.', 'src/' ],
+                     target = 'fluidsynth',
+                     name = 'FLUIDSYNTH',
+                     export_includes = ['fluidsynth'],
+                     uselib = 'GLIB',
+                     defines = [ 'HAVE_CONFIG_H', 'DEFAULT_SOUNDFONT=""' ]
+                    )
 
     # wine-gcc hacks:
     # defining __MINGW32__ for wine-gcc is a workaround for fluidsynth's include

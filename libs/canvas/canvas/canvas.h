@@ -32,6 +32,7 @@
 #include <cairomm/surface.h>
 #include <cairomm/context.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/signals.h"
 
 #include "gtkmm2ext/cairo_canvas.h"
@@ -182,6 +183,9 @@ protected:
 	virtual void pick_current_item (Duple const &, int state) = 0;
 
 	std::list<ScrollGroup*> scrollers;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourCanvas::Canvas);
 };
 
 /** A canvas which renders onto a GTK EventBox */
@@ -282,6 +286,9 @@ private:
 	bool _in_dtor;
 
 	void* _nsglview;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourCanvas::GtkCanvas);
 };
 
 /** A GTK::Alignment with a GtkCanvas inside it plus some Gtk::Adjustments for
@@ -310,6 +317,9 @@ private:
 	Gtk::Adjustment& vadjustment;
 
 	void scrolled ();
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourCanvas::GtkCanvasViewport);
 };
 
 }

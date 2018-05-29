@@ -36,6 +36,8 @@ using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
 
+A_DEFINE_CLASS_MEMBERS (ARDOUR::Port);
+
 PBD::Signal2<void,boost::shared_ptr<Port>, boost::shared_ptr<Port> > Port::PostDisconnect;
 PBD::Signal0<void> Port::PortDrop;
 PBD::Signal0<void> Port::PortSignalDrop;
@@ -72,13 +74,13 @@ Port::Port (std::string const & n, DataType t, PortFlags f)
 	assert (_name.find_first_of (':') == std::string::npos);
 
 	if (!port_engine.available ()) {
-		DEBUG_TRACE (DEBUG::Ports, string_compose ("port-engine n/a postpone registering %1\n", name()));
+		A_CLASS_MSG (A_FMT ("port-engine n/a postpone registering {}", name ()));
 		_port_handle = 0; // created during ::reestablish() later
 	} else if ((_port_handle = port_engine.register_port (_name, t, _flags)) == 0) {
 		cerr << "Failed to register port \"" << _name << "\", reason is unknown from here\n";
 		throw failed_constructor ();
 	}
-	DEBUG_TRACE (DEBUG::Ports, string_compose ("registed port %1 handle %2\n", name(), _port_handle));
+	A_CLASS_MSG (A_FMT ("registed port {} handle {}", name (), _port_handle));
 
 	PortDrop.connect_same_thread (drop_connection, boost::bind (&Port::drop, this));
 	PortSignalDrop.connect_same_thread (drop_connection, boost::bind (&Port::signal_drop, this));
@@ -134,8 +136,9 @@ Port::signal_drop ()
 void
 Port::drop ()
 {
+	A_CLASS_CALL ();
+
 	if (_port_handle) {
-		DEBUG_TRACE (DEBUG::Ports, string_compose ("drop handle for port %1\n", name()));
 		port_engine.unregister_port (_port_handle);
 		_port_handle = 0;
 	}
@@ -144,8 +147,10 @@ Port::drop ()
 void
 Port::port_connected_or_disconnected (boost::weak_ptr<Port> w0, boost::weak_ptr<Port> w1, bool con)
 {
+	A_CLASS_CALL ();
+
 	if (con) {
-		/* we're only interested in disconnect */
+		A_CLASS_MSG ("We're only interested in disconnect");
 		return;
 	}
 	boost::shared_ptr<Port> p0 = w0.lock ();
@@ -174,6 +179,8 @@ Port::connected () const
 int
 Port::disconnect_all ()
 {
+	A_CLASS_CALL();
+
 	if (_port_handle) {
 
 		std::vector<std::string> connections;
@@ -231,8 +238,12 @@ Port::get_connections (std::vector<std::string> & c) const
 int
 Port::connect (std::string const & other)
 {
+	A_CLASS_CALL2 (_name, other);
+
 	std::string const other_name = AudioEngine::instance()->make_port_name_non_relative (other);
 	std::string const our_name = AudioEngine::instance()->make_port_name_non_relative (_name);
+
+	A_CLASS_DATA2 (other_name, our_name);
 
 	int r = 0;
 
@@ -241,10 +252,10 @@ Port::connect (std::string const & other)
 	}
 
 	if (sends_output ()) {
-		DEBUG_TRACE (DEBUG::Ports, string_compose ("Connect %1 to %2\n", our_name, other_name));
+		A_CLASS_MSG (A_FMT ("Connect {} to {}", our_name, other_name));
 		r = port_engine.connect (our_name, other_name);
 	} else {
-		DEBUG_TRACE (DEBUG::Ports, string_compose ("Connect %1 to %2\n", other_name, our_name));
+		A_CLASS_MSG (A_FMT ("Connect {} to {}", other_name, our_name));
 		r = port_engine.connect (other_name, our_name);
 	}
 
@@ -258,8 +269,12 @@ Port::connect (std::string const & other)
 int
 Port::disconnect (std::string const & other)
 {
+	A_CLASS_CALL2 (_name, other);
+
 	std::string const other_fullname = port_manager->make_port_name_non_relative (other);
 	std::string const this_fullname = port_manager->make_port_name_non_relative (_name);
+
+	A_CLASS_DATA2 (other_fullname, this_fullname);
 
 	int r = 0;
 
@@ -520,15 +535,17 @@ Port::get_connected_latency_range (LatencyRange& range, bool playback) const
 int
 Port::reestablish ()
 {
-	DEBUG_TRACE (DEBUG::Ports, string_compose ("re-establish %1 port %2\n", type().to_string(), _name));
+	A_CLASS_CALL2 (type().to_string(), _name);
+
 	_port_handle = port_engine.register_port (_name, type(), _flags);
 
 	if (_port_handle == 0) {
 		PBD::error << string_compose (_("could not reregister %1"), _name) << endmsg;
+		A_CLASS_MSG (A_FMT ("Could not reregister {}", _name));
 		return -1;
 	}
 
-	DEBUG_TRACE (DEBUG::Ports, string_compose ("Port::reestablish %1 handle %2\n", name(), _port_handle));
+	A_CLASS_DATA2 (name(), _port_handle);
 
 	reset ();
 
@@ -541,9 +558,10 @@ Port::reestablish ()
 int
 Port::reconnect ()
 {
+	A_CLASS_CALL2 (name(), _connections.size());
+
 	/* caller must hold process lock; intended to be used only after reestablish() */
 
-	DEBUG_TRACE (DEBUG::Ports, string_compose ("Connect %1 to %2 destinations\n",name(), _connections.size()));
 
 	for (std::set<string>::iterator i = _connections.begin(); i != _connections.end(); ++i) {
 		if (connect (*i)) {

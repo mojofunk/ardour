@@ -16,7 +16,7 @@
     675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "ardour/debug.h"
+#include "ardour/logging.h"
 #include "ardour/mute_master.h"
 #include "ardour/session.h"
 #include "ardour/solo_isolate_control.h"
@@ -26,6 +26,8 @@
 using namespace ARDOUR;
 using namespace std;
 using namespace PBD;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::SoloIsolateControl);
 
 SoloIsolateControl::SoloIsolateControl (Session& session, std::string const & name, Soloable& s, Muteable& m)
 	: SlavableAutomationControl (session, SoloIsolateAutomation, ParameterDescriptor (SoloIsolateAutomation),
@@ -69,9 +71,9 @@ SoloIsolateControl::master_changed (bool from_self, PBD::Controllable::GroupCont
 void
 SoloIsolateControl::mod_solo_isolated_by_upstream (int32_t delta)
 {
+	A_CLASS_CALL3 (name(), _solo_isolated_by_upstream, delta);
+
 	bool old = solo_isolated ();
-	DEBUG_TRACE (DEBUG::Solo, string_compose ("%1 mod_solo_isolated_by_upstream cur: %2 d: %3\n",
-	                                          name(), _solo_isolated_by_upstream, delta));
 
 	if (delta < 0) {
 		if (_solo_isolated_by_upstream >= (uint32_t) abs(delta)) {
@@ -91,6 +93,8 @@ SoloIsolateControl::mod_solo_isolated_by_upstream (int32_t delta)
 void
 SoloIsolateControl::actually_set_value (double val, PBD::Controllable::GroupControlDisposition gcd)
 {
+	A_CLASS_CALL2 (name(), val);
+
 	if (!_soloable.can_solo()) {
 		return;
 	}
@@ -107,6 +111,8 @@ SoloIsolateControl::actually_set_value (double val, PBD::Controllable::GroupCont
 void
 SoloIsolateControl::set_solo_isolated (bool yn, Controllable::GroupControlDisposition group_override)
 {
+	A_CLASS_CALL2 (name(), yn);
+
 	if (!_soloable.can_solo()) {
 		return;
 	}

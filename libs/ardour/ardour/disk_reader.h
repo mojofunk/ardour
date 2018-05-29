@@ -21,6 +21,7 @@
 #define __ardour_disk_reader_h__
 
 #include "pbd/i18n.h"
+#include "pbd/dev_tools.h"
 
 #include "ardour/disk_io.h"
 #include "ardour/midi_buffer.h"
@@ -142,6 +143,9 @@ private:
 	sampleoffset_t calculate_playback_distance (pframes_t);
 
 	void get_midi_playback (MidiBuffer& dst, samplepos_t start_sample, samplepos_t end_sample, MonitorState, BufferSet&, double speed, samplecnt_t distance);
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::DiskReader);
 };
 
 } // namespace

@@ -34,12 +34,15 @@
 #include "ardour/search_paths.h"
 #include "ardour/selection.h"
 #include "ardour/session.h"
+#include "ardour/logging.h"
 
 using namespace ARDOUR;
 using namespace std;
 using namespace PBD;
 
 #include "pbd/i18n.h"
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::ControlProtocolManager);
 
 ControlProtocolManager* ControlProtocolManager::_instance = 0;
 const string ControlProtocolManager::state_node_name = X_("ControlProtocols");
@@ -86,6 +89,8 @@ ControlProtocolManager::~ControlProtocolManager()
 void
 ControlProtocolManager::set_session (Session* s)
 {
+	A_CLASS_CALL ();
+
 	SessionHandlePtr::set_session (s);
 
 	if (!_session) {
@@ -201,6 +206,8 @@ ControlProtocolManager::drop_protocols ()
 ControlProtocol*
 ControlProtocolManager::instantiate (ControlProtocolInfo& cpi)
 {
+	A_CLASS_CALL2 (cpi.path, cpi.name);
+
 	/* CALLER MUST HOLD LOCK */
 
 	if (_session == 0) {
@@ -209,14 +216,12 @@ ControlProtocolManager::instantiate (ControlProtocolInfo& cpi)
 
 	cpi.descriptor = get_descriptor (cpi.path);
 
-	DEBUG_TRACE (DEBUG::ControlProtocols, string_compose ("instantiating %1\n", cpi.name));
-
 	if (cpi.descriptor == 0) {
 		error << string_compose (_("control protocol name \"%1\" has no descriptor"), cpi.name) << endmsg;
 		return 0;
 	}
 
-	DEBUG_TRACE (DEBUG::ControlProtocols, string_compose ("initializing %1\n", cpi.name));
+	A_CLASS_MSG (A_FMT ("Initializing {}", cpi.name));
 
 	if ((cpi.protocol = cpi.descriptor->initialize (cpi.descriptor, _session)) == 0) {
 		error << string_compose (_("control protocol name \"%1\" could not be initialized"), cpi.name) << endmsg;
@@ -307,6 +312,8 @@ ControlProtocolManager::teardown (ControlProtocolInfo& cpi, bool lock_required)
 void
 ControlProtocolManager::load_mandatory_protocols ()
 {
+	A_CLASS_CALL();
+
 	if (_session == 0) {
 		return;
 	}
@@ -315,8 +322,7 @@ ControlProtocolManager::load_mandatory_protocols ()
 
 	for (list<ControlProtocolInfo*>::iterator i = control_protocol_info.begin(); i != control_protocol_info.end(); ++i) {
 		if ((*i)->mandatory && ((*i)->protocol == 0)) {
-			DEBUG_TRACE (DEBUG::ControlProtocols,
-				     string_compose (_("Instantiating mandatory control protocol %1"), (*i)->name));
+			A_CLASS_DURATION (A_FMT ("Instantiating mandatory control protocol {}", (*i)->name));
 			instantiate (**i);
 		}
 	}
@@ -325,6 +331,8 @@ ControlProtocolManager::load_mandatory_protocols ()
 void
 ControlProtocolManager::discover_control_protocols ()
 {
+	A_CLASS_CALL1 (control_protocol_search_path().to_string());
+
 	vector<std::string> cp_modules;
 
 #ifdef COMPILER_MSVC
@@ -359,8 +367,6 @@ ControlProtocolManager::discover_control_protocols ()
 	find_files_matching_pattern (cp_modules, control_protocol_search_path (),
 	                             dylib_extension_pattern);
 
-	DEBUG_TRACE (DEBUG::ControlProtocols,
-		     string_compose (_("looking for control protocols in %1\n"), control_protocol_search_path().to_string()));
 
 	for (vector<std::string>::iterator i = cp_modules.begin(); i != cp_modules.end(); ++i) {
 		control_protocol_discover (*i);
@@ -370,6 +376,8 @@ ControlProtocolManager::discover_control_protocols ()
 int
 ControlProtocolManager::control_protocol_discover (string path)
 {
+	A_CLASS_CALL1 (path);
+
 	ControlProtocolDescriptor* descriptor;
 
 #ifdef __APPLE__
@@ -400,8 +408,7 @@ ControlProtocolManager::control_protocol_discover (string path)
 
 			control_protocol_info.push_back (cpi);
 
-			DEBUG_TRACE (DEBUG::ControlProtocols,
-				     string_compose(_("Control surface protocol discovered: \"%1\"\n"), cpi->name));
+			A_CLASS_MSG(A_FMT("Control surface protocol discovered: {}", cpi->name));
 		}
 	}
 
@@ -461,6 +468,8 @@ ControlProtocolManager::cpi_by_name (string name)
 int
 ControlProtocolManager::set_state (const XMLNode& node, int /*version*/)
 {
+	A_CLASS_CALL ();
+
 	XMLNodeList clist;
 	XMLNodeConstIterator citer;
 
@@ -517,6 +526,8 @@ ControlProtocolManager::set_state (const XMLNode& node, int /*version*/)
 XMLNode&
 ControlProtocolManager::get_state ()
 {
+	A_CLASS_CALL ();
+
 	XMLNode* root = new XMLNode (state_node_name);
 	Glib::Threads::RWLock::ReaderLock lm (protocols_lock);
 
@@ -584,12 +595,22 @@ ControlProtocolManager::register_request_buffer_factories ()
 void
 ControlProtocolManager::stripable_selection_changed (StripableNotificationListPtr sp)
 {
+	A_CLASS_CALL ();
+
 	/* this sets up the (static) data structures owned by ControlProtocol
 	   that are "shared" across all control protocols.
 	*/
 
-	DEBUG_TRACE (DEBUG::Selection, string_compose ("Surface manager: selection changed, now %1 stripables\n", sp ? sp->size() : -1));
-	StripableSelectionChanged (sp); /* EMIT SIGNAL */
+	{
+#ifdef A_LOGGING_ENABLED
+		std::size_t stripable_count = sp ? sp->size () : -1;
+
+		A_LOG_CLASS_DURATION (LOG::Selection,
+		                      A_FMT ("Selection changed, now {} stripables", stripable_count));
+#endif
+
+		StripableSelectionChanged (sp); /* EMIT SIGNAL */
+	}
 
 	/* now give each protocol the chance to respond to the selection change
 	 */
@@ -598,7 +619,8 @@ ControlProtocolManager::stripable_selection_changed (StripableNotificationListPt
 		Glib::Threads::RWLock::ReaderLock lm (protocols_lock);
 
 		for (list<ControlProtocol*>::iterator p = control_protocols.begin(); p != control_protocols.end(); ++p) {
-			DEBUG_TRACE (DEBUG::Selection, string_compose ("selection change notification for surface \"%1\"\n", (*p)->name()));
+			A_LOG_CLASS_DURATION (LOG::Selection,
+			                      A_FMT ("Selection change notification for surface {}", (*p)->name ()));
 			(*p)->stripable_selection_changed ();
 		}
 	}

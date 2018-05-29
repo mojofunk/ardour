@@ -27,8 +27,11 @@
 
 #include "pbd/i18n.h"
 
-using namespace ARDOUR;
 using namespace PBD;
+
+namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::SrcFileSource);
 
 const uint32_t SrcFileSource::max_blocksize = 2097152U; /* see AudioDiskstream::_do_refill_with_alloc, max */
 
@@ -79,7 +82,6 @@ SrcFileSource::SrcFileSource (Session& s, boost::shared_ptr<AudioFileSource> src
 
 SrcFileSource::~SrcFileSource ()
 {
-	DEBUG_TRACE (DEBUG::AudioPlayback, "SrcFileSource::~SrcFileSource\n");
 	_src_state = src_delete (_src_state) ;
 	delete [] _src_buffer;
 }
@@ -96,11 +98,13 @@ SrcFileSource::close ()
 samplecnt_t
 SrcFileSource::read_unlocked (Sample *dst, samplepos_t start, samplecnt_t cnt) const
 {
+	A_CLASS_CALL2(start, cnt);
+
 	int err;
 	const double srccnt = cnt / _ratio;
 
 	if (_target_position != start) {
-		DEBUG_TRACE (DEBUG::AudioPlayback, string_compose ("SRC: reset %1 -> %2\n", _target_position, start));
+		A_CLASS_DATA2(_target_position, start);
 		src_reset(_src_state);
 		_fract_position = 0;
 		_source_position = start / _ratio;
@@ -110,12 +114,12 @@ SrcFileSource::read_unlocked (Sample *dst, samplepos_t start, samplecnt_t cnt) c
 	const samplecnt_t scnt = ceilf(srccnt - _fract_position);
 	_fract_position += (scnt - srccnt);
 
-#ifndef NDEBUG
+#ifdef A_LOGGING_ENABLED
 	if (scnt >= src_buffer_size) {
-		DEBUG_TRACE (DEBUG::AudioPlayback, string_compose ("SRC: CRASH AHEAD :)  %1 >= %2 (fract=%3, cnt=%4)\n",
-					scnt, src_buffer_size, _fract_position, cnt));
+		A_CLASS_DATA4 (scnt, src_buffer_size, _fract_position, cnt);
 	}
 #endif
+
 	assert(scnt < src_buffer_size);
 
 	_src_data.input_frames = _source->read (_src_buffer, _source_position, scnt);
@@ -123,7 +127,7 @@ SrcFileSource::read_unlocked (Sample *dst, samplepos_t start, samplecnt_t cnt) c
 	if ((samplecnt_t) _src_data.input_frames * _ratio <= cnt
 			&& _source_position + scnt >= _source->length(0)) {
 		_src_data.end_of_input = true;
-		DEBUG_TRACE (DEBUG::AudioPlayback, "SRC: END OF INPUT\n");
+		A_CLASS_MSG ("End of Input");
 	} else {
 		_src_data.end_of_input = false;
 	}
@@ -153,15 +157,18 @@ SrcFileSource::read_unlocked (Sample *dst, samplepos_t start, samplecnt_t cnt) c
 	samplecnt_t generated = _src_data.output_frames_gen;
 
 	while (generated < cnt) {
-		DEBUG_TRACE (DEBUG::AudioPlayback, string_compose ("SRC: recurse for %1 samples\n",  cnt - generated));
-		samplecnt_t g = read_unlocked(dst + generated, _target_position, cnt - generated);
+		samplecnt_t count = cnt - generated;
+		A_CLASS_MSG (A_FMT("Recurse for {} samples", count));
+		samplecnt_t g = read_unlocked(dst + generated, _target_position, count);
 		generated += g;
 		if (g == 0) break;
 	}
 	_target_position = saved_target;
 
-	DEBUG_TRACE (DEBUG::AudioPlayback, string_compose ("SRC: in: %1-> want: %2 || got: %3 total: %4\n",
-				_src_data.input_frames, _src_data.output_frames, _src_data.output_frames_gen, generated));
+	A_CLASS_DATA4 ((int64_t)_src_data.input_frames, (int64_t)_src_data.output_frames,
+	               (int64_t)_src_data.output_frames_gen, generated);
 
 	return generated;
 }
+
+} // namespace ARDOUR

@@ -37,6 +37,8 @@ using namespace Gtk;
 using namespace Gtkmm2ext;
 using namespace ArdourWidgets;
 
+A_DEFINE_CLASS_MEMBERS (ArdourWidgets::Tabbable);
+
 Tabbable::Tabbable (Widget& w, const string& name, bool tabbed_by_default)
 	: WindowProxy (name)
 	, _contents (w)
@@ -56,6 +58,7 @@ Tabbable::~Tabbable ()
 void
 Tabbable::add_to_notebook (Notebook& notebook, const string& tab_title)
 {
+	A_CLASS_CALL2 (_name, tab_title);
 	_parent_notebook = &notebook;
 
 	if (tab_requested_by_state) {
@@ -63,9 +66,11 @@ Tabbable::add_to_notebook (Notebook& notebook, const string& tab_title)
 	}
 }
 
-Window*
+Gtk::Window*
 Tabbable::use_own_window (bool and_pack_it)
 {
+	A_CLASS_CALL2 (_name, and_pack_it);
+
 	Gtk::Window* win = get (true);
 
 	if (and_pack_it) {
@@ -89,12 +94,14 @@ Tabbable::window_visible () const
 		return false;
 	}
 
-	return _window->is_visible();
+	return _window->get_visible();
 }
 
-Window*
+Gtk::Window*
 Tabbable::get (bool create)
 {
+	A_CLASS_CALL2 (_name, create);
+
 	if (_window) {
 		return _window;
 	}
@@ -106,7 +113,7 @@ Tabbable::get (bool create)
 	/* From here on, we're creating the window
 	 */
 
-	if ((_window = new Window (WINDOW_TOPLEVEL)) == 0) {
+	if ((_window = new Gtk::Window (Gtk::WINDOW_TOPLEVEL)) == 0) {
 		return 0;
 	}
 
@@ -129,6 +136,8 @@ Tabbable::get (bool create)
 void
 Tabbable::show_own_window (bool and_pack_it)
 {
+	A_CLASS_CALL2 (_name, and_pack_it);
+
 	Gtk::Widget* parent = _contents.get_parent();
 	Gtk::Allocation alloc;
 
@@ -164,6 +173,8 @@ Tabbable::tab_root_drop ()
 void
 Tabbable::show_window ()
 {
+	A_CLASS_CALL1 (_name);
+
 	make_visible ();
 
 	if (_window && (current_toplevel() == _window)) {
@@ -180,6 +191,8 @@ Tabbable::show_window ()
 void
 Tabbable::change_visibility ()
 {
+	A_CLASS_CALL1 (_name);
+
 	if (tabbed()) {
 		_parent_notebook->set_current_page (_parent_notebook->page_num (_contents));
 		return;
@@ -199,6 +212,8 @@ Tabbable::change_visibility ()
 void
 Tabbable::make_visible ()
 {
+	A_CLASS_CALL1 (_name);
+
 	if (_window && (current_toplevel() == _window)) {
 		set_pos ();
 		_window->present ();
@@ -215,6 +230,8 @@ Tabbable::make_visible ()
 void
 Tabbable::make_invisible ()
 {
+	A_CLASS_CALL1 (_name);
+
 	if (_window && (current_toplevel() == _window)) {
 		_window->hide ();
 	} else {
@@ -225,12 +242,16 @@ Tabbable::make_invisible ()
 void
 Tabbable::detach ()
 {
+	A_CLASS_CALL1 (_name);
+
 	show_own_window (true);
 }
 
 void
 Tabbable::attach ()
 {
+	A_CLASS_CALL1 (_name);
+
 	if (!_parent_notebook) {
 		return;
 	}
@@ -295,6 +316,8 @@ Tabbable::tabbed () const
 void
 Tabbable::hide_tab ()
 {
+	A_CLASS_CALL1 (_name);
+
 	if (tabbed()) {
 		_contents.hide();
 		_parent_notebook->remove_page (_contents);
@@ -305,6 +328,8 @@ Tabbable::hide_tab ()
 void
 Tabbable::show_tab ()
 {
+	A_CLASS_CALL1 (_name);
+
 	if (!window_visible() && _parent_notebook) {
 		if (_contents.get_parent() == 0) {
 			tab_requested_by_state = true;

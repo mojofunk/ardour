@@ -25,6 +25,8 @@
 using namespace std;
 using namespace ARDOUR;
 
+A_DEFINE_CLASS_MEMBERS (ARDOUR::UnknownProcessor);
+
 UnknownProcessor::UnknownProcessor (Session& s, XMLNode const & state)
 	: Processor (s, "")
 	, _state (state)
@@ -113,6 +115,8 @@ UnknownProcessor::can_support_io_configuration (const ChanCount &in, ChanCount &
 void
 UnknownProcessor::run (BufferSet& bufs, samplepos_t /*start_sample*/, samplepos_t /*end_sample*/, double /*speed*/, pframes_t nframes, bool)
 {
+	A_CLASS_CALL1 (nframes);
+
 	if (!have_ioconfig) {
 		return;
 	}

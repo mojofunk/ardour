@@ -312,6 +312,7 @@ class LIBARDOUR_API AudioEngine : public PortManager, public SessionHandlePtr
 	uint32_t   _silence_hit_cnt;
 #endif
 
+	A_DECLARE_CLASS_MEMBERS(ARDOUR::AudioEngine);
 };
 
 } // namespace ARDOUR

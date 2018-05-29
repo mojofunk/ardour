@@ -62,6 +62,8 @@ using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
 
+A_DEFINE_CLASS_MEMBERS (ARDOUR::AudioEngine);
+
 AudioEngine* AudioEngine::_instance = 0;
 
 static gint audioengine_thread_cnt = 1;
@@ -133,6 +135,8 @@ AudioEngine::create ()
 void
 AudioEngine::split_cycle (pframes_t offset)
 {
+	A_CLASS_CALL1 (offset);
+
 	/* caller must hold process lock */
 
 	Port::increment_global_port_buffer_offset (offset);
@@ -149,6 +153,8 @@ AudioEngine::split_cycle (pframes_t offset)
 int
 AudioEngine::sample_rate_change (pframes_t nframes)
 {
+	A_CLASS_CALL1 (nframes);
+
 	/* check for monitor input change every 1/10th of second */
 
 	monitor_check_interval = nframes / 10;
@@ -170,6 +176,8 @@ AudioEngine::sample_rate_change (pframes_t nframes)
 int
 AudioEngine::buffer_size_change (pframes_t bufsiz)
 {
+	A_CLASS_CALL1 (bufsiz);
+
 	if (_session) {
 		_session->set_block_size (bufsiz);
 		last_monitor_check = 0;
@@ -189,6 +197,8 @@ __attribute__((annotate("realtime")))
 int
 AudioEngine::process_callback (pframes_t nframes)
 {
+	A_CLASS_CALL1 (nframes);
+
 	Glib::Threads::Mutex::Lock tm (_process_lock, Glib::Threads::TRY_LOCK);
 	Port::set_speed_ratio (1.0);
 
@@ -742,20 +752,20 @@ AudioEngine::discover_backends ()
 	find_files_matching_pattern (backend_modules, backend_search_path (),
 	                             dll_extension_pattern);
 
-	DEBUG_TRACE (DEBUG::AudioEngine, string_compose ("looking for backends in %1\n", backend_search_path().to_string()));
+	A_CLASS_MSG (A_FMT ("looking for backends in {}", backend_search_path ().to_string ()));
 
 	for (vector<std::string>::iterator i = backend_modules.begin(); i != backend_modules.end(); ++i) {
 
 		AudioBackendInfo* info;
 
-		DEBUG_TRACE (DEBUG::AudioEngine, string_compose ("Checking possible backend in %1\n", *i));
+		A_CLASS_MSG (A_FMT ("Checking possible backend in {}", *i));
 
 		if ((info = backend_discover (*i)) != 0) {
 			_backends.insert (make_pair (info->name, info));
 		}
 	}
 
-	DEBUG_TRACE (DEBUG::AudioEngine, string_compose ("Found %1 backends\n", _backends.size()));
+	A_CLASS_MSG (A_FMT ("Found {} backends", _backends.size()));
 
 	return _backends.size();
 }
@@ -888,6 +898,8 @@ AudioEngine::set_backend (const std::string& name, const std::string& arg1, cons
 int
 AudioEngine::start (bool for_latency)
 {
+	A_CLASS_CALL1 (for_latency);
+
 	if (!_backend) {
 		return -1;
 	}
@@ -931,6 +943,8 @@ AudioEngine::start (bool for_latency)
 int
 AudioEngine::stop (bool for_latency)
 {
+	A_CLASS_CALL1 (for_latency);
+
 	bool stop_engine = true;
 
 	if (!_backend) {

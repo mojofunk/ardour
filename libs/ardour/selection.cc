@@ -28,12 +28,17 @@
 #include "ardour/session.h"
 #include "ardour/stripable.h"
 
-using namespace ARDOUR;
 using namespace PBD;
+
+namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::CoreSelection);
 
 void
 CoreSelection::send_selection_change ()
 {
+	A_CLASS_CALL();
+
 	PropertyChange pc;
 	pc.add (Properties::selected);
 	PresentationInfo::send_static_change (pc);
@@ -52,8 +57,8 @@ CoreSelection::~CoreSelection ()
 void
 CoreSelection::toggle (boost::shared_ptr<Stripable> s, boost::shared_ptr<AutomationControl> c)
 {
-	DEBUG_TRACE (DEBUG::Selection, string_compose ("toggle: s %1 selected %2 c %3 selected %4\n",
-	                                               s, selected (s), c, selected (c)));
+	A_CLASS_CALL4 (s->name (), selected (s), c->name (), selected (c));
+
 	if ((c && selected (c)) || selected (s)) {
 		remove (s, c);
 	} else {
@@ -64,6 +69,8 @@ CoreSelection::toggle (boost::shared_ptr<Stripable> s, boost::shared_ptr<Automat
 void
 CoreSelection::add (boost::shared_ptr<Stripable> s, boost::shared_ptr<AutomationControl> c)
 {
+	A_CLASS_CALL4 (s->name (), selected (s), c->name (), selected (c));
+
 	bool send = false;
 
 	{
@@ -72,10 +79,10 @@ CoreSelection::add (boost::shared_ptr<Stripable> s, boost::shared_ptr<Automation
 		SelectedStripable ss (s, c, g_atomic_int_add (&selection_order, 1));
 
 		if (_stripables.insert (ss).second) {
-			DEBUG_TRACE (DEBUG::Selection, string_compose ("added %1/%2 to s/c selection\n", s->name(), c));
+			A_CLASS_MSG (A_FMT ("Added {}/{} to s/c selection", s->name (), c->name ()));
 			send = true;
 		} else {
-			DEBUG_TRACE (DEBUG::Selection, string_compose ("%1/%2 already in s/c selection\n", s->name(), c));
+			A_CLASS_MSG (A_FMT ("Already in s/c selection", s->name (), c->name ()));
 		}
 	}
 
@@ -94,6 +101,14 @@ CoreSelection::add (boost::shared_ptr<Stripable> s, boost::shared_ptr<Automation
 void
 CoreSelection::remove (boost::shared_ptr<Stripable> s, boost::shared_ptr<AutomationControl> c)
 {
+	A_CLASS_CALL2 (s->name (), selected (s));
+
+#ifdef WITH_DEV_TOOLS
+	if (c) {
+		A_CLASS_DATA2 (c->name (), selected (c));
+	}
+#endif
+
 	bool send = false;
 	{
 		Glib::Threads::RWLock::WriterLock lm (_lock);
@@ -104,7 +119,7 @@ CoreSelection::remove (boost::shared_ptr<Stripable> s, boost::shared_ptr<Automat
 
 		if (i != _stripables.end()) {
 			_stripables.erase (i);
-			DEBUG_TRACE (DEBUG::Selection, string_compose ("removed %1/%2 from s/c selection\n", s, c));
+			A_CLASS_MSG (A_FMT ("Removed {}/{} to s/c selection", s->name (), c->name ()));
 			send = true;
 		}
 	}
@@ -135,7 +150,7 @@ CoreSelection::set (boost::shared_ptr<Stripable> s, boost::shared_ptr<Automation
 
 		_stripables.clear ();
 		_stripables.insert (ss);
-		DEBUG_TRACE (DEBUG::Selection, string_compose ("set s/c selection to %1/%2\n", s->name(), c));
+		A_CLASS_MSG (A_FMT ("Set s/c to selection {}/{}", s->name (), c->name ()));
 	}
 
 	send_selection_change ();
@@ -152,11 +167,13 @@ CoreSelection::set (boost::shared_ptr<Stripable> s, boost::shared_ptr<Automation
 void
 CoreSelection::clear_stripables ()
 {
+	A_CLASS_CALL();
+
 	bool send = false;
 	std::vector<boost::shared_ptr<Stripable> > s;
 
-	DEBUG_TRACE (DEBUG::Selection, "clearing s/c selection\n");
 	{
+		A_CLASS_DURATION ("Clearing s/c selection");
 		Glib::Threads::RWLock::WriterLock lm (_lock);
 
 		if (!_stripables.empty()) {
@@ -173,11 +190,11 @@ CoreSelection::clear_stripables ()
 			_stripables.clear ();
 
 			send = true;
-			DEBUG_TRACE (DEBUG::Selection, "cleared s/c selection\n");
 		}
 	}
 
 	if (send) {
+		A_CLASS_DURATION ("Send clearing s/c selection");
 		send_selection_change ();
 
 		PropertyChange pc (Properties::selected);
@@ -185,7 +202,6 @@ CoreSelection::clear_stripables ()
 		for (std::vector<boost::shared_ptr<Stripable> >::iterator ss = s.begin(); ss != s.end(); ++ss) {
 			(*ss)->presentation_info().PropertyChanged (pc);
 		}
-
 	}
 }
 
@@ -367,3 +383,5 @@ CoreSelection::selected () const
 	Glib::Threads::RWLock::ReaderLock lm (_lock);
 	return _stripables.size();
 }
+
+} // namespace ARDOUR

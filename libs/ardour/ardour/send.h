@@ -22,6 +22,7 @@
 
 #include <string>
 
+#include "pbd/dev_tools.h"
 #include "pbd/stateful.h"
 
 #include "ardour/ardour.h"
@@ -107,6 +108,8 @@ private:
 	samplecnt_t _delay_in;
 	samplecnt_t _delay_out;
 	bool       _remove_on_disconnect;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::Send);
 };
 
 } // namespace ARDOUR

@@ -25,6 +25,7 @@
 
 #include <boost/weak_ptr.hpp>
 
+#include "pbd/dev_tools.h"
 #include "pbd/timing.h"
 
 #include "ardour/ardour.h"
@@ -209,6 +210,8 @@ public:
 	private:
 		PluginInsert* _plugin;
 		void actually_set_value (double val, PBD::Controllable::GroupControlDisposition group_override);
+
+		A_DECLARE_CLASS_MEMBERS (ARDOUR::PluginInsert::PluginControl);
 	};
 
 	/** A control that manipulates a plugin property (message). */
@@ -227,6 +230,8 @@ public:
 	private:
 		PluginInsert* _plugin;
 		Variant       _value;
+
+		A_DECLARE_CLASS_MEMBERS (ARDOUR::PluginInsert::PluginPropertyControl);
 	};
 
 	boost::shared_ptr<Plugin> plugin(uint32_t num=0) const {
@@ -395,6 +400,8 @@ private:
 	void preset_load_set_value (uint32_t, float);
 
 	PBD::TimingStats _timing_stats;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::PluginInsert);
 };
 
 } // namespace ARDOUR

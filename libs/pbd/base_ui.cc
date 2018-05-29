@@ -32,11 +32,10 @@
 #include <sched.h>
 
 #include "pbd/base_ui.h"
-#include "pbd/debug.h"
-#include "pbd/pthread_utils.h"
 #include "pbd/error.h"
 #include "pbd/compose.h"
 #include "pbd/failed_constructor.h"
+#include "pbd/logging.h"
 
 #include "pbd/i18n.h"
 
@@ -45,6 +44,8 @@
 using namespace std;
 using namespace PBD;
 using namespace Glib;
+
+A_DEFINE_CLASS_AS_MEMBERS(BaseUI, "PBD::BaseUI");
 
 uint64_t BaseUI::rt_bit = 1;
 BaseUI::RequestType BaseUI::CallSlot = BaseUI::new_request_type();
@@ -88,7 +89,8 @@ BaseUI::set_thread_priority (const int policy, int priority) const
 void
 BaseUI::main_thread ()
 {
-	DEBUG_TRACE (DEBUG::EventLoop, string_compose ("%1: event loop running in thread %2\n", event_loop_name(), pthread_name()));
+	A_CLASS_CALL1 (event_loop_name ());
+
 	set_event_loop_for_thread (this);
 	thread_init ();
 	_main_loop->get_context()->signal_idle().connect (sigc::mem_fun (*this, &BaseUI::signal_running));
@@ -122,6 +124,8 @@ BaseUI::run ()
 void
 BaseUI::quit ()
 {
+	A_CLASS_CALL1 (event_loop_name ());
+
 	if (_main_loop && _main_loop->is_running()) {
 		_main_loop->quit ();
 		run_loop_thread->join ();
@@ -131,6 +135,8 @@ BaseUI::quit ()
 bool
 BaseUI::request_handler (Glib::IOCondition ioc)
 {
+	A_CLASS_CALL1 (event_loop_name ());
+
 	/* check the request pipe */
 
 	if (ioc & ~IO_IN) {
@@ -146,7 +152,6 @@ BaseUI::request_handler (Glib::IOCondition ioc)
 
 		/* handle requests */
 
-		DEBUG_TRACE (DEBUG::EventLoop, string_compose ("%1: request handler\n", event_loop_name()));
 		handle_ui_requests ();
 	}
 
@@ -156,7 +161,8 @@ BaseUI::request_handler (Glib::IOCondition ioc)
 void
 BaseUI::signal_new_request ()
 {
-	DEBUG_TRACE (DEBUG::EventLoop, string_compose ("%1: signal_new_request\n", event_loop_name()));
+	A_CLASS_CALL1 (event_loop_name ());
+
 	request_channel.wakeup ();
 }
 
@@ -166,6 +172,7 @@ BaseUI::signal_new_request ()
 void
 BaseUI::attach_request_source ()
 {
-	DEBUG_TRACE (DEBUG::EventLoop, string_compose ("%1: attach request source\n", event_loop_name()));
+	A_CLASS_CALL1 (event_loop_name ());
+
 	request_channel.attach (m_context);
 }

@@ -42,7 +42,7 @@ using namespace std;
 using namespace ArdourSurface;
 using namespace ArdourCanvas;
 
-LevelMeter::LevelMeter (Push2& p, Item* parent, int len, Meter::Orientation o)
+LevelMeter::LevelMeter (Push2& p, Item* parent, int len, ArdourCanvas::Meter::Orientation o)
 	: Container (parent)
 	, p2 (p)
 	, _meter (0)
@@ -59,7 +59,7 @@ LevelMeter::LevelMeter (Push2& p, Item* parent, int len, Meter::Orientation o)
 {
 	Config->ParameterChanged.connect (_parameter_connection, invalidator(*this), boost::bind (&LevelMeter::parameter_changed, this, _1), &p2);
 
-	if (_meter_orientation == Meter::Vertical) {
+	if (_meter_orientation == ArdourCanvas::Meter::Vertical) {
 		meter_packer = new HBox (this);
 	} else {
 		meter_packer = new VBox (this);
@@ -462,7 +462,7 @@ LevelMeter::setup_meters (int len, int initial_width, int thin_width)
 			bool hl = meters[n].meter ? meters[n].meter->get_highlight() : false;
 			meters[n].packed = false;
 			delete meters[n].meter;
-			meters[n].meter = new Meter (this->canvas(), 32, width, _meter_orientation, len);
+			meters[n].meter = new ArdourCanvas::Meter (this->canvas(), 32, width, _meter_orientation, len);
 			meters[n].meter->set_highlight(hl);
 			meters[n].width = width;
 			meters[n].length = len;

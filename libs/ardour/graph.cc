@@ -29,12 +29,12 @@
 #include "ardour/types.h"
 #include "ardour/session.h"
 #include "ardour/route.h"
+#include "ardour/logging.h"
 #include "ardour/process_thread.h"
 #include "ardour/audioengine.h"
 
 #include "pbd/i18n.h"
 
-using namespace ARDOUR;
 using namespace PBD;
 using namespace std;
 
@@ -50,6 +50,10 @@ int alloc_allowed ()
 
 }
 #endif
+
+namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::Graph);
 
 Graph::Graph (Session & session)
 	: SessionHandleRef (session)
@@ -271,8 +275,7 @@ Graph::dec_ref()
 void
 Graph::restart_cycle()
 {
-	// we are through. wakeup our caller.
-	DEBUG_TRACE(DEBUG::ProcessThreads, string_compose ("%1 cycle done.\n", pthread_name()));
+	A_LOG_MSG (LOG::ProcessThreads, "Cycle Done");
 
 again:
 	_callback_done_sem.signal ();
@@ -284,7 +287,7 @@ again:
 		return;
 	}
 
-	DEBUG_TRACE(DEBUG::ProcessThreads, string_compose ("%1 prepare new cycle.\n", pthread_name()));
+	A_LOG_MSG (LOG::ProcessThreads, "Prepare new cycle");
 	prep ();
 
 	if (_graph_empty && _threads_active) {
@@ -302,10 +305,13 @@ again:
 void
 Graph::rechain (boost::shared_ptr<RouteList> routelist, GraphEdges const & edges)
 {
+	A_CLASS_CALL ();
+
 	Glib::Threads::Mutex::Lock ls (_swap_mutex);
 
 	int chain = _setup_chain;
-	DEBUG_TRACE (DEBUG::Graph, string_compose ("============== setup %1\n", chain));
+
+	A_CLASS_DATA1 (chain);
 
 	/* This will become the number of nodes that do not feed any other node;
 	 * once we have processed this number of those nodes, we have finished.
@@ -374,6 +380,8 @@ Graph::rechain (boost::shared_ptr<RouteList> routelist, GraphEdges const & edges
 bool
 Graph::run_one()
 {
+	A_LOG_CALL(LOG::ProcessThreads);
+
 	GraphNode* to_run;
 
 	pthread_mutex_lock (&_trigger_mutex);
@@ -394,7 +402,7 @@ Graph::run_one()
 	/* update the number of threads that will still be sleeping */
 	_execution_tokens -= wakeup;
 
-	DEBUG_TRACE(DEBUG::ProcessThreads, string_compose ("%1 signals %2\n", pthread_name(), wakeup));
+	A_LOG_DATA1 (LOG::ProcessThreads, wakeup);
 
 	for (int i = 0; i < wakeup; i++) {
 		_execution_sem.signal ();
@@ -403,24 +411,26 @@ Graph::run_one()
 	while (to_run == 0) {
 		_execution_tokens += 1;
 		pthread_mutex_unlock (&_trigger_mutex);
-		DEBUG_TRACE (DEBUG::ProcessThreads, string_compose ("%1 goes to sleep\n", pthread_name()));
-		_execution_sem.wait ();
-		if (!_threads_active) {
-			return true;
+		{
+			A_LOG_DURATION (LOG::ProcessThreads, "Sleeping");
+			_execution_sem.wait ();
+			if (!_threads_active) {
+				return true;
+			}
 		}
-		DEBUG_TRACE (DEBUG::ProcessThreads, string_compose ("%1 is awake\n", pthread_name()));
-		pthread_mutex_lock (&_trigger_mutex);
-		if (_trigger_queue.size()) {
-			to_run = _trigger_queue.back();
-			_trigger_queue.pop_back();
+		{
+			A_LOG_DURATION (LOG::ProcessThreads, "Awake");
+			pthread_mutex_lock (&_trigger_mutex);
+			if (_trigger_queue.size ()) {
+				to_run = _trigger_queue.back ();
+				_trigger_queue.pop_back ();
+			}
 		}
 	}
 	pthread_mutex_unlock (&_trigger_mutex);
 
 	to_run->process();
 	to_run->finish (_current_chain);
-
-	DEBUG_TRACE(DEBUG::ProcessThreads, string_compose ("%1 has finished run_one()\n", pthread_name()));
 
 	return !_threads_active;
 }
@@ -457,7 +467,7 @@ Graph::main_thread()
 again:
 	_callback_start_sem.wait ();
 
-	DEBUG_TRACE(DEBUG::ProcessThreads, "main thread is awake\n");
+	A_LOG_MSG (LOG::ProcessThreads, "main thread is awake");
 
 	if (!_threads_active) {
 		pt->drop_buffers();
@@ -469,13 +479,12 @@ again:
 
 	if (_graph_empty && _threads_active) {
 		_callback_done_sem.signal ();
-		DEBUG_TRACE(DEBUG::ProcessThreads, "main thread sees graph done, goes back to sleep\n");
+		A_LOG_MSG (LOG::ProcessThreads, "main thread sees graph done, goes back to sleep");
 		goto again;
 	}
 
 	/* This loop will run forever */
 	while (1) {
-		DEBUG_TRACE(DEBUG::ProcessThreads, string_compose ("main thread (%1) runs one graph node\n", pthread_name ()));
 		if (run_one()) {
 			break;
 		}
@@ -515,7 +524,7 @@ Graph::dump (int chain)
 int
 Graph::process_routes (pframes_t nframes, samplepos_t start_sample, samplepos_t end_sample, int declick, bool& need_butler)
 {
-	DEBUG_TRACE (DEBUG::ProcessThreads, string_compose ("graph execution from %1 to %2 = %3\n", start_sample, end_sample, nframes));
+	A_LOG_CALL4 (LOG::ProcessThreads, nframes, start_sample, end_sample, declick);
 
 	if (!_threads_active) return 0;
 
@@ -528,10 +537,11 @@ Graph::process_routes (pframes_t nframes, samplepos_t start_sample, samplepos_t 
 	_process_retval = 0;
 	_process_need_butler = false;
 
-	DEBUG_TRACE(DEBUG::ProcessThreads, "wake graph for non-silent process\n");
-	_callback_start_sem.signal ();
-	_callback_done_sem.wait ();
-	DEBUG_TRACE (DEBUG::ProcessThreads, "graph execution complete\n");
+	{
+		A_LOG_DURATION (LOG::ProcessThreads, "Wake graph for silent process");
+		_callback_start_sem.signal ();
+		_callback_done_sem.wait ();
+	}
 
 	need_butler = _process_need_butler;
 
@@ -542,7 +552,7 @@ int
 Graph::routes_no_roll (pframes_t nframes, samplepos_t start_sample, samplepos_t end_sample,
                        bool non_rt_pending, int declick)
 {
-	DEBUG_TRACE (DEBUG::ProcessThreads, string_compose ("no-roll graph execution from %1 to %2 = %3\n", start_sample, end_sample, nframes));
+	A_LOG_CALL5 (LOG::ProcessThreads, nframes, start_sample, end_sample, non_rt_pending, declick);
 
 	if (!_threads_active) return 0;
 
@@ -556,22 +566,24 @@ Graph::routes_no_roll (pframes_t nframes, samplepos_t start_sample, samplepos_t 
 	_process_retval = 0;
 	_process_need_butler = false;
 
-	DEBUG_TRACE(DEBUG::ProcessThreads, "wake graph for no-roll process\n");
-	_callback_start_sem.signal ();
-	_callback_done_sem.wait ();
-	DEBUG_TRACE (DEBUG::ProcessThreads, "graph execution complete\n");
+	{
+		A_LOG_DURATION (LOG::ProcessThreads, "Wake graph for no-roll process");
+		_callback_start_sem.signal ();
+		_callback_done_sem.wait ();
+	}
 
 	return _process_retval;
 }
 void
 Graph::process_one_route (Route* route)
 {
+	A_LOG_CALL1 (LOG::ProcessThreads, route->name ());
+
 	bool need_butler = false;
 	int retval;
 
 	assert (route);
 
-	DEBUG_TRACE (DEBUG::ProcessThreads, string_compose ("%1 runs route %2\n", pthread_name(), route->name()));
 
 	if (_process_noroll) {
 		route->set_pending_declick (_process_declick);
@@ -595,3 +607,5 @@ Graph::in_process_thread () const
 {
 	return AudioEngine::instance()->in_process_thread ();
 }
+
+} // namespace ARDOUR

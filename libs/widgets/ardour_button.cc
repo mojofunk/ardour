@@ -55,6 +55,8 @@ ArdourButton::Element ArdourButton::default_elements = ArdourButton::Element (Ar
 ArdourButton::Element ArdourButton::led_default_elements = ArdourButton::Element (ArdourButton::default_elements|ArdourButton::Indicator);
 ArdourButton::Element ArdourButton::just_led_default_elements = ArdourButton::Element (ArdourButton::Edge|ArdourButton::Body|ArdourButton::Indicator);
 
+A_DEFINE_CLASS_AS_MEMBERS (ArdourButton, "ArdourWidgets::ArdourButton");
+
 ArdourButton::ArdourButton (Element e, bool toggle)
 	: _sizing_text("")
 	, _markup (false)
@@ -252,6 +254,8 @@ ArdourButton::set_alignment (const float xa, const float ya)
 void
 ArdourButton::render (Cairo::RefPtr<Cairo::Context> const& ctx, cairo_rectangle_t*)
 {
+	A_CLASS_CALL1 (_text);
+
 	cairo_t* cr = ctx->cobj();
 
 	uint32_t text_color;
@@ -595,6 +599,8 @@ ArdourButton::on_realize()
 void
 ArdourButton::on_size_request (Gtk::Requisition* req)
 {
+	A_CLASS_CALL1 (_text);
+
 	req->width = req->height = 0;
 	CairoWidget::on_size_request (req);
 
@@ -712,6 +718,8 @@ ArdourButton::on_size_request (Gtk::Requisition* req)
 void
 ArdourButton::set_colors ()
 {
+	A_CLASS_CALL1 (_text);
+
 	_update_colors = false;
 
 	if (_fixed_colors_set == 0x3) {
@@ -766,6 +774,8 @@ void ArdourButton::set_fixed_colors (const uint32_t color_active, const uint32_t
 
 void ArdourButton::set_active_color (const uint32_t color)
 {
+	A_CLASS_CALL1 (_text);
+
 	_fixed_colors_set |= 0x1;
 
 	fill_active_color = color;
@@ -791,6 +801,8 @@ void ArdourButton::set_active_color (const uint32_t color)
 
 void ArdourButton::set_inactive_color (const uint32_t color)
 {
+	A_CLASS_CALL1 (_text);
+
 	_fixed_colors_set |= 0x2;
 
 	fill_inactive_color = color;
@@ -817,6 +829,8 @@ void ArdourButton::set_inactive_color (const uint32_t color)
 void
 ArdourButton::build_patterns ()
 {
+	A_CLASS_CALL1 (_text);
+
 	if (convex_pattern) {
 		cairo_pattern_destroy (convex_pattern);
 		convex_pattern = 0;

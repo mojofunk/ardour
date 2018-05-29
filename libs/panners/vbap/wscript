@@ -19,10 +19,8 @@ def build(bld):
     obj.defines      = ['PACKAGE="libardour_panvbap"']
     obj.defines     += ['ARDOURPANNER_DLL_EXPORTS']
     obj.includes     = ['.']
-    obj.name         = 'libardour_panvbap'
     obj.target       = 'panvbap'
-    obj.use          = 'libardour libardour_cp libpbd'
-    obj.uselib       = 'GLIBMM XML'
+    obj.use          = 'ARDOUR ARDOUR_CP'
     obj.install_path = os.path.join(bld.env['LIBDIR'], 'panners')
 
 def shutdown():

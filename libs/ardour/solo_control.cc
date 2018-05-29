@@ -16,7 +16,7 @@
     675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "ardour/debug.h"
+#include "ardour/logging.h"
 #include "ardour/mute_master.h"
 #include "ardour/session.h"
 #include "ardour/solo_control.h"
@@ -26,6 +26,8 @@
 using namespace ARDOUR;
 using namespace std;
 using namespace PBD;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::SoloControl);
 
 SoloControl::SoloControl (Session& session, std::string const & name, Soloable& s, Muteable& m)
 	: SlavableAutomationControl (session, SoloAutomation, ParameterDescriptor (SoloAutomation),
@@ -46,7 +48,8 @@ SoloControl::SoloControl (Session& session, std::string const & name, Soloable& 
 void
 SoloControl::set_self_solo (bool yn)
 {
-	DEBUG_TRACE (DEBUG::Solo, string_compose ("%1: set SELF solo => %2\n", name(), yn));
+	A_CLASS_CALL2 (name(), yn);
+
 	_self_solo = yn;
 	set_mute_master_solo ();
 
@@ -78,12 +81,14 @@ SoloControl::set_mute_master_solo ()
 void
 SoloControl::mod_solo_by_others_downstream (int32_t delta)
 {
+	A_CLASS_CALL1 (delta);
+
 	if (_soloable.is_safe() || !_soloable.can_solo()) {
 		return;
 	}
 
-	DEBUG_TRACE (DEBUG::Solo, string_compose ("%1 mod solo-by-downstream by %2, current up = %3 down = %4\n",
-						  name(), delta, _soloed_by_others_upstream, _soloed_by_others_downstream));
+	A_CLASS_DATA3 (name(), _soloed_by_others_upstream,
+	                   _soloed_by_others_downstream);
 
 	if (delta < 0) {
 		if (_soloed_by_others_downstream >= (uint32_t) abs (delta)) {
@@ -95,7 +100,7 @@ SoloControl::mod_solo_by_others_downstream (int32_t delta)
 		_soloed_by_others_downstream += delta;
 	}
 
-	DEBUG_TRACE (DEBUG::Solo, string_compose ("%1 SbD delta %2 = %3\n", name(), delta, _soloed_by_others_downstream));
+	A_CLASS_DATA2 (name(), _soloed_by_others_downstream);
 
 	set_mute_master_solo ();
 	_transition_into_solo = 0;
@@ -105,12 +110,13 @@ SoloControl::mod_solo_by_others_downstream (int32_t delta)
 void
 SoloControl::mod_solo_by_others_upstream (int32_t delta)
 {
+	A_CLASS_CALL1 (delta);
+
 	if (_soloable.is_safe() || !_soloable.can_solo()) {
 		return;
 	}
 
-	DEBUG_TRACE (DEBUG::Solo, string_compose ("%1 mod solo-by-upstream by %2, current up = %3 down = %4\n",
-	                                          name(), delta, _soloed_by_others_upstream, _soloed_by_others_downstream));
+	A_CLASS_DATA3 (name(), _soloed_by_others_upstream, _soloed_by_others_downstream);
 
 	uint32_t old_sbu = _soloed_by_others_upstream;
 
@@ -124,11 +130,8 @@ SoloControl::mod_solo_by_others_upstream (int32_t delta)
 		_soloed_by_others_upstream += delta;
 	}
 
-	DEBUG_TRACE (DEBUG::Solo, string_compose (
-		             "%1 SbU delta %2 = %3 old = %4 sbd %5 ss %6 exclusive %7\n",
-		             name(), delta, _soloed_by_others_upstream, old_sbu,
-		             _soloed_by_others_downstream, _self_solo, Config->get_exclusive_solo()));
-
+	A_CLASS_DATA7 (name (), delta, _soloed_by_others_upstream, old_sbu, _soloed_by_others_downstream,
+	               _self_solo, Config->get_exclusive_solo ());
 
 	/* push the inverse solo change to everything that feeds us.
 

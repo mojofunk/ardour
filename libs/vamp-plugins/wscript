@@ -30,7 +30,12 @@ def configure(conf):
                       atleast_version='0.3.2')
     autowaf.check_pkg(conf, 'aubio', uselib_store='AUBIO4',
                       atleast_version='0.4.0', mandatory=False)
+    autowaf.check_pkg(conf, 'vamp-sdk', uselib_store='VAMPSDK', atleast_version='2.1')
     conf.write_config_header('libvampplugins-config.h', remove=False)
+
+    if conf.is_defined('USE_EXTERNAL_LIBS'):
+        conf.check_cxx(header_name="base/Pitch.h", mandatory=True)
+        conf.check_cxx(lib="qm-dsp", uselib_store="QMDSP", mandatory=True)
 
 def build(bld):
     # Library
@@ -55,10 +60,10 @@ def build(bld):
     '''
     obj.export_includes = ['.']
     obj.includes     = ['.']
-    obj.name         = 'libardourvampplugins'
+    obj.name         = 'VAMP_PLUGINS'
     obj.target       = 'ardourvampplugins'
-    obj.uselib       = 'FFTW3F VAMPSDK QMDSP'
-    obj.use          = 'libvampplugin libqm-dsp'
+    obj.uselib       = 'FFTW3F VAMPSDK'
+    obj.use          = 'QMDSP'
     autowaf.ensure_visible_symbols (obj, True)
     if bld.is_defined('HAVE_AUBIO4'):
         obj.source += ' Onset.cpp '

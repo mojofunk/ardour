@@ -45,14 +45,15 @@
 #include "pbd/i18n.h"
 
 using namespace std;
-using namespace ARDOUR;
 using namespace PBD;
 using std::string;
+
+namespace ARDOUR {
 
 gain_t* SndFileSource::out_coefficient = 0;
 gain_t* SndFileSource::in_coefficient = 0;
 samplecnt_t SndFileSource::xfade_samples = 64;
-const Source::Flag SndFileSource::default_writable_flags = Source::Flag (
+const ARDOUR::Source::Flag SndFileSource::default_writable_flags = Source::Flag (
 		Source::Writable |
 		Source::Removable |
 		Source::RemovableIfEmpty |
@@ -1141,3 +1142,4 @@ SndFileSource::set_path (const string& p)
         FileSource::set_path (p);
 }
 
+} // namespace ARDOUR

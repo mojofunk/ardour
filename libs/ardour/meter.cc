@@ -25,6 +25,7 @@
 #include "ardour/audio_buffer.h"
 #include "ardour/buffer_set.h"
 #include "ardour/dB.h"
+#include "ardour/logging.h"
 #include "ardour/meter.h"
 #include "ardour/midi_buffer.h"
 #include "ardour/session.h"
@@ -34,6 +35,8 @@
 using namespace std;
 
 using namespace ARDOUR;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::PeakMeter);
 
 PeakMeter::PeakMeter (Session& s, const std::string& name)
     : Processor (s, string_compose ("meter-%1", name))
@@ -80,6 +83,8 @@ PeakMeter::~PeakMeter ()
 void
 PeakMeter::run (BufferSet& bufs, samplepos_t /*start_sample*/, samplepos_t /*end_sample*/, double /*speed*/, pframes_t nframes, bool)
 {
+	A_CLASS_CALL1 (nframes);
+
 	if (!_active && !_pending_active) {
 		return;
 	}
@@ -196,6 +201,8 @@ PeakMeter::run (BufferSet& bufs, samplepos_t /*start_sample*/, samplepos_t /*end
 void
 PeakMeter::reset ()
 {
+	A_CLASS_CALL ();
+
 	if (_active || _pending_active) {
 		_reset_dpm = true;
 	} else {
@@ -217,6 +224,8 @@ PeakMeter::reset ()
 void
 PeakMeter::reset_max ()
 {
+	A_CLASS_CALL ();
+
 	if (_active || _pending_active) {
 		_reset_max = true;
 		return;
@@ -237,6 +246,8 @@ PeakMeter::can_support_io_configuration (const ChanCount& in, ChanCount& out)
 bool
 PeakMeter::configure_io (ChanCount in, ChanCount out)
 {
+	A_CLASS_CALL ();
+
 	bool changed = false;
 	if (out != in) { // always 1:1
 		return false;
@@ -274,6 +285,8 @@ PeakMeter::emit_configuration_changed () {
 void
 PeakMeter::set_max_channels (const ChanCount& chn)
 {
+	A_CLASS_CALL ();
+
 	uint32_t const limit = chn.n_total();
 	const size_t n_audio = chn.n_audio();
 

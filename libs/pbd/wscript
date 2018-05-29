@@ -52,6 +52,8 @@ libpbd_sources = [
     'file_utils.cc',
     'fpu.cc',
     'id.cc',
+    'init.cc',
+    'library_options.cc',
     'locale_guard.cc',
     'localtime_r.cc',
     'malign.cc',
@@ -59,7 +61,6 @@ libpbd_sources = [
     'mountpoint.cc',
     'openuri.cc',
     'pathexpand.cc',
-    'pbd.cc',
     'pool.cc',
     'property_list.cc',
     'pthread_utils.cc',
@@ -89,6 +90,15 @@ libpbd_sources = [
     'xml++.cc',
 ]
 
+libpbd_windows_sources = [
+    'windows_special_dirs.cc',
+    'windows_timer_utils.cc',
+    'windows_mmcss.cc'
+]
+
+libpbd_amalgamated_sources = [ 'pbd.cc' ]
+
+
 def options(opt):
     opt.load('compiler_cxx')
     autowaf.set_options(opt)
@@ -96,22 +106,30 @@ def options(opt):
                    help='Compile with -arch ppc (OS X ONLY)')
     opt.add_option('--dist-target', type='string', default='auto', dest='dist_target',
                     help='Specify the target for cross-compiling [auto,none,x86,i386,i686,x86_64,tiger,leopard,mingw,msvc]')
-    opt.add_option('--internal-shared-libs', action='store_true', default=True, dest='internal_shared_libs',
-                   help='Build internal libs as shared libraries')
 
 def configure(conf):
     conf.load('compiler_cxx')
     autowaf.configure(conf)
     autowaf.check_pkg(conf, 'libxml-2.0', uselib_store='XML')
     autowaf.check_pkg(conf, 'sigc++-2.0', uselib_store='SIGCPP', atleast_version='2.0')
-    autowaf.check_pkg(conf, 'libcurl', uselib_store='CURL', atleast_version='7.0.0', mandatory=True)
-    autowaf.check_pkg(conf, 'libarchive', uselib_store='ARCHIVE', atleast_version='3.0.0', mandatory=True)
-    autowaf.check_pkg(conf, 'glibmm-2.4', uselib_store='GLIBMM', atleast_version='2.32.0', mandatory=True)
-    autowaf.check_pkg(conf, 'giomm-2.4', uselib_store='GIOMM', atleast_version='2.2', mandatory=True)
+    autowaf.check_pkg(conf, 'libcurl', uselib_store='CURL', atleast_version='7.0.0')
+    autowaf.check_pkg(conf, 'libarchive', uselib_store='ARCHIVE', atleast_version='3.0.0')
+    autowaf.check_pkg(conf, 'gthread-2.0', uselib_store='GTHREAD', atleast_version='2.2')
+    autowaf.check_pkg(conf, 'glibmm-2.4', uselib_store='GLIBMM', atleast_version='2.32.0')
+    autowaf.check_pkg(conf, 'giomm-2.4', uselib_store='GIOMM', atleast_version='2.2')
 
-    conf.check(function_name='getmntent', header_name='mntent.h', define_name='HAVE_GETMNTENT',mandatory=False)
+    if (Options.options.dev_tools):
+        autowaf.check_pkg(conf, 'adt-0', uselib_store='ADT', atleast_version='0.5.0')
+
+    conf.check(function_name='getmntent', header_name='mntent.h',
+               define_name='HAVE_GETMNTENT',mandatory=False)
     conf.check(header_name='execinfo.h', define_name='HAVE_EXECINFO',mandatory=False)
     conf.check(header_name='unistd.h', define_name='HAVE_UNISTD',mandatory=False)
+
+    # May be provided via compiler/toolchain and not a libpthread
+    # library, for instance with more recent mingw-w64/gcc
+    conf.check(header_name='pthread.h', lib='pthread', uselib_store='PTHREAD', mandatory=False)
+
     if not Options.options.ppc:
         conf.check_cc(function_name='posix_memalign', header_name='stdlib.h', cflags='-D_XOPEN_SOURCE=600', define_name='HAVE_POSIX_MEMALIGN', mandatory=False)
     conf.check(function_name='localtime_r', header_name='time.h', define_name='HAVE_LOCALTIME_R',mandatory=False)
@@ -124,9 +142,6 @@ def configure(conf):
                    lib='ole32',
                    mandatory=True,
                    uselib_store='OLE')
-
-    if Options.options.internal_shared_libs:
-        conf.define('INTERNAL_SHARED_LIBS', 1)
 
     conf.write_config_header('libpbd-config.h', remove=False)
 
@@ -145,24 +160,41 @@ def build(bld):
     # Make signals_generated.h using signals.py
     bld(rule = sys.executable + ' ${SRC} ${TGT}', source = 'pbd/signals.py', target = 'pbd/signals_generated.h')
 
+    sources = libpbd_sources
+
+    public_uselibs = ['GLIBMM',
+                      'SIGCPP',
+                      'XML',
+                      'ADT']
+
+    private_uselibs = ['UUID',
+                       'SNDFILE',
+                       'GIOMM',
+                       'ARCHIVE',
+                       'CURL',
+                       'OLE']
+
+    if bld.is_defined('WITH_DEV_TOOLS'):
+        sources += [ 'logging.cc' ]
+
+    if bld.env['AMALGAMATE']:
+        sources = libpbd_amalgamated_sources
+
+    uselibs = public_uselibs + private_uselibs
+
     # Library
-    if bld.is_defined ('INTERNAL_SHARED_LIBS'):
-        obj              = bld.shlib(features = 'cxx cxxshlib', source=libpbd_sources)
-        obj.defines = [ 'LIBPBD_DLL_EXPORTS=1' ]
-    else:
-        obj              = bld.stlib(features = 'cxx cxxstlib', source=libpbd_sources)
-        obj.cxxflags     = [ '-fPIC' ]
-        obj.cflags     = [ '-fPIC' ]
-        obj.defines      = []
+    obj              = bld.shlib(features = 'cxx cxxshlib', source=sources)
+    obj.defines = [ 'LIBPBD_DLL_EXPORTS=1' ]
 
     if bld.is_defined('DEBUG_RT_ALLOC'):
         obj.source += 'debug_rt_alloc.c'
 
     obj.export_includes = ['.']
-    obj.includes     = ['.']
-    obj.name         = 'libpbd'
+    obj.includes     = obj.export_includes
+    obj.name         = 'PBD'
     obj.target       = 'pbd'
-    obj.uselib       = 'GLIBMM SIGCPP XML UUID SNDFILE GIOMM ARCHIVE CURL'
+    obj.uselib       = private_uselibs
+    obj.use          = public_uselibs
     if sys.platform == 'darwin':
         TaskGen.task_gen.mappings['.mm'] = TaskGen.task_gen.mappings['.cc']
         if 'cocoa_open_uri.mm' not in obj.source:
@@ -179,10 +211,8 @@ def build(bld):
         obj.defines += [ 'USE_X86_64_ASM' ]
     if bld.env['build_target'] == 'mingw':
         obj.defines += [ 'NO_POSIX_MEMALIGN' ]
-        obj.source += [ 'windows_special_dirs.cc' ]
-        obj.source += [ 'windows_timer_utils.cc' ]
-        obj.source += [ 'windows_mmcss.cc' ]
-        obj.uselib += ' OLE'
+        if not bld.env['AMALGAMATE']:
+            obj.source += libpbd_windows_sources
 
     if bld.env['BUILD_TESTS'] and bld.is_defined('HAVE_CPPUNIT'):
         # Unit tests
@@ -204,10 +234,10 @@ def build(bld):
         if bld.env['build_target'] == 'mingw':
             testobj.source += [ 'test/windows_timer_utils_test.cc' ]
         testobj.target       = 'run-tests'
-        testobj.includes     = obj.includes + ['test', '../pbd']
-        testobj.uselib       = 'CPPUNIT XML SNDFILE'
-        testobj.use          = 'libpbd'
-        testobj.name         = 'libpbd-tests'
+        testobj.includes     = ['test']
+        testobj.uselib       = ['CPPUNIT', 'PTHREAD']
+        testobj.use          = 'PBD'
+        testobj.name         = 'PBD_TESTS'
         testobj.defines      = [ 'PACKAGE="' + I18N_PACKAGE + '"' ]
         if sys.platform != 'darwin' and bld.env['build_target'] != 'mingw':
             testobj.linkflags    = ['-lrt']

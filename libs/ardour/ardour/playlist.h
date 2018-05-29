@@ -32,6 +32,7 @@
 
 #include <glib.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/undo.h"
 #include "pbd/stateful.h"
 #include "pbd/statefuldestructible.h"
@@ -421,6 +422,8 @@ public:
 	boost::shared_ptr<RegionList> find_regions_at (samplepos_t);
 
 	samplepos_t _end_space;  //this is used when we are pasting a range with extra space at the end
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::Playlist);
 };
 
 } /* namespace ARDOUR */

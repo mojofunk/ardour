@@ -92,6 +92,8 @@ struct LIBCANVAS_API Duple
 	Duple operator/ (double b) const throw () {
 		return Duple (x / b, y / b);
 	}
+
+	std::string to_string () const;
 };
 
 
@@ -181,6 +183,8 @@ struct LIBCANVAS_API Rect
 			y0 != o.y0 ||
 			y1 != o.y1;
 	}
+
+	std::string to_string () const;
 };
 
 extern LIBCANVAS_API std::ostream & operator<< (std::ostream &, Rect const &);

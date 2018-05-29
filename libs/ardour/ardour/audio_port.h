@@ -23,6 +23,8 @@
 
 #include "zita-resampler/vmresampler.h"
 
+#include "pbd/dev_tools.h"
+
 #include "ardour/port.h"
 #include "ardour/audio_buffer.h"
 
@@ -59,6 +61,9 @@ private:
 	ArdourZita::VMResampler _src;
 	Sample*                 _data;
 	bool                    _buf_valid;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::AudioPort);
 };
 
 } // namespace ARDOUR

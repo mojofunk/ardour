@@ -28,6 +28,7 @@
 #include <glibmm.h>
 #include <boost/algorithm/string.hpp>
 
+#include "pbd/dev_tools.h"
 #include "pbd/xml++.h"
 #include "pbd/enumwriter.h"
 #include "pbd/locale_guard.h"
@@ -53,6 +54,7 @@
 #include "ardour/gain_control.h"
 #include "ardour/internal_return.h"
 #include "ardour/internal_send.h"
+#include "ardour/logging.h"
 #include "ardour/meter.h"
 #include "ardour/delayline.h"
 #include "ardour/midi_buffer.h"
@@ -87,6 +89,8 @@
 using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::Route);
 
 PBD::Signal3<int,boost::shared_ptr<Route>, boost::shared_ptr<PluginInsert>, Route::PluginSetupOptions > Route::PluginSetup;
 
@@ -254,8 +258,6 @@ Route::init ()
 
 Route::~Route ()
 {
-	DEBUG_TRACE (DEBUG::Destruction, string_compose ("route %1 destructor\n", _name));
-
 	/* do this early so that we don't get incoming signals as we are going through destruction
 	 */
 
@@ -465,16 +467,12 @@ Route::process_output_buffers (BufferSet& bufs,
 		 * cross loop points.
 		 */
 
-#ifndef NDEBUG
+#ifdef A_LOGGING_ENABLED
 		/* if it has any inputs, make sure they match */
 		if (boost::dynamic_pointer_cast<UnknownProcessor> (*i) == 0 && (*i)->input_streams() != ChanCount::ZERO) {
 			if (bufs.count() != (*i)->input_streams()) {
-				DEBUG_TRACE (
-					DEBUG::Processors, string_compose (
-						"input port mismatch %1 bufs = %2 input for %3 = %4\n",
-						_name, bufs.count(), (*i)->name(), (*i)->input_streams()
-						)
-					);
+				A_CLASS_MSG (A_FMT ("Input port mismatch {} bufs = {} input for {} = {}",
+				                    name(), bufs.count().to_string(), (*i)->name(), (*i)->input_streams().to_string()));
 			}
 		}
 #endif
@@ -718,6 +716,7 @@ Route::set_listen (bool yn)
 void
 Route::solo_control_changed (bool, Controllable::GroupControlDisposition)
 {
+	A_LOG_CLASS_CALL1 (LOG::Solo, name());
 	/* nothing to do if we're not using AFL/PFL. But if we are, we need
 	   to alter the active state of the monitor send.
 	*/
@@ -730,6 +729,8 @@ Route::solo_control_changed (bool, Controllable::GroupControlDisposition)
 void
 Route::push_solo_isolate_upstream (int32_t delta)
 {
+	A_LOG_CLASS_CALL2 (LOG::Solo, name(), delta);
+
 	/* forward propagate solo-isolate status to everything fed by this route, but not those via sends only */
 
 	boost::shared_ptr<RouteList> routes = _session.get_routes ();
@@ -751,7 +752,8 @@ Route::push_solo_isolate_upstream (int32_t delta)
 void
 Route::push_solo_upstream (int delta)
 {
-	DEBUG_TRACE (DEBUG::Solo, string_compose("\t ... INVERT push from %1\n", _name));
+	A_LOG_CLASS_CALL2 (LOG::Solo, name(), delta);
+
 	for (FedBy::iterator i = _fed_by.begin(); i != _fed_by.end(); ++i) {
 		if (i->sends_only) {
 			continue;
@@ -782,6 +784,8 @@ dump_processors(const string& name, const list<boost::shared_ptr<Processor> >& p
 boost::shared_ptr<Processor>
 Route::before_processor_for_placement (Placement p)
 {
+	A_CLASS_CALL1 (p);
+
 	Glib::Threads::RWLock::ReaderLock lm (_processor_lock);
 
 	ProcessorList::iterator loc;
@@ -794,32 +798,36 @@ Route::before_processor_for_placement (Placement p)
 		loc = find (_processors.begin(), _processors.end(), _main_outs);
 	}
 
+	if (*loc) {
+		A_CLASS_DATA1 ((*loc)->display_name());
+	}
+
 	return loc != _processors.end() ? *loc : boost::shared_ptr<Processor> ();
 }
 
 /** Supposing that we want to insert a Processor at a given index, return
- *  the processor to add the new one before (or 0 to add at the end).
+ *  the processor to add the new one before (or -1 to add at the end).
  */
 boost::shared_ptr<Processor>
 Route::before_processor_for_index (int index)
 {
+	A_CLASS_CALL1 (index);
+
 	if (index == -1) {
 		return boost::shared_ptr<Processor> ();
 	}
 
 	Glib::Threads::RWLock::ReaderLock lm (_processor_lock);
 
-	ProcessorList::iterator i = _processors.begin ();
 	int j = 0;
-	while (i != _processors.end() && j < index) {
-		if ((*i)->display_to_user()) {
-			++j;
+	for (ProcessorList::const_iterator i = _processors.begin (); i != _processors.end(); ++i) {
+		if ((*i)->display_to_user() && j >= index) {
+			return *i;
 		}
-
-		++i;
+		j++;
 	}
 
-	return (i != _processors.end() ? *i : boost::shared_ptr<Processor> ());
+	return boost::shared_ptr<Processor> ();
 }
 
 /** Add a processor either pre- or post-fader
@@ -849,11 +857,10 @@ Route::add_processor_by_index (boost::shared_ptr<Processor> processor, int index
 int
 Route::add_processor (boost::shared_ptr<Processor> processor, boost::shared_ptr<Processor> before, ProcessorStreams* err, bool activation_allowed)
 {
+	A_CLASS_CALL2 (name(), processor->name());
+
 	assert (processor != _meter);
 	assert (processor != _main_outs);
-
-	DEBUG_TRACE (DEBUG::Processors, string_compose (
-		             "%1 adding processor %2\n", name(), processor->name()));
 
 	ProcessorList pl;
 
@@ -980,6 +987,8 @@ inline Route::PluginSetupOptions operator&= (Route::PluginSetupOptions& a, const
 int
 Route::add_processors (const ProcessorList& others, boost::shared_ptr<Processor> before, ProcessorStreams* err)
 {
+	A_CLASS_CALL1 (before.get());
+
 	ProcessorList::iterator loc;
 	boost::shared_ptr <PluginInsert> fanout;
 
@@ -1098,6 +1107,10 @@ Route::add_processors (const ProcessorList& others, boost::shared_ptr<Processor>
 
 			_processors.insert (loc, *i);
 			(*i)->set_owner (this);
+
+			for (const auto& p : _processors) {
+				A_CLASS_DATA3 (name(), p->display_name(), p->display_to_user());
+			}
 
 			{
 				if (configure_processors_unlocked (err, &lm)) {
@@ -1734,13 +1747,12 @@ Route::try_configure_processors (ChanCount in, ProcessorStreams* err)
 list<pair<ChanCount, ChanCount> >
 Route::try_configure_processors_unlocked (ChanCount in, ProcessorStreams* err)
 {
+	A_CLASS_CALL1 (name());
+
 	// Check each processor in order to see if we can configure as requested
 	ChanCount out;
 	list<pair<ChanCount, ChanCount> > configuration;
 	uint32_t index = 0;
-
-	DEBUG_TRACE (DEBUG::Processors, string_compose ("%1: configure processors\n", _name));
-	DEBUG_TRACE (DEBUG::Processors, "{\n");
 
 	for (ProcessorList::iterator p = _processors.begin(); p != _processors.end(); ++p, ++index) {
 
@@ -1772,7 +1784,8 @@ Route::try_configure_processors_unlocked (ChanCount in, ProcessorStreams* err)
 				}
 			}
 
-			DEBUG_TRACE (DEBUG::Processors, string_compose ("\t%1 ID=%2 in=%3 out=%4\n",(*p)->name(), (*p)->id(), in, out));
+			A_CLASS_DATA4 ((*p)->name(), (*p)->id().to_s(), in.to_string(), out.to_string());
+
 			configuration.push_back(make_pair(in, out));
 
 			if (is_monitor()) {
@@ -1792,11 +1805,11 @@ Route::try_configure_processors_unlocked (ChanCount in, ProcessorStreams* err)
 					 * 3) monitor processors fail to re-reconfigure (stereo plugin)
 					 * 4) re-load session, monitor-processor remains unconfigured, crash.
 					 */
-					DEBUG_TRACE (DEBUG::Processors, "Monitor: Channel configuration change.\n");
+					A_CLASS_MSG ("Monitor: Channel configuration change");
 				}
 				if (boost::dynamic_pointer_cast<InternalSend> (*p)) {
 					// internal sends make no sense, only feedback
-					DEBUG_TRACE (DEBUG::Processors, "Monitor: No Sends allowed.\n");
+					A_CLASS_MSG ("Monitor: No Sends allowed");
 					return list<pair<ChanCount, ChanCount> > ();
 				}
 				if (boost::dynamic_pointer_cast<PortInsert> (*p)) {
@@ -1804,12 +1817,12 @@ Route::try_configure_processors_unlocked (ChanCount in, ProcessorStreams* err)
 					 * there signal leaves the DAW to external monitors anyway, so there's
 					 * no real use for allowing them here anyway.
 					 */
-					DEBUG_TRACE (DEBUG::Processors, "Monitor: No External Sends allowed.\n");
+					A_CLASS_MSG ("Monitor: No External Sends allowed");
 					return list<pair<ChanCount, ChanCount> > ();
 				}
 				if (boost::dynamic_pointer_cast<Send> (*p)) {
 					// ditto
-					DEBUG_TRACE (DEBUG::Processors, "Monitor: No Sends allowed.\n");
+					A_CLASS_MSG ("Monitor: No Sends allowed");
 					return list<pair<ChanCount, ChanCount> > ();
 				}
 			}
@@ -1819,14 +1832,10 @@ Route::try_configure_processors_unlocked (ChanCount in, ProcessorStreams* err)
 				err->index = index;
 				err->count = in;
 			}
-			DEBUG_TRACE (DEBUG::Processors, "---- CONFIGURATION FAILED.\n");
-			DEBUG_TRACE (DEBUG::Processors, string_compose ("---- %1 cannot support in=%2 out=%3\n", (*p)->name(), in, out));
-			DEBUG_TRACE (DEBUG::Processors, "}\n");
+			A_CLASS_MSG (A_FMT ("{} Cannot support in={} out={}", (*p)->name(), in.to_string(), out.to_string()));
 			return list<pair<ChanCount, ChanCount> > ();
 		}
 	}
-
-	DEBUG_TRACE (DEBUG::Processors, "}\n");
 
 	return configuration;
 }
@@ -1890,7 +1899,7 @@ Route::configure_processors_unlocked (ProcessorStreams* err, Glib::Threads::RWLo
 	for (ProcessorList::iterator p = _processors.begin(); p != _processors.end(); ++p, ++c) {
 
 		if (!(*p)->configure_io(c->first, c->second)) {
-			DEBUG_TRACE (DEBUG::Processors, string_compose ("%1: configuration failed\n", _name));
+			A_CLASS_MSG (A_FMT("{} configuration failed", name()));
 			_in_configure_processors = false;
 			lr.release ();
 			lm->acquire ();
@@ -1941,7 +1950,7 @@ Route::configure_processors_unlocked (ProcessorStreams* err, Glib::Threads::RWLo
 	*/
 	_session.ensure_buffers (n_process_buffers ());
 
-	DEBUG_TRACE (DEBUG::Processors, string_compose ("%1: configuration complete\n", _name));
+	A_CLASS_MSG (A_FMT("{}: configuration complete", name()));
 
 	_in_configure_processors = false;
 	return 0;
@@ -2130,7 +2139,7 @@ Route::reorder_processors (const ProcessorList& new_order, ProcessorStreams* err
 	// (unless engine is stopped. apply immediately and proceed
 	while (g_atomic_int_get (&_pending_process_reorder)) {
 		if (!AudioEngine::instance()->running()) {
-			DEBUG_TRACE (DEBUG::Processors, "offline apply queued processor re-order.\n");
+			A_CLASS_MSG ("Offline apply queued processor re-order");
 			Glib::Threads::RWLock::WriterLock lm (_processor_lock);
 
 			apply_processor_order(_pending_processor_order);
@@ -2168,7 +2177,7 @@ Route::reorder_processors (const ProcessorList& new_order, ProcessorStreams* err
 		set_processor_positions ();
 
 	} else {
-		DEBUG_TRACE (DEBUG::Processors, "Queue clickless processor re-order.\n");
+		A_CLASS_MSG ("Queue clickless processor re-order");
 		Glib::Threads::RWLock::ReaderLock lm (_processor_lock);
 
 		// _pending_processor_order is protected by _processor_lock
@@ -3354,9 +3363,10 @@ Route::all_outputs () const
 bool
 Route::direct_feeds_according_to_reality (boost::shared_ptr<Route> other, bool* via_send_only)
 {
-	DEBUG_TRACE (DEBUG::Graph, string_compose ("Feeds? %1\n", _name));
+	A_LOG_CLASS_CALL1 (LOG::Graph, name());
+
 	if (other->all_inputs().fed_by (_output)) {
-		DEBUG_TRACE (DEBUG::Graph, string_compose ("\tdirect FEEDS %2\n", other->name()));
+		A_LOG_CLASS_MSG (LOG::Graph, A_FMT ("Directly feeds {}", other->name()));
 		if (via_send_only) {
 			*via_send_only = false;
 		}
@@ -3379,25 +3389,25 @@ Route::direct_feeds_according_to_reality (boost::shared_ptr<Route> other, bool* 
 			boost::shared_ptr<const IO> iop_out = iop->output();
 			if (other.get() == this && iop_out && iop->input() && iop_out->connected_to (iop->input())) {
 				// TODO this needs a delaylines in the Insert to align connections (!)
-				DEBUG_TRACE (DEBUG::Graph,  string_compose ("\tIOP %1 does feed its own return (%2)\n", iop->name(), other->name()));
+				A_LOG_CLASS_MSG (LOG::Graph, A_FMT ("IOP {} does feed its own return ({})",
+				                                    iop->name(), other->name()));
 				continue;
 			}
 			if ((iop_out && other->all_inputs().fed_by (iop_out)) || iop->feeds (other)) {
-				DEBUG_TRACE (DEBUG::Graph,  string_compose ("\tIOP %1 does feed %2\n", iop->name(), other->name()));
+				A_LOG_CLASS_MSG (LOG::Graph, A_FMT ("IOP {} does feed {}", iop->name(), other->name()));
 				if (via_send_only) {
 					*via_send_only = true;
 				}
 				return true;
 			} else {
-				DEBUG_TRACE (DEBUG::Graph,  string_compose ("\tIOP %1 does NOT feed %2\n", iop->name(), other->name()));
+				A_LOG_CLASS_MSG (LOG::Graph, A_FMT("IOP {} does NOT feed {}", iop->name(), other->name()));
 			}
 		} else {
-			DEBUG_TRACE (DEBUG::Graph,  string_compose ("\tPROC %1 is not an IOP\n", (*r)->name()));
+			A_LOG_CLASS_MSG (LOG::Graph, A_FMT ("PROC {} is not an IOP", (*r)->name()));
 		}
-
 	}
 
-	DEBUG_TRACE (DEBUG::Graph,  string_compose ("\tdoes NOT feed %1\n", other->name()));
+	A_LOG_CLASS_MSG (LOG::Graph, A_FMT ("Does NOT feed {}", other->name()));
 	return false;
 }
 
@@ -3417,6 +3427,8 @@ Route::feeds_according_to_graph (boost::shared_ptr<Route> other)
 void
 Route::non_realtime_transport_stop (samplepos_t now, bool flush)
 {
+	A_CLASS_CALL3 (name(), now, flush);
+
 	Glib::Threads::RWLock::ReaderLock lm (_processor_lock);
 
 	Automatable::non_realtime_transport_stop (now, flush);
@@ -3672,6 +3684,8 @@ Route::latency_preroll (pframes_t nframes, samplepos_t& start_sample, samplepos_
 int
 Route::roll (pframes_t nframes, samplepos_t start_sample, samplepos_t end_sample, int declick, bool& need_butler)
 {
+	A_LOG_CLASS_CALL5 (LOG::ProcessThreads, name(), nframes, start_sample, end_sample, declick);
+
 	Glib::Threads::RWLock::ReaderLock lm (_processor_lock, Glib::Threads::TRY_LOCK);
 
 	if (!lm.locked()) {
@@ -3931,13 +3945,15 @@ Route::set_meter_point_unlocked ()
 void
 Route::listen_position_changed ()
 {
+	A_CLASS_CALL ();
+
 	{
 		Glib::Threads::Mutex::Lock lx (AudioEngine::instance()->process_lock ());
 		Glib::Threads::RWLock::WriterLock lm (_processor_lock);
 		ProcessorState pstate (this);
 
 		if (configure_processors_unlocked (0, &lm)) {
-			DEBUG_TRACE (DEBUG::Processors, "---- CONFIGURATION FAILED.\n");
+			A_CLASS_MSG ("Configuration Failed");
 			pstate.restore ();
 			configure_processors_unlocked (0, &lm); // it worked before we tried to add it ...
 			return;
@@ -4919,10 +4935,12 @@ Route::setup_invisible_processors ()
 		}
 	}
 
-	DEBUG_TRACE (DEBUG::Processors, string_compose ("%1: setup_invisible_processors\n", _name));
+#ifdef A_LOGGING_ENABLED
+	A_CLASS_MSG (A_FMT("{}: setup_invisible_processors", name()));
 	for (ProcessorList::iterator i = _processors.begin(); i != _processors.end(); ++i) {
-		DEBUG_TRACE (DEBUG::Processors, string_compose ("\t%1\n", (*i)->name ()));
+		A_CLASS_MSG (A_FMT("{}", (*i)->name ()));
 	}
+#endif
 }
 
 void
@@ -5051,6 +5069,8 @@ Route::is_track()
 void
 Route::non_realtime_locate (samplepos_t pos)
 {
+	A_CLASS_CALL2 (name(), pos);
+
 	Automatable::non_realtime_locate (pos);
 
 	if (_pannable) {
@@ -5076,6 +5096,8 @@ Route::non_realtime_locate (samplepos_t pos)
 void
 Route::fill_buffers_with_input (BufferSet& bufs, boost::shared_ptr<IO> io, pframes_t nframes)
 {
+	A_LOG_CLASS_CALL1 (LOG::ProcessThreads, nframes);
+
 	size_t n_buffers;
 	size_t i;
 

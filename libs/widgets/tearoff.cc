@@ -30,7 +30,6 @@
 
 using namespace std;
 using namespace Glib;
-using namespace Gdk;
 using namespace Gtk;
 using namespace ArdourWidgets;
 
@@ -45,6 +44,8 @@ TearOff::TearOff (Widget& c, bool allow_resize)
 	, _can_be_torn_off (true)
 
 {
+	using namespace Gdk;
+
 	own_window_width = 0;
 	own_window_height = 0;
 	own_window_xpos = 0;
@@ -297,7 +298,7 @@ TearOff::set_state (const XMLNode& node)
 	node.get_property (X_("xpos"), own_window_xpos);
 	node.get_property (X_("ypos"), own_window_ypos);
 
-	if (own_window.is_realized ()) {
+	if (own_window.get_realized ()) {
 		own_window.set_default_size (own_window_width, own_window_height);
 		own_window.move (own_window_xpos, own_window_ypos);
 	}
@@ -307,6 +308,7 @@ TearOff::set_state (const XMLNode& node)
 void
 TearOff::own_window_realized ()
 {
+	using namespace Gdk;
 	own_window.get_window()->set_decorations (WMDecoration (DECOR_BORDER|DECOR_RESIZEH));
 
 	if (own_window_width > 0) {

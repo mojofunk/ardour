@@ -32,8 +32,8 @@ namespace Gtkmm2ext
 typedef uint32_t Color;
 
 /* conventient way to use Gtkmm2ext::Color with libcairo */
-extern LIBGTKMM2EXT_API void set_source_rgba (Cairo::RefPtr<Cairo::Context>, Gtkmm2ext::Color);
-extern LIBGTKMM2EXT_API void set_source_rgb_a (Cairo::RefPtr<Cairo::Context>, Gtkmm2ext::Color, float alpha);  //override the color's alpha
+extern LIBGTKMM2EXT_API void set_source_rgba (::Cairo::RefPtr<::Cairo::Context>, Gtkmm2ext::Color);
+extern LIBGTKMM2EXT_API void set_source_rgb_a (::Cairo::RefPtr<::Cairo::Context>, Gtkmm2ext::Color, float alpha);  //override the color's alpha
 
 extern LIBGTKMM2EXT_API void set_source_rgba (cairo_t*, Gtkmm2ext::Color);
 extern LIBGTKMM2EXT_API void set_source_rgb_a (cairo_t*, Gtkmm2ext::Color, float alpha);  //override the color's alpha

@@ -191,6 +191,9 @@ private:
 
 	void check_record_status (samplepos_t transport_sample, double speed, bool can_record);
 	void finish_capture (boost::shared_ptr<ChannelList> c);
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::DiskWriter);
 };
 
 } // namespace

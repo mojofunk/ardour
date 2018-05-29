@@ -258,6 +258,32 @@ libardour_sources = [
         'worker.cc'
 ]
 
+libardour_amalgamated_sources = [
+        'libardour_audio.cc',
+        'libardour_audio_analysis.cc',
+        'libardour_automation_controls.cc',
+        'libardour_core.cc',
+        'libardour_dsp.cc',
+        'libardour_engine.cc',
+        'libardour_utils.cc',
+        'libardour_pan.cc',
+        'libardour_plugin.cc',
+        'libardour_processor.cc',
+        'libardour_importers.cc',
+        'libardour_route.cc',
+        'libardour_lua.cc',
+        'libardour_midi.cc',
+        'libardour_misc.cc',
+        'libardour_session.cc',
+        'libardour_slave.cc',
+        'libardour_export.cc',
+        'soundcloud_upload.cc',
+        'export_handler.cc',
+        'config_text.cc',
+        'revision.cc',
+]
+
+
 def flac_supported():
     cmd = subprocess.Popen ("sndfile-info testfile.flac",
                             stdout = subprocess.PIPE,
@@ -284,6 +310,8 @@ def configure(conf):
                       atleast_version='0.3.2')
     autowaf.check_pkg(conf, 'aubio', uselib_store='AUBIO4',
                       atleast_version='0.4.0', mandatory=False)
+    autowaf.check_pkg(conf, 'fftw3f', uselib_store='FFTW3F',
+                      mandatory=True)
     autowaf.check_pkg(conf, 'libxml-2.0', uselib_store='XML')
     if Options.options.dist_target != 'mingw':
         if not Options.options.no_lrdf:
@@ -295,6 +323,11 @@ def configure(conf):
                       atleast_version='0.1.0')
     autowaf.check_pkg(conf, 'sigc++-2.0', uselib_store='SIGCPP',
                       atleast_version='2.0')
+    autowaf.check_pkg(conf, 'giomm-2.4', uselib_store='GIOMM', atleast_version='2.2')
+
+    autowaf.check_pkg(conf, 'liblo', uselib_store='LO', atleast_version='0.26')
+    autowaf.check_pkg(conf, 'taglib', uselib_store='TAGLIB', atleast_version='1.6')
+    autowaf.check_pkg(conf, 'rubberband', uselib_store='RUBBERBAND')
 
     if Options.options.lv2:
         autowaf.check_pkg(conf, 'lv2', uselib_store='LV2',
@@ -335,6 +368,10 @@ def configure(conf):
     autowaf.check_pkg(conf, 'libcurl', uselib_store='CURL',
                       atleast_version='7.0.0')
 
+    if conf.is_defined('USE_EXTERNAL_LIBS'):
+        autowaf.check_pkg(conf, 'ltc', uselib_store='LTC', atleast_version='1.1.1', mandatory=True)
+        autowaf.check_pkg(conf, 'fluidsynth', uselib_store='FLUIDSYNTH', atleast_version='1.1.6', mandatory=True)
+
     # controls whether we actually use it in preference to soundtouch
     # Note: as of 2104, soundtouch (WSOLA) has been out-of-use for years.
     conf.define('USE_RUBBERBAND', 1)
@@ -354,8 +391,6 @@ def configure(conf):
     conf.write_config_header('libardour-config.h', remove=False)
 
     # Boost headers
-    autowaf.check_header(conf, 'cxx', 'boost/shared_ptr.hpp')
-    autowaf.check_header(conf, 'cxx', 'boost/weak_ptr.hpp')
     autowaf.check_header(conf, 'cxx', 'boost/scoped_ptr.hpp')
     autowaf.check_header(conf, 'cxx', 'boost/ptr_container/ptr_list.hpp')
     if conf.env['WINDOWS_VST_SUPPORT'] == True and Options.options.dist_target == 'mingw':
@@ -374,39 +409,33 @@ def build(bld):
 
     # operate on copy to avoid adding sources twice
     sources = list(libardour_sources)
+
+    if bld.is_defined('WITH_DEV_TOOLS'):
+        sources += ['logging.cc']
+
+    if bld.env['AMALGAMATE']:
+        sources = list(libardour_amalgamated_sources)
+
     if bld.is_tracks_build():
         sources += [ 'engine_state_controller.cc' ]
 
+    private_uselibs = ['AUBIO','UUID','AUDIOUNITS','GIOMM',
+                       'GDI32','DL','APPLE_UTILITY'
+                       'OSX','LILV','SUIL']
+
+    public_uselibs = ['MIDIPP','EVORAL','AUDIOGRAPHER','VSTWIN','LO','CURL','ZITA_RESAMPLER',
+                        'LUA','LRDF','TAGLIB','RUBBERBAND','LTC','FLUIDSYNTH']
     # Library
-    if bld.is_defined ('INTERNAL_SHARED_LIBS'):
-        obj              = bld.shlib(features = 'c cxx cshlib cxxshlib', source=sources)
-        # macros for this shared library
-        obj.defines      = [ 'LIBARDOUR_DLL_EXPORTS=1' ]
-    else:
-        obj              = bld.stlib(features = 'c cxx cstlib cxxstlib', source=sources)
-        obj.cxxflags     = [  bld.env['compiler_flags_dict']['pic'] ]
-        obj.cflags       = [ bld.env['compiler_flags_dict']['pic'] ]
-        obj.defines      = []
+    obj              = bld.shlib(features = 'c cxx cshlib cxxshlib', source=sources)
+    # macros for this shared library
+    obj.defines      = [ 'LIBARDOUR_DLL_EXPORTS=1' ]
 
     obj.export_includes = ['.']
     obj.includes     = ['.', '../surfaces/control_protocol', '..']
-    obj.name         = 'libardour'
+    obj.name         = 'ARDOUR'
     obj.target       = 'ardour'
-    obj.uselib       = ['GLIBMM','GTHREAD','AUBIO','SIGCPP','XML','UUID', 'LO',
-                        'SNDFILE','SAMPLERATE','LRDF','AUDIOUNITS', 'GIOMM',
-                        'OSX','BOOST','CURL','TAGLIB','VAMPSDK','VAMPHOSTSDK','RUBBERBAND']
-    obj.use          = ['libpbd','libmidipp','libevoral',
-                        'libaudiographer',
-                        'libtemporal',
-                        'liblua',
-                        'zita-resampler',
-                        ]
-    if bld.env['build_target'] != 'mingw':
-        obj.uselib += ['DL']
-    if bld.is_defined('USE_EXTERNAL_LIBS'):
-        obj.uselib.extend(['VAMPSDK', 'LIBLTC', 'LIBFLUIDSYNTH'])
-    else:
-        obj.use.extend(['librubberband', 'libltc_includes', 'libltc', 'libfluidsynth_includes', 'libfluidsynth'])
+    obj.uselib       = private_uselibs
+    obj.use          = public_uselibs
 
     obj.vnum         = LIBARDOUR_LIB_VERSION
     obj.install_path = bld.env['LIBDIR']
@@ -424,17 +453,11 @@ def build(bld):
 
     if bld.is_defined('HAVE_LILV') :
         obj.source += ['lv2_plugin.cc', 'lv2_evbuf.c', 'uri_map.cc']
-        obj.uselib += ['LILV']
-        if bld.is_defined('HAVE_SUIL'):
-            obj.uselib += ['SUIL']
 
     if bld.is_defined('WINDOWS_VST_SUPPORT'):
         obj.source += [ 'windows_vst_plugin.cc']
         obj.includes += [ '../fst' ]
         obj.defines += [ 'WINDOWS_VST_SUPPORT' ]
-        if bld.env['build_target'] == 'mingw':
-            obj.use += [ 'vstwin' ]
-            obj.uselib += ['GDI32']
 
     if bld.is_defined('LXVST_SUPPORT'):
         obj.source += [ 'lxvst_plugin.cc', 'linux_vst_support.cc' ]
@@ -449,7 +472,6 @@ def build(bld):
 
     if bld.is_defined('HAVE_COREAUDIO'):
         obj.source += [ 'coreaudiosource.cc', 'caimportable.cc' ]
-        obj.use    += ['libappleutility']
 
     if bld.is_defined('AUDIOUNIT_SUPPORT'):
         obj.source += [ 'audio_unit.cc' ]
@@ -482,8 +504,7 @@ def build(bld):
                 source   = avx_sources,
                 cxxflags = avx_cxxflags,
                 includes = [ '.' ],
-                use = [ 'libtemporal', 'libpbd', 'libevoral', 'liblua' ],
-                uselib = [ 'GLIBMM', 'XML' ],
+                use = [ 'EVORAL' ],
                 target   = 'sse_avx_functions')
 
             obj.use += ['sse_avx_functions' ]
@@ -500,24 +521,18 @@ def build(bld):
         # Unit tests
         # only build these common sources once
         testcommon              = bld(features = 'cxx')
-        testcommon.includes     = obj.includes + ['test', '../pbd', '..']
+        testcommon.includes     = obj.includes + ['test', '..']
         testcommon.source       = ['test/testrunner.cc', 'test/test_needing_session.cc',
                                    'test/dummy_lxvst.cc', 'test/audio_region_test.cc', 'test/test_util.cc', 'test/test_ui.cc']
-        testcommon.uselib       = ['CPPUNIT','SIGCPP','GLIBMM','GTHREAD',
-                                   'SAMPLERATE','XML','LRDF','COREAUDIO','TAGLIB','VAMPSDK','VAMPHOSTSDK','RUBBERBAND']
-        testcommon.use          = ['libpbd','libmidipp','libevoral',
-                                   'libaudiographer','libardour']
-        if bld.is_defined('USE_EXTERNAL_LIBS'):
-            testcommon.uselib.extend(['LIBLTC', 'LIBFLUIDSYNTH'])
-        else:
-            testcommon.use.extend(['libltc', 'librubberband', 'libfluidsynth'])
+        testcommon.uselib       = ['CPPUNIT', 'COREAUDIO']
+        testcommon.use          = ['ARDOUR']
         testcommon.defines      = [
             'PACKAGE="libardour' + str(bld.env['MAJOR']) + 'test"',
             'DATA_DIR="' + os.path.normpath(bld.env['DATADIR']) + '"',
             'CONFIG_DIR="' + os.path.normpath(bld.env['SYSCONFDIR']) + '"',
             'LOCALEDIR="' + os.path.normpath(bld.env['LOCALEDIR']) + '"',
             ]
-        testcommon.name         = 'testcommon'
+        testcommon.name         = 'ARDOUR_TEST_COMMON'
 
         if bld.env['SINGLE_TESTS']:
             create_ardour_test_program(bld, obj.includes, 'audio_engine_test', 'test_audio_engine', ['test/audio_engine_test.cc'])
@@ -579,10 +594,9 @@ def build(bld):
 
         load_save_session.includes  = obj.includes
         load_save_session.includes.append ('test')
-        load_save_session.uselib    = ['CPPUNIT','SIGCPP','GLIBMM','GTHREAD',
-                             'SAMPLERATE','XML','LRDF','COREAUDIO']
-        load_save_session.use       = ['libpbd','libmidipp','libardour']
-        load_save_session.name      = 'libardour-load-save-session'
+        load_save_session.uselib    = ['CPPUNIT','COREAUDIO']
+        load_save_session.use       = ['ARDOUR']
+        load_save_session.name      = 'ARDOUR_LOAD_SAVE_SESSION'
         load_save_session.target    = 'load-save-session'
         load_save_session.install_path = ''
         load_save_session.defines      = [
@@ -604,10 +618,9 @@ def build(bld):
 
             profilingobj.includes  = obj.includes
             profilingobj.includes.append ('test')
-            profilingobj.uselib    = ['CPPUNIT','SIGCPP','GLIBMM','GTHREAD',
-                             'SAMPLERATE','XML','LRDF','COREAUDIO']
-            profilingobj.use       = ['libpbd','libmidipp','libardour']
-            profilingobj.name      = 'libardour-profiling'
+            profilingobj.uselib    = ['CPPUNIT', 'COREAUDIO']
+            profilingobj.use       = ['ARDOUR']
+            profilingobj.name      = 'ARDOUR_PROFILING'
             profilingobj.target    = p
             profilingobj.install_path = ''
             profilingobj.defines      = [
@@ -619,18 +632,10 @@ def build(bld):
 
 def create_ardour_test_program(bld, includes, name, target, sources):
     testobj              = bld(features = 'cxx cxxprogram')
-    testobj.includes     = includes + ['test', '../pbd', '..']
+    testobj.includes     = includes + ['test', '..']
     testobj.source       = sources
-    testobj.uselib       = ['CPPUNIT','SIGCPP','GLIBMM','GTHREAD',
-                            'SAMPLERATE','XML','LRDF','COREAUDIO','TAGLIB','VAMPSDK','VAMPHOSTSDK','RUBBERBAND']
-    testobj.use          = ['libpbd','libmidipp','libevoral',
-                            'libaudiographer','libardour','testcommon']
-    if bld.is_defined('USE_EXTERNAL_LIBS'):
-        testobj.uselib.extend(['LIBLTC', 'LIBFLUIDSYNTH'])
-    else:
-        testobj.use.extend(['libltc', 'libfluidsynth'])
-
-    testobj.name         = name
+    testobj.uselib       = ['CPPUNIT', 'COREAUDIO']
+    testobj.use          = ['ARDOUR_TEST_COMMON']
     testobj.target       = target
     # not sure about install path
     testobj.install_path = bld.env['LIBDIR']

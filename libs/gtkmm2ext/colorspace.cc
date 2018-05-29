@@ -140,10 +140,14 @@
 namespace Gtkmm2ext {
 
 /** @brief Min of A and B */
+#ifndef MIN
 #define MIN(A,B)	(((A) <= (B)) ? (A) : (B))
+#endif
 
 /** @brief Max of A and B */
+#ifndef MAX
 #define MAX(A,B)	(((A) >= (B)) ? (A) : (B))
+#endif
 
 /** @brief Min of A, B, and C */
 #define MIN3(A,B,C)	(((A) <= (B)) ? MIN(A,C) : MIN(B,C))

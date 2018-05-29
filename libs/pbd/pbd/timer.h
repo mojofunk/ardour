@@ -40,14 +40,19 @@ public:
 	Timer (unsigned int interval,
 	       const Glib::RefPtr<Glib::MainContext>& main_context);
 
+	// @return timeout interval in milliseconds
 	unsigned int get_interval () const;
 
+	// @param new_interval New timeout interval in milliseconds
 	void set_interval (unsigned int new_interval);
 
 	virtual unsigned int connection_count () const = 0;
 
 	void suspend () { m_suspended = true; }
 	void resume  () { m_suspended = false; }
+
+	bool enabled () const { return !m_suspended; }
+	bool suspended () const { return m_suspended; }
 
 protected:
 
@@ -58,8 +63,6 @@ protected:
 	void stop ();
 
 	virtual bool on_elapsed () = 0;
-
-	bool suspended  () const { return m_suspended; }
 
 private:
 

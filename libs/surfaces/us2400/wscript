@@ -35,14 +35,11 @@ def build(bld):
             surface_port.cc
             types.cc
     '''
-    obj.export_includes = ['./us2400']
     obj.defines      = [ 'PACKAGE="ardour_us2400"' ]
     obj.defines     += [ 'ARDOURSURFACE_DLL_EXPORTS' ]
     obj.includes     = [ '.' ]
-    obj.name         = 'libardour_us2400'
     obj.target       = 'ardour_us2400'
-    obj.uselib       = 'GTKMM XML'
-    obj.use          = 'libardour libardour_cp libgtkmm2ext'
+    obj.use          = 'ARDOUR_CP GTKMM2EXT'
     obj.install_path = os.path.join(bld.env['LIBDIR'], 'surfaces')
 
 def shutdown():

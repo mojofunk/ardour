@@ -19,6 +19,9 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifndef LIBARDOUR_SHA1_INCLUDED
+#define LIBARDOUR_SHA1_INCLUDED
+
 #ifndef EXPORT_SHA
 #define EXPORT_SHA static
 #endif
@@ -177,3 +180,5 @@ EXPORT_SHA void sha1_result_hash (Sha1Digest *s, char *rv) {
 		sprintf (&rv[2*i], "%02x", hash[i]);
 	}
 }
+
+#endif // LIBARDOUR_SHA1_INCLUDED

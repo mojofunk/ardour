@@ -21,7 +21,7 @@
 
 #include "pbd/compose.h"
 #include "pbd/configuration_variable.h"
-#include "pbd/debug.h"
+#include "pbd/logging.h"
 
 #if defined(_MSC_VER) && (_MSC_VER < 1800)
 // MSVC only introduced std::strtof in VS2013
@@ -35,7 +35,7 @@ void
 ConfigVariableBase::add_to_node (XMLNode& node)
 {
 	const std::string v = get_as_string ();
-	DEBUG_TRACE (DEBUG::Configuration, string_compose ("Config variable %1 stored as [%2]\n", _name, v));
+	A_LOG_MSG (LOG::Configuration, A_FMT ("Config variable {} stored as [{}]", _name, v));
 	XMLNode* child = new XMLNode ("Option");
 	child->set_property ("name", _name);
 	child->set_property ("value", v);
@@ -45,6 +45,8 @@ ConfigVariableBase::add_to_node (XMLNode& node)
 bool
 ConfigVariableBase::set_from_node (XMLNode const & node)
 {
+	A_LOG_CALL1 (LOG::Configuration, node.name ());
+
 	if (node.name() == "Config" || node.name() == "Canvas" || node.name() == "UI") {
 
 		/* ardour.rc */

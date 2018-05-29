@@ -43,6 +43,8 @@ using namespace ARDOUR;
 using namespace PBD;
 using namespace std;
 
+A_DEFINE_CLASS_MEMBERS (ARDOUR::DiskReader);
+
 ARDOUR::samplecnt_t DiskReader::_chunk_samples = default_chunk_samples ();
 PBD::Signal0<void> DiskReader::Underrun;
 Sample* DiskReader::_mixdown_buffer = 0;
@@ -63,7 +65,7 @@ DiskReader::DiskReader (Session& s, string const & str, DiskIOProcessor::Flag f)
 
 DiskReader::~DiskReader ()
 {
-	DEBUG_TRACE (DEBUG::Destruction, string_compose ("DiskReader %1 @ %2 deleted\n", _name, this));
+	A_CLASS_CALL();
 
 	for (uint32_t n = 0; n < DataType::num_types; ++n) {
 		if (_playlists[n]) {
@@ -234,6 +236,8 @@ void
 DiskReader::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_sample,
                  double speed, pframes_t nframes, bool result_required)
 {
+	A_CLASS_CALL5 (start_sample, end_sample, speed, nframes, result_required);
+
 	uint32_t n;
 	boost::shared_ptr<ChannelList> c = channels.reader();
 	ChannelList::iterator chan;
@@ -513,6 +517,8 @@ DiskReader::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_samp
 void
 DiskReader::set_pending_overwrite (bool yn)
 {
+	A_CLASS_CALL1 (yn);
+
 	/* called from audio thread, so we can use the read ptr and playback sample as we wish */
 
 	_pending_overwrite = yn;
@@ -528,13 +534,13 @@ DiskReader::set_pending_overwrite (bool yn)
 int
 DiskReader::overwrite_existing_buffers ()
 {
+	A_CLASS_CALL1 (overwrite_sample);
+
 	int ret = -1;
 
 	boost::shared_ptr<ChannelList> c = channels.reader();
 
 	overwrite_queued = false;
-
-	DEBUG_TRACE (DEBUG::DiskIO, string_compose ("%1 overwriting existing buffers at %2\n", overwrite_sample));
 
 	if (!c->empty ()) {
 

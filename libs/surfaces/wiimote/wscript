@@ -22,10 +22,10 @@ def build(bld):
     obj.defines      = [ 'PACKAGE="ardour_wiimote"' ]
     obj.defines     += [ 'ARDOURSURFACE_DLL_EXPORTS' ]
     obj.includes     = ['.', '../libs']
-    obj.name         = 'libardour_wiimote'
+    obj.name         = 'ARDOUR_WIIMOTE'
     obj.target       = 'ardour_wiimote'
-    obj.uselib       = 'GTKMM CWIID'
-    obj.use          = 'libardour libardour_cp libgtkmm2ext'
+    obj.uselib       = 'CWIID'
+    obj.use          = 'ARDOUR_CP GTKMM2EXT'
     obj.install_path = os.path.join(bld.env['LIBDIR'], 'surfaces')
 
 def shutdown():

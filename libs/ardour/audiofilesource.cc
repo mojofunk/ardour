@@ -64,9 +64,10 @@
 #include "pbd/i18n.h"
 
 using namespace std;
-using namespace ARDOUR;
 using namespace PBD;
 using namespace Glib;
+
+namespace ARDOUR {
 
 PBD::Signal0<void> AudioFileSource::HeaderPositionOffsetChanged;
 samplecnt_t         AudioFileSource::header_position_offset = 0;
@@ -366,3 +367,4 @@ AudioFileSource::get_interleave_buffer (samplecnt_t size)
 	return ssb->buf;
 }
 
+} // namespace ARDOUR

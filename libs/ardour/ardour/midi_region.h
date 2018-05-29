@@ -26,6 +26,7 @@
 #include "temporal/beats.h"
 #include "evoral/Range.hpp"
 
+#include "pbd/dev_tools.h"
 #include "pbd/string_convert.h"
 
 #include "ardour/ardour.h"
@@ -167,6 +168,8 @@ class LIBARDOUR_API MidiRegion : public Region
 	PBD::ScopedConnection _source_connection;
 	PBD::ScopedConnection _model_contents_connection;
 	bool _ignore_shift;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::MidiRegion);
 };
 
 } /* namespace ARDOUR */

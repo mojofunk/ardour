@@ -265,9 +265,12 @@ class LIBARDOUR_API PresentationInfo : public PBD::Stateful
 	static int _change_signal_suspended;
 
 	static int selection_counter;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::PresentationInfo);
 };
 
-}
+} // namespace ARDOUR
 
 std::ostream& operator<<(std::ostream& o, ARDOUR::PresentationInfo const& rid);
 

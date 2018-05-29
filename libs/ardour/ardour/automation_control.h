@@ -28,6 +28,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
+#include "pbd/dev_tools.h"
 #include "pbd/controllable.h"
 
 #include "evoral/types.hpp"
@@ -158,7 +159,10 @@ private:
 	friend class ControlGroup;
 	void set_group (boost::shared_ptr<ControlGroup>);
 	PBD::ScopedConnection _state_changed_connection;
+
 	bool _no_session;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::AutomationControl);
 };
 
 

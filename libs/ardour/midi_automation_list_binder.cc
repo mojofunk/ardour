@@ -25,6 +25,8 @@
 
 using namespace ARDOUR;
 
+A_DEFINE_CLASS_MEMBERS (ARDOUR::MidiAutomationListBinder);
+
 MidiAutomationListBinder::MidiAutomationListBinder (boost::shared_ptr<MidiSource> s, Evoral::Parameter p)
 	: _source (s)
 	, _parameter (p)

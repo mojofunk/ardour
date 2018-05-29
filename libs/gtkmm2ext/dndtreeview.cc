@@ -24,7 +24,6 @@
 
 using namespace std;
 using namespace sigc;
-using namespace Gdk;
 using namespace Gtk;
 using namespace Glib;
 using namespace Gtkmm2ext;

@@ -394,6 +394,8 @@ class AlsaAudioBackend : public AudioBackend {
 		double _t0, _t1;
 
 		/* process threads */
+		static void* alsa_realtime_priority_process_thread (void *);
+		static void* alsa_normal_priority_process_thread (void *);
 		static void* alsa_process_thread (void *);
 		std::vector<pthread_t> _threads;
 

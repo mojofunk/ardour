@@ -97,6 +97,8 @@ public:
 		return ret;
 	}
 
+	std::string to_string () const;
+
 	bool operator==(const ChanCount& other) const {
 		for (DataType::iterator t = DataType::begin(); t != DataType::end(); ++t)
 			if (_counts[*t] != other._counts[*t])

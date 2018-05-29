@@ -49,6 +49,8 @@ using namespace PBD;
 using std::string;
 using std::vector;
 
+A_DEFINE_CLASS_MEMBERS(ARDOUR::PortManager);
+
 PortManager::PortManager ()
 	: ports (new Ports)
 	, _port_remove_in_progress (false)
@@ -61,9 +63,9 @@ PortManager::PortManager ()
 void
 PortManager::clear_pending_port_deletions ()
 {
-	Port* p;
+	A_CLASS_CALL1 (_port_deletions_pending.read_space());
 
-	DEBUG_TRACE (DEBUG::Ports, string_compose ("pending port deletions: %1\n", _port_deletions_pending.read_space()));
+	Port* p;
 
 	while (_port_deletions_pending.read (&p, 1) == 1) {
 		delete p;
@@ -73,6 +75,8 @@ PortManager::clear_pending_port_deletions ()
 void
 PortManager::remove_all_ports ()
 {
+	A_CLASS_CALL ();
+
 	/* make sure that JACK callbacks that will be invoked as we cleanup
 	 * ports know that they have nothing to do.
 	 */
@@ -383,19 +387,19 @@ PortManager::register_port (DataType dtype, const string& portname, bool input, 
 
 	try {
 		if (dtype == DataType::AUDIO) {
-			DEBUG_TRACE (DEBUG::Ports, string_compose ("registering AUDIO port %1, input %2\n",
-								   portname, input));
+			A_CLASS_MSG (A_FMT ("Registering AUDIO port {}, input {}", portname, input));
+
 			newport.reset (new AudioPort (portname, PortFlags ((input ? IsInput : IsOutput) | flags)),
 			               PortDeleter());
 		} else if (dtype == DataType::MIDI) {
 			if (async) {
-				DEBUG_TRACE (DEBUG::Ports, string_compose ("registering ASYNC MIDI port %1, input %2\n",
-									   portname, input));
-				newport.reset (new AsyncMIDIPort (portname, PortFlags ((input ? IsInput : IsOutput) | flags)),
-				               PortDeleter());
+			A_CLASS_MSG (A_FMT ("Registering ASYNC MIDI port {}, input {}", portname, input));
+
+			newport.reset (new AsyncMIDIPort (portname, PortFlags ((input ? IsInput : IsOutput) | flags)),
+				             PortDeleter ());
 			} else {
-				DEBUG_TRACE (DEBUG::Ports, string_compose ("registering MIDI port %1, input %2\n",
-									   portname, input));
+				A_CLASS_MSG (A_FMT ("Registering MIDI port {}, input {}", portname, input));
+
 				newport.reset (new MidiPort (portname, PortFlags ((input ? IsInput : IsOutput) | flags)),
 				               PortDeleter());
 			}
@@ -420,7 +424,8 @@ PortManager::register_port (DataType dtype, const string& portname, bool input, 
 		throw PortRegistrationFailure("unable to create port (unknown error)");
 	}
 
-	DEBUG_TRACE (DEBUG::Ports, string_compose ("\t%2 port registration success, ports now = %1\n", ports.reader()->size(), this));
+	A_CLASS_MSG (A_FMT ("Port registration success, port count : {}", ports.reader()->size()));
+
 	return newport;
 }
 
@@ -453,7 +458,7 @@ PortManager::unregister_port (boost::shared_ptr<Port> port)
 		Ports::iterator x = ps->find (make_port_name_relative (port->name()));
 
 		if (x != ps->end()) {
-			DEBUG_TRACE (DEBUG::Ports, string_compose ("removing %1 from port map (uc=%2)\n", port->name(), port.use_count()));
+			A_CLASS_MSG (A_FMT ("Removing {} from port map, count {}", port->name(), port.use_count()));
 			ps->erase (x);
 		}
 
@@ -597,22 +602,22 @@ PortManager::disconnect (std::string const & name)
 int
 PortManager::reestablish_ports ()
 {
+	A_CLASS_CALL ();
+
 	Ports::iterator i;
 
 	boost::shared_ptr<Ports> p = ports.reader ();
 
-	DEBUG_TRACE (DEBUG::Ports, string_compose ("reestablish %1 ports\n", p->size()));
+	A_CLASS_DATA1 (p->size());
 
 	for (i = p->begin(); i != p->end(); ++i) {
 		if (i->second->reestablish ()) {
 			error << string_compose (_("Re-establising port %1 failed"), i->second->name()) << endmsg;
-			std::cerr << string_compose (_("Re-establising port %1 failed"), i->second->name()) << std::endl;
 			break;
 		}
 	}
 
 	if (i != p->end()) {
-		/* failed */
 		remove_all_ports ();
 		return -1;
 	}
@@ -623,12 +628,14 @@ PortManager::reestablish_ports ()
 int
 PortManager::reconnect_ports ()
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<Ports> p = ports.reader ();
+
+	A_CLASS_DATA1 (p->size());
 
 	if (!Profile->get_trx()) {
 		/* re-establish connections */
-
-		DEBUG_TRACE (DEBUG::Ports, string_compose ("reconnect %1 ports\n", p->size()));
 
 		for (Ports::iterator i = p->begin(); i != p->end(); ++i) {
 			i->second->reconnect ();
@@ -748,6 +755,8 @@ PortManager::graph_order_callback ()
 void
 PortManager::cycle_start (pframes_t nframes, Session* s)
 {
+	A_CLASS_CALL1 (nframes);
+
 	Port::set_global_port_buffer_offset (0);
 	Port::set_cycle_samplecnt (nframes);
 
@@ -788,6 +797,8 @@ PortManager::cycle_start (pframes_t nframes, Session* s)
 void
 PortManager::cycle_end (pframes_t nframes, Session* s)
 {
+	A_CLASS_CALL1 (nframes);
+
 	// see optimzation note in ::cycle_start()
 	if (s && s->rt_tasklist () && fabs (Port::speed_ratio ()) != 1.0) {
 		RTTaskList::TaskList tl;
@@ -813,6 +824,8 @@ PortManager::cycle_end (pframes_t nframes, Session* s)
 void
 PortManager::silence (pframes_t nframes, Session *s)
 {
+	A_CLASS_CALL1 (nframes);
+
 	for (Ports::iterator i = _cycle_ports->begin(); i != _cycle_ports->end(); ++i) {
 		if (s && i->second == s->mtc_output_port ()) {
 			continue;
@@ -835,6 +848,8 @@ PortManager::silence (pframes_t nframes, Session *s)
 void
 PortManager::silence_outputs (pframes_t nframes)
 {
+	A_CLASS_CALL1 (nframes);
+
 	std::vector<std::string> port_names;
 	if (get_ports("", DataType::AUDIO, IsOutput, port_names)) {
 		for (std::vector<std::string>::iterator p = port_names.begin(); p != port_names.end(); ++p) {
@@ -891,6 +906,8 @@ PortManager::check_monitoring ()
 void
 PortManager::cycle_end_fade_out (gain_t base_gain, gain_t gain_step, pframes_t nframes, Session* s)
 {
+	A_CLASS_CALL3 (base_gain, gain_step, nframes);
+
 	// see optimzation note in ::cycle_start()
 	if (s && s->rt_tasklist () && fabs (Port::speed_ratio ()) != 1.0) {
 		RTTaskList::TaskList tl;

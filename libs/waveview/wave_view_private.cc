@@ -26,8 +26,23 @@
 #include "ardour/audiosource.h"
 
 #include "waveview/wave_view_private.h"
+#include "waveview/wave_view_logging_macros.h"
+
+A_DEFINE_CLASS_MEMBERS (ArdourWaveView::WaveViewProperties);
+
+A_DEFINE_CLASS_MEMBERS (ArdourWaveView::WaveViewImage);
+A_DEFINE_CLASS_MEMBERS (ArdourWaveView::WaveViewDrawRequest);
+A_DEFINE_CLASS_MEMBERS (ArdourWaveView::WaveViewCache);
+A_DEFINE_CLASS_MEMBERS (ArdourWaveView::WaveViewCacheGroup);
+A_DEFINE_CLASS_MEMBERS (ArdourWaveView::WaveViewDrawRequestQueue);
+A_DEFINE_CLASS_MEMBERS (ArdourWaveView::WaveViewDrawingThread);
+A_DEFINE_CLASS_MEMBERS (ArdourWaveView::WaveViewThreads);
 
 namespace ArdourWaveView {
+
+namespace LOG {
+	A_DEFINE_LOG_CATEGORY (WaveViewProperties, "ArdourWaveView::WaveViewProperties");
+};
 
 WaveViewProperties::WaveViewProperties (boost::shared_ptr<ARDOUR::AudioRegion> region)
     : region_start (region->start ())
@@ -49,7 +64,6 @@ WaveViewProperties::WaveViewProperties (boost::shared_ptr<ARDOUR::AudioRegion> r
     , sample_start (0)
     , sample_end (0)
 {
-
 }
 
 /*-------------------------------------------------*/
@@ -60,12 +74,10 @@ WaveViewImage::WaveViewImage (boost::shared_ptr<const ARDOUR::AudioRegion> const
 	, props (properties)
 	, timestamp (0)
 {
-
 }
 
 WaveViewImage::~WaveViewImage ()
 {
-
 }
 
 /*-------------------------------------------------*/
@@ -73,7 +85,6 @@ WaveViewImage::~WaveViewImage ()
 WaveViewCacheGroup::WaveViewCacheGroup (WaveViewCache& parent_cache)
 	: _parent_cache (parent_cache)
 {
-
 }
 
 WaveViewCacheGroup::~WaveViewCacheGroup ()
@@ -84,10 +95,14 @@ WaveViewCacheGroup::~WaveViewCacheGroup ()
 void
 WaveViewCacheGroup::add_image (boost::shared_ptr<WaveViewImage> image)
 {
+	A_CLASS_CALL ();
+
 	if (!image) {
-		// Not adding invalid image to cache
+		A_CLASS_MSG ("Not adding invalid image to cache");
 		return;
 	}
+
+	A_CLASS_DATA1 (_cached_images.size());
 
 	ImageCache::iterator oldest_image_it = _cached_images.begin();
 	ImageCache::iterator second_oldest_image_it = _cached_images.end();
@@ -95,10 +110,11 @@ WaveViewCacheGroup::add_image (boost::shared_ptr<WaveViewImage> image)
 	for (ImageCache::iterator it = _cached_images.begin (); it != _cached_images.end (); ++it) {
 		if ((*it) == image) {
 			// Must never be more than one instance of the image in the cache
+			A_CLASS_MSG ("Image already in cache, updating timestamp");
 			(*it)->timestamp = g_get_monotonic_time ();
 			return;
 		} else if ((*it)->props.is_equivalent (image->props)) {
-			// Equivalent Image already in cache, updating timestamp
+			A_CLASS_MSG ("Equivalent Image already in cache, updating timestamp");
 			(*it)->timestamp = g_get_monotonic_time ();
 			return;
 		}
@@ -109,18 +125,20 @@ WaveViewCacheGroup::add_image (boost::shared_ptr<WaveViewImage> image)
 		}
 	}
 
+	A_CLASS_MSG ("Image not in cache, adding image");
+
 	// no duplicate or equivalent image so we are definitely adding it to cache
 	image->timestamp = g_get_monotonic_time ();
 
 	if (_parent_cache.full () || full ()) {
 		if (oldest_image_it != _cached_images.end()) {
-			// Replacing oldest Image in cache
+			A_CLASS_MSG ("Replacing oldest Image in cache");
 			_parent_cache.decrease_size ((*oldest_image_it)->size_in_bytes ());
 			*oldest_image_it = image;
 			_parent_cache.increase_size (image->size_in_bytes ());
 
 			if (second_oldest_image_it != _cached_images.end ()) {
-				// Removing second oldest Image in cache
+				A_CLASS_MSG ("Removing second oldest Image in cache");
 				_parent_cache.decrease_size ((*second_oldest_image_it)->size_in_bytes ());
 				_cached_images.erase (second_oldest_image_it);
 			}
@@ -132,9 +150,11 @@ WaveViewCacheGroup::add_image (boost::shared_ptr<WaveViewImage> image)
 			 * the cache will quickly equalize back to the threshold as new images
 			 * are added and the size of the cache is reduced.
 			 */
+			A_CLASS_MSG ("Cache full but cache group empty, so adding image to cache anyway");
 		}
 	}
 
+	A_CLASS_MSG ("Adding image to cache group");
 	_cached_images.push_back (image);
 	_parent_cache.increase_size (image->size_in_bytes ());
 }
@@ -142,17 +162,27 @@ WaveViewCacheGroup::add_image (boost::shared_ptr<WaveViewImage> image)
 boost::shared_ptr<WaveViewImage>
 WaveViewCacheGroup::lookup_image (WaveViewProperties const& props)
 {
+	A_CLASS_CALL ();
+
+	A_CLASS_DATA1 (_cached_images.size());
+
 	for (ImageCache::iterator i = _cached_images.begin (); i != _cached_images.end (); ++i) {
 		if ((*i)->props.is_equivalent (props)) {
+			A_CLASS_MSG ("Found equivalent Image in cache");
 			return (*i);
-		}
+		} else {
+			LOG_PROPERTY_DIFF (props, (*i)->props);
+	  }
 	}
+	A_CLASS_MSG ("No equivalent Image found in cache");
 	return boost::shared_ptr<WaveViewImage>();
 }
 
 void
 WaveViewCacheGroup::clear_cache ()
 {
+	A_CLASS_CALL ();
+
 	// Tell the parent cache about the images we are about to drop references to
 	for (ImageCache::iterator it = _cached_images.begin (); it != _cached_images.end (); ++it) {
 		_parent_cache.decrease_size ((*it)->size_in_bytes ());
@@ -166,7 +196,6 @@ WaveViewCache::WaveViewCache ()
 	: image_cache_size (0)
 	, _image_cache_threshold (100 * 1048576) /* bytes */
 {
-
 }
 
 WaveViewCache::~WaveViewCache ()
@@ -180,30 +209,54 @@ WaveViewCache::get_instance ()
 	return instance;
 }
 
+static
+double
+bytes_in_megabytes (uint64_t bytes)
+{
+	return ((double)(bytes) / 1024) / 1024;
+}
+
 void
 WaveViewCache::increase_size (uint64_t bytes)
 {
+	A_CLASS_CALL2 (bytes, image_cache_size);
+
 	image_cache_size += bytes;
+
+	A_CLASS_MSG (A_FMT ("New WaveViewCache size in Mb: {}, Threshold: {}",
+	                    bytes_in_megabytes (image_cache_size),
+	                    bytes_in_megabytes (_image_cache_threshold)));
 }
 
 void
 WaveViewCache::decrease_size (uint64_t bytes)
 {
+	A_CLASS_CALL2 (bytes, image_cache_size);
+
 	assert (image_cache_size - bytes < image_cache_size);
 	image_cache_size -= bytes;
+
+	A_CLASS_MSG (A_FMT ("New WaveViewCache size in Mb: {}, Threshold: {}",
+	                    bytes_in_megabytes (image_cache_size),
+	                    bytes_in_megabytes (_image_cache_threshold)));
 }
 
 boost::shared_ptr<WaveViewCacheGroup>
 WaveViewCache::get_cache_group (boost::shared_ptr<ARDOUR::AudioSource> source)
 {
+	A_CLASS_CALL1 (source.get());
+
 	CacheGroups::iterator it = cache_group_map.find (source);
 
 	if (it != cache_group_map.end()) {
-		// Found existing CacheGroup for AudioSource
+		A_CLASS_MSG (A_FMT ("Found existing CacheGroup for AudioSource: {}", source->name ()));
 		return it->second;
 	}
 
 	boost::shared_ptr<WaveViewCacheGroup> new_group (new WaveViewCacheGroup (*this));
+
+	A_CLASS_MSG (A_FMT ("Created new CacheGroup : {} for AudioSource: {}",
+	                    adt::void_cast (new_group.get ()), source->name ()));
 
 	bool inserted = cache_group_map.insert (std::make_pair (source, new_group)).second;
 
@@ -215,6 +268,8 @@ WaveViewCache::get_cache_group (boost::shared_ptr<ARDOUR::AudioSource> source)
 void
 WaveViewCache::reset_cache_group (boost::shared_ptr<WaveViewCacheGroup>& group)
 {
+	A_CLASS_CALL1 (group.get());
+
 	if (!group) {
 		return;
 	}
@@ -223,6 +278,7 @@ WaveViewCache::reset_cache_group (boost::shared_ptr<WaveViewCacheGroup>& group)
 
 	while (it != cache_group_map.end()) {
 		if (it->second == group) {
+			A_CLASS_MSG (A_FMT ("Found CacheGroup {}", adt::void_cast (group.get ())));
 			break;
 		}
 		++it;
@@ -233,6 +289,8 @@ WaveViewCache::reset_cache_group (boost::shared_ptr<WaveViewCacheGroup>& group)
 	group.reset();
 
 	if (it->second.unique()) {
+		A_CLASS_MSG (A_FMT ("Dropping reference to CacheGroup : {} AudioSource: {}",
+		                    adt::void_cast (it->second.get ()), it->first->name ()));
 		cache_group_map.erase (it);
 	}
 }
@@ -240,6 +298,8 @@ WaveViewCache::reset_cache_group (boost::shared_ptr<WaveViewCacheGroup>& group)
 void
 WaveViewCache::clear_cache ()
 {
+	A_CLASS_CALL ();
+
 	for (CacheGroups::iterator it = cache_group_map.begin (); it != cache_group_map.end (); ++it) {
 		(*it).second->clear_cache ();
 	}
@@ -248,6 +308,7 @@ WaveViewCache::clear_cache ()
 void
 WaveViewCache::set_image_cache_threshold (uint64_t sz)
 {
+	A_CLASS_CALL1 (sz);
 	_image_cache_threshold = sz;
 }
 
@@ -266,7 +327,11 @@ WaveViewDrawRequest::~WaveViewDrawRequest ()
 void
 WaveViewDrawRequestQueue::enqueue (boost::shared_ptr<WaveViewDrawRequest>& request)
 {
+	A_CLASS_CALL ();
+
 	Glib::Threads::Mutex::Lock lm (_queue_mutex);
+
+	A_CLASS_DATA1 (_queue.size());
 
 	_queue.push_back (request);
 	_cond.broadcast ();
@@ -283,6 +348,10 @@ WaveViewDrawRequestQueue::wake_up ()
 boost::shared_ptr<WaveViewDrawRequest>
 WaveViewDrawRequestQueue::dequeue (bool block)
 {
+	A_CLASS_CALL1 (block);
+
+	A_CLASS_DATA1 (_queue.size());
+
 	if (block) {
 		_queue_mutex.lock();
 	} else {
@@ -308,7 +377,7 @@ WaveViewDrawRequestQueue::dequeue (bool block)
 		req = _queue.front ();
 		_queue.pop_front ();
 	} else {
-		// Queue empty, returning empty DrawRequest
+		A_CLASS_MSG ("Queue empty, returning empty DrawRequest");
 	}
 
 	_queue_mutex.unlock();
@@ -320,12 +389,10 @@ WaveViewDrawRequestQueue::dequeue (bool block)
 
 WaveViewThreads::WaveViewThreads ()
 {
-
 }
 
 WaveViewThreads::~WaveViewThreads ()
 {
-
 }
 
 uint32_t WaveViewThreads::init_count = 0;
@@ -335,6 +402,8 @@ WaveViewThreads* WaveViewThreads::instance = 0;
 void
 WaveViewThreads::initialize ()
 {
+	A_CLASS_STATIC_CALL ();
+
 	// no need for atomics as only called from GUI thread
 	if (++init_count == 1) {
 		assert(!instance);
@@ -346,6 +415,8 @@ WaveViewThreads::initialize ()
 void
 WaveViewThreads::deinitialize ()
 {
+	A_CLASS_STATIC_CALL ();
+
 	if (--init_count == 0) {
 		instance->stop_threads();
 		delete instance;
@@ -377,11 +448,15 @@ WaveViewThreads::wake_up ()
 void
 WaveViewThreads::start_threads ()
 {
+	A_CLASS_CALL ();
+
 	assert (!_threads.size());
 
 	int num_cpus = hardware_concurrency ();
 
 	uint32_t num_threads = std::max (1, num_cpus - 1);
+
+	A_CLASS_DATA2 (num_cpus, num_threads);
 
 	for (uint32_t i = 0; i != num_threads; ++i) {
 		boost::shared_ptr<WaveViewDrawingThread> new_thread (new WaveViewDrawingThread ());
@@ -392,6 +467,8 @@ WaveViewThreads::start_threads ()
 void
 WaveViewThreads::stop_threads ()
 {
+	A_CLASS_CALL ();
+
 	assert (_threads.size());
 
 	_threads.clear ();
@@ -414,6 +491,8 @@ WaveViewDrawingThread::~WaveViewDrawingThread ()
 void
 WaveViewDrawingThread::start ()
 {
+	A_CLASS_CALL ();
+
 	assert (!_thread);
 
 	_thread = Glib::Threads::Thread::create (sigc::mem_fun (*this, &WaveViewDrawingThread::run));
@@ -422,6 +501,8 @@ WaveViewDrawingThread::start ()
 void
 WaveViewDrawingThread::quit ()
 {
+	A_CLASS_CALL ();
+
 	assert (_thread);
 
 	g_atomic_int_set (&_quit, 1);
@@ -433,6 +514,8 @@ WaveViewDrawingThread::quit ()
 void
 WaveViewDrawingThread::run ()
 {
+	A_REGISTER_THREAD ("WaveView Drawing", adt::ThreadPriority::NORMAL);
+
 	while (true) {
 
 		if (g_atomic_int_get (&_quit)) {
@@ -442,6 +525,8 @@ WaveViewDrawingThread::run ()
 		// block until a request is available.
 		boost::shared_ptr<WaveViewDrawRequest> req = WaveViewThreads::dequeue_draw_request ();
 
+		A_CLASS_DURATION ("New DrawRequest in drawing thread");
+
 		if (req && !req->stopped()) {
 			try {
 				WaveView::process_draw_request (req);
@@ -450,7 +535,7 @@ WaveViewDrawingThread::run ()
 				req->image->cairo_image.clear ();
 			}
 		} else {
-			// null or stopped Request, processing skipped
+			A_CLASS_MSG ("null or stopped Request, processing skipped");
 		}
 	}
 }

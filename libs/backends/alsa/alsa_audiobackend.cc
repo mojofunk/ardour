@@ -730,6 +730,20 @@ static void * pthread_process (void *arg)
 	return 0;
 }
 
+static void * pthread_realtime_priority_process (void *arg)
+{
+	A_REGISTER_THREAD ("ALSA Main thread", adt::ThreadPriority::REALTIME);
+
+	return pthread_process (arg);
+}
+
+static void * pthread_normal_priority_process (void *arg)
+{
+	A_REGISTER_THREAD ("ALSA Main thread", adt::ThreadPriority::NORMAL);
+
+	return pthread_process (arg);
+}
+
 int
 AlsaAudioBackend::_start (bool for_latency_measurement)
 {
@@ -925,9 +939,9 @@ AlsaAudioBackend::_start (bool for_latency_measurement)
 	_port_change_flag = false;
 
 	if (pbd_realtime_pthread_create (PBD_SCHED_FIFO, -20, 100000,
-				&_main_thread, pthread_process, this))
+				&_main_thread, pthread_realtime_priority_process, this))
 	{
-		if (pthread_create (&_main_thread, NULL, pthread_process, this))
+		if (pthread_create (&_main_thread, NULL, pthread_normal_priority_process, this))
 		{
 			PBD::error << _("AlsaAudioBackend: failed to create process thread.") << endmsg;
 			delete _pcmi; _pcmi = 0;
@@ -1075,7 +1089,6 @@ AlsaAudioBackend::samples_since_cycle_start ()
 	return std::max((pframes_t)0, (pframes_t)rint(1e-6 * elapsed_time_us * _samplerate));
 }
 
-
 void *
 AlsaAudioBackend::alsa_process_thread (void *arg)
 {
@@ -1084,6 +1097,22 @@ AlsaAudioBackend::alsa_process_thread (void *arg)
 	delete td;
 	f ();
 	return 0;
+}
+
+void *
+AlsaAudioBackend::alsa_realtime_priority_process_thread (void *arg)
+{
+	A_REGISTER_THREAD ("ALSA process thread", adt::ThreadPriority::REALTIME);
+
+	return alsa_process_thread (arg);
+}
+
+void *
+AlsaAudioBackend::alsa_normal_priority_process_thread (void *arg)
+{
+	A_REGISTER_THREAD ("ALSA process thread", adt::ThreadPriority::NORMAL);
+
+	return alsa_process_thread (arg);
 }
 
 int
@@ -1096,10 +1125,10 @@ AlsaAudioBackend::create_process_thread (boost::function<void()> func)
 	ThreadData* td = new ThreadData (this, func, stacksize);
 
 	if (pbd_realtime_pthread_create (PBD_SCHED_FIFO, -22, stacksize,
-				&thread_id, alsa_process_thread, td)) {
+				&thread_id, alsa_realtime_priority_process_thread, td)) {
 		pthread_attr_init (&attr);
 		pthread_attr_setstacksize (&attr, stacksize);
-		if (pthread_create (&thread_id, &attr, alsa_process_thread, td)) {
+		if (pthread_create (&thread_id, &attr, alsa_normal_priority_process_thread, td)) {
 			PBD::error << _("AudioEngine: cannot create process thread.") << endmsg;
 			pthread_attr_destroy (&attr);
 			return -1;

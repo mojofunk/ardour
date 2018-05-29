@@ -8,9 +8,9 @@
 #include "pbd/pbd.h"
 
 int
-main()
+main (int argc, char** argv)
 {
-	if (!PBD::init ()) return 1;
+	if (!PBD::init (&argc, &argv)) return 1;
 
 	CppUnit::TestResult testresult;
 

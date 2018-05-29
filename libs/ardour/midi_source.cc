@@ -37,8 +37,8 @@
 #include "evoral/Control.hpp"
 #include "evoral/EventSink.hpp"
 
-#include "ardour/debug.h"
 #include "ardour/file_source.h"
+#include "ardour/logging.h"
 #include "ardour/midi_channel_filter.h"
 #include "ardour/midi_cursor.h"
 #include "ardour/midi_model.h"
@@ -56,6 +56,8 @@ namespace ARDOUR { template <typename T> class MidiRingBuffer; }
 using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::MidiSource);
 
 MidiSource::MidiSource (Session& s, string name, Source::Flag flags)
 	: Source(s, DataType::MIDI, name, flags)
@@ -207,13 +209,11 @@ MidiSource::midi_read (const Lock&                        lm,
                        const double                       pos_beats,
                        const double                       start_beats) const
 {
+	A_CLASS_CALL5 (source_start, start, cnt, pos_beats, start_beats);
+
 	BeatsSamplesConverter converter(_session.tempo_map(), source_start);
 
 	const double start_qn = pos_beats - start_beats;
-
-	DEBUG_TRACE (DEBUG::MidiSourceIO,
-	             string_compose ("MidiSource::midi_read() %5 sstart %1 start %2 cnt %3 tracker %4\n",
-	                             source_start, start, cnt, tracker, name()));
 
 	if (!_model) {
 		return read_unlocked (lm, dst, source_start, start, cnt, loop_range, tracker, filter);
@@ -250,9 +250,8 @@ MidiSource::midi_read (const Lock&                        lm,
 
 		} else if (time_samples >= start + cnt + source_start) {
 
-			DEBUG_TRACE (DEBUG::MidiSourceIO,
-			             string_compose ("%1: reached end with event @ %2 vs. %3\n",
-			                             _name, time_samples, start+cnt));
+			A_CLASS_MSG (A_FMT ("{}: reached end with event @ {} vs. {}", _name.val (), time_samples,
+			                          start + cnt));
 			break;
 
 		} else {
@@ -274,30 +273,17 @@ MidiSource::midi_read (const Lock&                        lm,
 				if (!filter->filter(ev.buffer(), ev.size())) {
 					dst.write(time_samples, ev.event_type(), ev.size(), ev.buffer());
 				} else {
-					DEBUG_TRACE (DEBUG::MidiSourceIO,
-					             string_compose ("%1: filter event @ %2 type %3 size %4\n",
-					                             _name, time_samples, i->event_type(), i->size()));
+					A_CLASS_MSG (A_FMT ("{}: filter event @ {} type {} size {}", _name.val (), time_samples,
+					                    i->event_type (), i->size ()));
 				}
 			} else {
 				dst.write (time_samples, i->event_type(), i->size(), i->buffer());
 			}
 
-#ifndef NDEBUG
-			if (DEBUG_ENABLED(DEBUG::MidiSourceIO)) {
-				DEBUG_STR_DECL(a);
-				DEBUG_STR_APPEND(a, string_compose ("%1 added event @ %2 sz %3 within %4 .. %5 ",
-				                                    _name, time_samples, i->size(),
-				                                    start + source_start, start + cnt + source_start));
-				for (size_t n=0; n < i->size(); ++n) {
-					DEBUG_STR_APPEND(a,hex);
-					DEBUG_STR_APPEND(a,"0x");
-					DEBUG_STR_APPEND(a,(int)i->buffer()[n]);
-					DEBUG_STR_APPEND(a,' ');
-				}
-				DEBUG_STR_APPEND(a,'\n');
-				DEBUG_TRACE (DEBUG::MidiSourceIO, DEBUG_STR(a).str());
-			}
-#endif
+			A_CLASS_MSG (A_FMT ("{} added event @ {}, value: {} within {} .. {}", _name.val (),
+			                    time_samples,
+			                    LOG::midi_event_to_string (i->size (), i->buffer ()).c_str (),
+			                    start + source_start, start + cnt + source_start));
 
 			if (tracker) {
 				tracker->track (*i);
@@ -452,6 +438,8 @@ MidiSource::write_to (const Lock& lock, boost::shared_ptr<MidiSource> newsrc, Te
 void
 MidiSource::session_saved()
 {
+	A_CLASS_CALL ();
+
 	Lock lm (_lock);
 
 	/* this writes a copy of the data to disk.

@@ -23,7 +23,7 @@
 
 #include <string>
 
-
+#include "pbd/dev_tools.h"
 #include "pbd/stateful.h"
 #include "ardour/ardour.h"
 #include "ardour/io_processor.h"
@@ -76,6 +76,8 @@ private:
 	uint32_t _bitslot;
 
 	void collect_input (BufferSet& bufs, pframes_t nframes, ChanCount offset = ChanCount::ZERO);
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::Return);
 };
 
 } // namespace ARDOUR

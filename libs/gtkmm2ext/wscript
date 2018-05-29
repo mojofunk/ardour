@@ -50,6 +50,14 @@ gtkmm2ext_sources = [
         'window_title.cc'
 ]
 
+gtkmm2ext_amalgamated_sources = [
+        'gtkmm2ext.cc',
+        'actions.cc',
+        'gtk_ui.cc',
+        'gtkapplication.c',
+        'utils.cc',
+]
+
 # Mandatory variables
 top = '.'
 out = 'build'
@@ -63,28 +71,24 @@ def configure(conf):
     conf.load('compiler_cxx')
     autowaf.configure(conf)
     autowaf.check_pkg(conf, 'gtkmm-2.4', uselib_store='GTKMM', atleast_version='2.8')
-    autowaf.check_pkg(conf, 'gtk+-2.0', uselib_store='GTK', atleast_version='2.12.1')
 
 
 def build(bld):
     # operate on copy to avoid adding sources twice
     sources = list(gtkmm2ext_sources)
+    if bld.env['AMALGAMATE']:
+        sources = list(gtkmm2ext_amalgamated_sources)
 
-    if bld.is_defined ('INTERNAL_SHARED_LIBS'):
-        obj              = bld.shlib(features = 'c cxx cshlib cxxshlib', source=sources)
-        # defines for this library
-        obj.defines      = [ 'LIBGTKMM2EXT_DLL_EXPORTS', 'ABSTRACT_UI_EXPORTS' ]
-    else:
-        obj              = bld.stlib(features = 'c cxx cstlib cxxstlib', source=sources)
-        obj.cxxflags     = [ '-fPIC' ]
-        obj.defines      = [ ]
+    obj              = bld.shlib(features = 'c cxx cshlib cxxshlib', source=sources)
+    # defines for this library
+    obj.defines      = [ 'LIBGTKMM2EXT_DLL_EXPORTS', 'ABSTRACT_UI_EXPORTS' ]
 
     obj.export_includes = ['.']
     obj.includes     = ['.']
-    obj.name         = 'libgtkmm2ext'
+    obj.name         = 'GTKMM2EXT'
     obj.target       = 'gtkmm2ext'
-    obj.uselib       = 'GTKMM GTK XML'
-    obj.use          = [ 'libpbd' ]
+    # Add gtkmm as a public dependency
+    obj.use          = [ 'PBD', 'GTKMM' ]
     obj.vnum         = GTKMM2EXT_LIB_VERSION
     obj.install_path = bld.env['LIBDIR']
     obj.defines     += [

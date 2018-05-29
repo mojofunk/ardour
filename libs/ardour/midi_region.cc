@@ -51,23 +51,24 @@
 #include <locale.h>
 
 using namespace std;
-using namespace ARDOUR;
 using namespace PBD;
 
 namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::MidiRegion);
+
 	namespace Properties {
 		PBD::PropertyDescriptor<double> start_beats;
 		PBD::PropertyDescriptor<double> length_beats;
 	}
-}
 
 void
 MidiRegion::make_property_quarks ()
 {
 	Properties::start_beats.property_id = g_quark_from_static_string (X_("start-beats"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for start-beats = %1\n", Properties::start_beats.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::start_beats.property_id);
 	Properties::length_beats.property_id = g_quark_from_static_string (X_("length-beats"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for length-beats = %1\n", Properties::length_beats.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::length_beats.property_id);
 }
 
 void
@@ -135,6 +136,8 @@ MidiRegion::~MidiRegion ()
 bool
 MidiRegion::do_export (string path) const
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<MidiSource> newsrc;
 
 	/* caller must check for pre-existing file */
@@ -166,6 +169,8 @@ MidiRegion::do_export (string path) const
 boost::shared_ptr<MidiRegion>
 MidiRegion::clone (string path) const
 {
+	A_CLASS_CALL1 (path);
+
 	boost::shared_ptr<MidiSource> newsrc;
 
 	/* caller must check for pre-existing file */
@@ -180,6 +185,8 @@ MidiRegion::clone (string path) const
 boost::shared_ptr<MidiRegion>
 MidiRegion::clone (boost::shared_ptr<MidiSource> newsrc) const
 {
+	A_CLASS_CALL ();
+
 	BeatsSamplesConverter bfc (_session.tempo_map(), _position);
 	Temporal::Beats const bbegin = bfc.from (_start);
 	Temporal::Beats const bend = bfc.from (_start + _length);
@@ -222,6 +229,8 @@ MidiRegion::clone (boost::shared_ptr<MidiSource> newsrc) const
 void
 MidiRegion::post_set (const PropertyChange& pc)
 {
+	A_CLASS_CALL ();
+
 	Region::post_set (pc);
 
 	if (pc.contains (Properties::length) && !pc.contains (Properties::length_beats)) {
@@ -243,6 +252,8 @@ MidiRegion::post_set (const PropertyChange& pc)
 void
 MidiRegion::set_start_beats_from_start_samples ()
 {
+	A_CLASS_CALL ();
+
 	if (position_lock_style() == AudioTime) {
 		_start_beats = quarter_note() - _session.tempo_map().quarter_note_at_sample (_position - _start);
 	}
@@ -251,6 +262,8 @@ MidiRegion::set_start_beats_from_start_samples ()
 void
 MidiRegion::set_length_internal (samplecnt_t len, const int32_t sub_num)
 {
+	A_CLASS_CALL ();
+
 	Region::set_length_internal (len, sub_num);
 	update_length_beats (sub_num);
 }
@@ -258,6 +271,8 @@ MidiRegion::set_length_internal (samplecnt_t len, const int32_t sub_num)
 void
 MidiRegion::update_after_tempo_map_change (bool /* send */)
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<Playlist> pl (playlist());
 
 	if (!pl) {
@@ -326,6 +341,8 @@ MidiRegion::update_length_beats (const int32_t sub_num)
 void
 MidiRegion::set_position_internal (samplepos_t pos, bool allow_bbt_recompute, const int32_t sub_num)
 {
+	A_CLASS_CALL ();
+
 	Region::set_position_internal (pos, allow_bbt_recompute, sub_num);
 
 	/* don't clobber _start _length and _length_beats if session loading.*/
@@ -354,6 +371,8 @@ MidiRegion::set_position_internal (samplepos_t pos, bool allow_bbt_recompute, co
 void
 MidiRegion::set_position_music_internal (double qn)
 {
+	A_CLASS_CALL ();
+
 	Region::set_position_music_internal (qn);
 	/* set _start to new position in tempo map */
 	_start = _session.tempo_map().samples_between_quarter_notes (quarter_note() - start_beats(), quarter_note());
@@ -407,6 +426,8 @@ MidiRegion::_read_at (const SourceList&              /*srcs*/,
                       MidiStateTracker*              tracker,
                       MidiChannelFilter*             filter) const
 {
+	A_CLASS_CALL3 (position, dur, chan_n);
+
 	sampleoffset_t internal_offset = 0;
 	samplecnt_t    to_read         = 0;
 
@@ -568,6 +589,8 @@ MidiRegion::clobber_sources (boost::shared_ptr<MidiSource> s)
 void
 MidiRegion::model_changed ()
 {
+	A_CLASS_CALL ();
+
 	if (!model()) {
 		return;
 	}
@@ -665,6 +688,8 @@ MidiRegion::set_start_internal (samplecnt_t s, const int32_t sub_num)
 void
 MidiRegion::trim_to_internal (samplepos_t position, samplecnt_t length, const int32_t sub_num)
 {
+	A_CLASS_CALL ();
+
 	if (locked()) {
 		return;
 	}
@@ -729,3 +754,5 @@ MidiRegion::trim_to_internal (samplepos_t position, samplecnt_t length, const in
 		send_change (what_changed);
 	}
 }
+
+} // namespace ARDOUR

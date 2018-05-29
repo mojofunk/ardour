@@ -26,10 +26,9 @@ def build(bld):
                    'coremidi_io.cc'
                  ]
     obj.includes = ['.']
-    obj.name     = 'coreaudio_backend'
+    obj.name     = 'COREAUDIO_BACKEND'
     obj.target   = 'coreaudio_backend'
-    obj.use      = 'libardour libpbd'
-    obj.uselib   = 'GLIBMM XML'
+    obj.use      = 'ARDOUR'
     obj.framework = [ 'CoreAudio', 'AudioToolbox', 'CoreServices' ]
     if bld.env['build_target'] not in [ 'lion', 'el_capitan' ] and (not bld.env['build_arch'] == "ppc"):
         obj.framework += [ 'CoreMidi' ]

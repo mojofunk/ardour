@@ -24,10 +24,9 @@ def build(bld):
     obj.defines      = [ 'PACKAGE="ardour_faderport"' ]
     obj.defines     += [ 'ARDOURSURFACE_DLL_EXPORTS' ]
     obj.includes     = [ '.', './faderport']
-    obj.name         = 'libardour_faderport'
+    obj.name         = 'ARDOUR_FADERPORT'
     obj.target       = 'ardour_faderport'
-    obj.uselib       = 'GTKMM GTK GDK XML'
-    obj.use          = 'libardour libardour_cp libgtkmm2ext libpbd'
+    obj.use          = 'ARDOUR_CP GTKMM2EXT'
     obj.install_path = os.path.join(bld.env['LIBDIR'], 'surfaces')
 
 def shutdown():

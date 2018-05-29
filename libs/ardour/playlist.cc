@@ -45,13 +45,14 @@
 #include "pbd/i18n.h"
 
 using namespace std;
-using namespace ARDOUR;
 using namespace PBD;
 
 namespace ARDOUR {
-	namespace Properties {
-		PBD::PropertyDescriptor<bool> regions;
-	}
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::Playlist);
+
+namespace Properties {
+	PBD::PropertyDescriptor<bool> regions;
 }
 
 struct ShowMeTheList {
@@ -62,8 +63,6 @@ struct ShowMeTheList {
     boost::shared_ptr<Playlist> playlist;
     string name;
 };
-
-
 
 void
 Playlist::make_property_quarks ()
@@ -300,6 +299,8 @@ Playlist::copy_regions (RegionList& newlist) const
 void
 Playlist::init (bool hide)
 {
+	A_CLASS_CALL1 (name());
+
 	add_property (regions);
 	_xml_node_name = X_("Playlist");
 
@@ -333,7 +334,7 @@ Playlist::init (bool hide)
 
 Playlist::~Playlist ()
 {
-	DEBUG_TRACE (DEBUG::Destruction, string_compose ("Playlist %1 destructor\n", _name));
+	A_CLASS_CALL1 (name());
 
 	{
 		RegionReadLock rl (this);
@@ -355,12 +356,12 @@ Playlist::_set_sort_id ()
 	  is an integer. We extract the id and sort by that.
 	*/
 
-	size_t dot_position = _name.val().find_last_of(".");
+	size_t dot_position = name().find_last_of(".");
 
 	if (dot_position == string::npos) {
 		_sort_id = 0;
 	} else {
-		string t = _name.val().substr(dot_position + 1);
+		string t = name().substr(dot_position + 1);
 
 		if (!string_to_uint32 (t, _sort_id)) {
 			_sort_id = 0;
@@ -413,6 +414,8 @@ Playlist::end_undo ()
 void
 Playlist::freeze ()
 {
+	A_CLASS_CALL1 (name());
+
 	delay_notifications ();
 	g_atomic_int_inc (&ignore_state_changes);
 }
@@ -421,6 +424,8 @@ Playlist::freeze ()
 void
 Playlist::thaw (bool from_undo)
 {
+	A_CLASS_CALL1 (name());
+
 	g_atomic_int_dec_and_test (&ignore_state_changes);
 	release_notifications (from_undo);
 }
@@ -444,6 +449,8 @@ Playlist::release_notifications (bool from_undo)
 void
 Playlist::notify_contents_changed ()
 {
+	A_CLASS_CALL1 (name());
+
 	if (holding_state ()) {
 		pending_contents_change = true;
 	} else {
@@ -455,6 +462,8 @@ Playlist::notify_contents_changed ()
 void
 Playlist::notify_layering_changed ()
 {
+	A_CLASS_CALL1 (name());
+
 	if (holding_state ()) {
 		pending_layering = true;
 	} else {
@@ -466,6 +475,8 @@ Playlist::notify_layering_changed ()
 void
 Playlist::notify_region_removed (boost::shared_ptr<Region> r)
 {
+	A_CLASS_CALL2 (name(), r->name());
+
 	if (holding_state ()) {
 		pending_removes.insert (r);
 		pending_contents_change = true;
@@ -482,6 +493,8 @@ Playlist::notify_region_removed (boost::shared_ptr<Region> r)
 void
 Playlist::notify_region_moved (boost::shared_ptr<Region> r)
 {
+	A_CLASS_CALL2 (name(), r->name());
+
 	Evoral::RangeMove<samplepos_t> const move (r->last_position (), r->length (), r->position ());
 
 	if (holding_state ()) {
@@ -500,6 +513,8 @@ Playlist::notify_region_moved (boost::shared_ptr<Region> r)
 void
 Playlist::notify_region_start_trimmed (boost::shared_ptr<Region> r)
 {
+	A_CLASS_CALL2 (name(), r->name());
+
 	if (r->position() >= r->last_position()) {
 		/* trimmed shorter */
 		return;
@@ -523,6 +538,8 @@ Playlist::notify_region_start_trimmed (boost::shared_ptr<Region> r)
 void
 Playlist::notify_region_end_trimmed (boost::shared_ptr<Region> r)
 {
+	A_CLASS_CALL2 (name(), r->name());
+
 	if (r->length() < r->last_length()) {
 		/* trimmed shorter */
 	}
@@ -545,6 +562,8 @@ Playlist::notify_region_end_trimmed (boost::shared_ptr<Region> r)
 void
 Playlist::notify_region_added (boost::shared_ptr<Region> r)
 {
+	A_CLASS_CALL2 (name(), r->name());
+
 	/* the length change might not be true, but we have to act
 	   as though it could be.
 	*/
@@ -565,6 +584,8 @@ Playlist::notify_region_added (boost::shared_ptr<Region> r)
 void
 Playlist::flush_notifications (bool from_undo)
 {
+	A_CLASS_CALL1 (name());
+
 	set<boost::shared_ptr<Region> >::iterator s;
 	bool regions_changed = false;
 
@@ -668,6 +689,8 @@ Playlist::clear_pending ()
 void
 Playlist::add_region (boost::shared_ptr<Region> region, samplepos_t position, float times, bool auto_partition, int32_t sub_num, double quarter_note, bool for_music)
 {
+	A_CLASS_CALL8 (name(), region->name(), position, times, auto_partition, sub_num, quarter_note, for_music);
+
 	RegionWriteLock rlock (this);
 	times = fabs (times);
 
@@ -780,6 +803,8 @@ Playlist::add_region_internal (boost::shared_ptr<Region> region, samplepos_t pos
 void
 Playlist::replace_region (boost::shared_ptr<Region> old, boost::shared_ptr<Region> newr, samplepos_t pos)
 {
+	A_CLASS_CALL3 (old->name(), newr->name(), pos);
+
 	RegionWriteLock rlock (this);
 
 	bool old_sp = _splicing;
@@ -797,6 +822,8 @@ Playlist::replace_region (boost::shared_ptr<Region> old, boost::shared_ptr<Regio
 void
 Playlist::remove_region (boost::shared_ptr<Region> region)
 {
+	A_CLASS_CALL1 (region->name());
+
 	RegionWriteLock rlock (this);
 	remove_region_internal (region);
 }
@@ -879,6 +906,8 @@ Playlist::get_source_equivalent_regions (boost::shared_ptr<Region> other, vector
 void
 Playlist::partition (samplepos_t start, samplepos_t end, bool cut)
 {
+	A_CLASS_CALL4 (name(), start, end, cut);
+
 	RegionList thawlist;
 	{
 		RegionWriteLock lock(this);
@@ -912,6 +941,8 @@ static void maybe_add_start_beats (TempoMap const& tm, PropertyList& plist, boos
 void
 Playlist::partition_internal (samplepos_t start, samplepos_t end, bool cutting, RegionList& thawlist)
 {
+	A_CLASS_CALL4 (name(), start, end, cutting);
+
 	RegionList new_regions;
 
 	{
@@ -1157,6 +1188,8 @@ Playlist::partition_internal (samplepos_t start, samplepos_t end, bool cutting, 
 boost::shared_ptr<Playlist>
 Playlist::cut_copy (boost::shared_ptr<Playlist> (Playlist::*pmf)(samplepos_t, samplecnt_t,bool), list<AudioRange>& ranges, bool result_is_hidden)
 {
+	A_CLASS_CALL2 (name(), result_is_hidden);
+
 	boost::shared_ptr<Playlist> ret;
 	boost::shared_ptr<Playlist> pl;
 	samplepos_t start;
@@ -1204,6 +1237,8 @@ Playlist::copy (list<AudioRange>& ranges, bool result_is_hidden)
 boost::shared_ptr<Playlist>
 Playlist::cut (samplepos_t start, samplecnt_t cnt, bool result_is_hidden)
 {
+	A_CLASS_CALL4 (name(), start, cnt, result_is_hidden);
+
 	boost::shared_ptr<Playlist> the_copy;
 	RegionList thawlist;
 	char buf[32];
@@ -1232,6 +1267,8 @@ Playlist::cut (samplepos_t start, samplecnt_t cnt, bool result_is_hidden)
 boost::shared_ptr<Playlist>
 Playlist::copy (samplepos_t start, samplecnt_t cnt, bool result_is_hidden)
 {
+	A_CLASS_CALL4 (name(), start, cnt, result_is_hidden);
+
 	char buf[32];
 
 	snprintf (buf, sizeof (buf), "%" PRIu32, ++subcnt);
@@ -1247,6 +1284,8 @@ Playlist::copy (samplepos_t start, samplecnt_t cnt, bool result_is_hidden)
 int
 Playlist::paste (boost::shared_ptr<Playlist> other, samplepos_t position, float times, const int32_t sub_num)
 {
+	A_CLASS_CALL5 (name(), other->name(), position, times, sub_num);
+
 	times = fabs (times);
 
 	{
@@ -1289,6 +1328,8 @@ Playlist::duplicate (boost::shared_ptr<Region> region, samplepos_t position, flo
 void
 Playlist::duplicate (boost::shared_ptr<Region> region, samplepos_t position, samplecnt_t gap, float times)
 {
+	A_CLASS_CALL5 (name(), region->name(), position, gap, times);
+
 	times = fabs (times);
 
 	RegionWriteLock rl (this);
@@ -1325,6 +1366,8 @@ Playlist::duplicate (boost::shared_ptr<Region> region, samplepos_t position, sam
 void
 Playlist::duplicate_until (boost::shared_ptr<Region> region, samplepos_t position, samplecnt_t gap, samplepos_t end)
 {
+	A_CLASS_CALL4 (region->name(), position, gap, end);
+
 	 RegionWriteLock rl (this);
 
 	 while (position + region->length() - 1 < end) {
@@ -1364,6 +1407,8 @@ Playlist::duplicate_range (AudioRange& range, float times)
 void
 Playlist::duplicate_ranges (std::list<AudioRange>& ranges, float times)
 {
+	A_CLASS_CALL2 (name(), times);
+
 	if (ranges.empty()) {
 		return;
 	}
@@ -1394,6 +1439,8 @@ Playlist::duplicate_ranges (std::list<AudioRange>& ranges, float times)
  void
  Playlist::shift (samplepos_t at, sampleoffset_t distance, bool move_intersected, bool ignore_music_glue)
  {
+	 A_CLASS_CALL5 (name(), at, distance, move_intersected, ignore_music_glue);
+
 	 RegionWriteLock rlock (this);
 	 RegionList copy (regions.rlist());
 	 RegionList fixup;
@@ -1454,6 +1501,8 @@ Playlist::duplicate_ranges (std::list<AudioRange>& ranges, float times)
  void
  Playlist::_split_region (boost::shared_ptr<Region> region, const MusicSample& playlist_position)
  {
+	 A_CLASS_CALL3 (name(), region->name(), playlist_position.sample);
+
 	 if (!region->covers (playlist_position.sample)) {
 		 return;
 	 }
@@ -1590,6 +1639,8 @@ Playlist::SoloSelectedActive()
  void
  Playlist::core_splice (samplepos_t at, samplecnt_t distance, boost::shared_ptr<Region> exclude)
  {
+	 A_CLASS_CALL4 (name(), at, distance, exclude->name());
+
 	 _splicing = true;
 
 	 for (RegionList::iterator i = regions.begin(); i != regions.end(); ++i) {
@@ -1633,6 +1684,8 @@ Playlist::ripple_unlocked (samplepos_t at, samplecnt_t distance, RegionList *exc
 void
 Playlist::core_ripple (samplepos_t at, samplecnt_t distance, RegionList *exclude)
 {
+	A_CLASS_CALL3 (name(), at, distance);
+
 	if (distance == 0) {
 		return;
 	}
@@ -1669,6 +1722,8 @@ Playlist::core_ripple (samplepos_t at, samplecnt_t distance, RegionList *exclude
 void
 Playlist::region_bounds_changed (const PropertyChange& what_changed, boost::shared_ptr<Region> region)
 {
+	A_CLASS_CALL2 (name(), region->name());
+
 	 if (in_set_state || _splicing || _rippling || _nudging || _shuffling) {
 		 return;
 	 }
@@ -1741,6 +1796,8 @@ Playlist::region_bounds_changed (const PropertyChange& what_changed, boost::shar
  bool
  Playlist::region_changed (const PropertyChange& what_changed, boost::shared_ptr<Region> region)
  {
+	A_CLASS_CALL2 (name(), region->name());
+
 	 PropertyChange our_interests;
 	 PropertyChange bounds;
 	 PropertyChange pos_and_length;
@@ -1810,6 +1867,8 @@ Playlist::region_bounds_changed (const PropertyChange& what_changed, boost::shar
  void
  Playlist::clear (bool with_signals)
  {
+		A_CLASS_CALL2 (name(), with_signals);
+
 	 {
 		 RegionWriteLock rl (this);
 
@@ -2006,6 +2065,8 @@ Playlist::regions_touched_locked (samplepos_t start, samplepos_t end)
 samplepos_t
 Playlist::find_next_transient (samplepos_t from, int dir)
 {
+	A_CLASS_CALL3 (name(), from, dir);
+
 	RegionReadLock rlock (this);
 	AnalysisFeatureList points;
 	AnalysisFeatureList these_points;
@@ -2066,6 +2127,8 @@ Playlist::find_next_transient (samplepos_t from, int dir)
 boost::shared_ptr<Region>
 Playlist::find_next_region (samplepos_t sample, RegionPoint point, int dir)
 {
+	A_CLASS_CALL3 (name(), sample, dir);
+
 	RegionReadLock rlock (this);
 	boost::shared_ptr<Region> ret;
 	samplepos_t closest = max_samplepos;
@@ -2126,6 +2189,8 @@ Playlist::find_next_region (samplepos_t sample, RegionPoint point, int dir)
  samplepos_t
  Playlist::find_next_region_boundary (samplepos_t sample, int dir)
  {
+	A_CLASS_CALL3 (name(), sample, dir);
+
 	 RegionReadLock rlock (this);
 
 	 samplepos_t closest = max_samplepos;
@@ -2226,8 +2291,7 @@ Playlist::find_next_region (samplepos_t sample, RegionPoint point, int dir)
  void
  Playlist::update (const RegionListProperty::ChangeRecord& change)
  {
-	 DEBUG_TRACE (DEBUG::Properties, string_compose ("Playlist %1 updates from a change record with %2 adds %3 removes\n",
-							 name(), change.added.size(), change.removed.size()));
+	A_CLASS_CALL3 (name(), change.added.size(), change.removed.size());
 
 	 freeze ();
 	 /* add the added regions */
@@ -2552,6 +2616,8 @@ struct LaterHigherSort {
 void
 Playlist::relayer ()
 {
+	A_CLASS_CALL1 (name());
+
 	/* never compute layers when setting from XML */
 
 	if (in_set_state) {
@@ -2752,6 +2818,8 @@ Playlist::nudge_after (samplepos_t start, samplecnt_t distance, bool forwards)
 bool
 Playlist::uses_source (boost::shared_ptr<const Source> src, bool shallow) const
 {
+	A_CLASS_CALL3 (name(), src->name (), shallow);
+
 	RegionReadLock rlock (const_cast<Playlist*> (this));
 
 	for (set<boost::shared_ptr<Region> >::const_iterator r = all_regions.begin(); r != all_regions.end(); ++r) {
@@ -2867,6 +2935,8 @@ Playlist::set_frozen (bool yn)
 void
 Playlist::shuffle (boost::shared_ptr<Region> region, int dir)
 {
+	A_CLASS_CALL3 (name(), region->name(), dir);
+
 	bool moved = false;
 
 	if (region->locked()) {
@@ -2999,6 +3069,8 @@ Playlist::ripple (samplepos_t at, samplecnt_t distance, RegionList *exclude)
 void
 Playlist::update_after_tempo_map_change ()
 {
+	A_CLASS_CALL1 (name());
+
 	RegionWriteLock rlock (const_cast<Playlist*> (this));
 	RegionList copy (regions.rlist());
 
@@ -3060,6 +3132,8 @@ Playlist::find_next_top_layer_position (samplepos_t t) const
 boost::shared_ptr<Region>
 Playlist::combine (const RegionList& r)
 {
+	A_CLASS_CALL1 (name());
+
 	PropertyList plist;
 	uint32_t channels = 0;
 	uint32_t layer = 0;
@@ -3190,6 +3264,8 @@ Playlist::combine (const RegionList& r)
 void
 Playlist::uncombine (boost::shared_ptr<Region> target)
 {
+	A_CLASS_CALL1 (name());
+
 	boost::shared_ptr<PlaylistSource> pls;
 	boost::shared_ptr<const Playlist> pl;
 	vector<boost::shared_ptr<Region> > originals;
@@ -3470,3 +3546,5 @@ Playlist::set_capture_insertion_in_progress (bool yn)
 {
 	_capture_insertion_underway = yn;
 }
+
+} // namespace ARDOUR

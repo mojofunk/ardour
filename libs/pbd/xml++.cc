@@ -18,6 +18,8 @@ xmlChar* xml_version = xmlCharStrdup("1.0");
 
 using namespace std;
 
+A_DEFINE_CLASS_AS_MEMBERS (XMLNode, "PBD::XMLNode");
+
 static XMLNode*           readnode(xmlNodePtr);
 static void               writenode(xmlDocPtr, XMLNode*, xmlNodePtr, int);
 static XMLSharedNodeList* find_impl(xmlXPathContext* ctxt, const string& xpath);

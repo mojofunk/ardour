@@ -37,7 +37,7 @@
 #include "evoral/Control.hpp"
 #include "evoral/SMF.hpp"
 
-#include "ardour/debug.h"
+#include "ardour/logging.h"
 #include "ardour/midi_channel_filter.h"
 #include "ardour/midi_model.h"
 #include "ardour/midi_ring_buffer.h"
@@ -53,6 +53,8 @@ using namespace Glib;
 using namespace PBD;
 using namespace Evoral;
 using namespace std;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::SMFSource);
 
 /** Constructor used for new internal-to-session files.  File cannot exist. */
 SMFSource::SMFSource (Session& s, const string& path, Source::Flag flags)
@@ -219,6 +221,8 @@ SMFSource::read_unlocked (const Lock&                    lock,
                           MidiStateTracker*              tracker,
                           MidiChannelFilter*             filter) const
 {
+	A_CLASS_CALL3 (source_start, start, duration);
+
 	int      ret  = 0;
 	uint64_t time = 0; // in SMF ticks, 1 tick per _ppqn
 
@@ -226,8 +230,6 @@ SMFSource::read_unlocked (const Lock&                    lock,
 		/* nothing to read since nothing has ben written */
 		return duration;
 	}
-
-	DEBUG_TRACE (DEBUG::MidiSourceIO, string_compose ("SMF read_unlocked: start %1 duration %2\n", start, duration));
 
 	// Output parameters for read_event (which will allocate scratch in buffer as needed)
 	uint32_t ev_delta_t = 0;
@@ -239,10 +241,11 @@ SMFSource::read_unlocked (const Lock&                    lock,
 	BeatsSamplesConverter converter(_session.tempo_map(), source_start);
 
 	const uint64_t start_ticks = converter.from(start).to_ticks();
-	DEBUG_TRACE (DEBUG::MidiSourceIO, string_compose ("SMF read_unlocked: start in ticks %1\n", start_ticks));
+
+	A_CLASS_DATA4 (time, start, start_ticks, _smf_last_read_end);
 
 	if (_smf_last_read_end == 0 || start != _smf_last_read_end) {
-		DEBUG_TRACE (DEBUG::MidiSourceIO, string_compose ("SMF read_unlocked: seek to %1\n", start));
+		A_CLASS_DURATION ("Read Events");
 		Evoral::SMF::seek_to_start();
 		while (time < start_ticks) {
 			gint ignored;
@@ -255,11 +258,12 @@ SMFSource::read_unlocked (const Lock&                    lock,
 			time += ev_delta_t; // accumulate delta time
 		}
 	} else {
-		DEBUG_TRACE (DEBUG::MidiSourceIO, string_compose ("SMF read_unlocked: set time to %1\n", _smf_last_read_time));
 		time = _smf_last_read_time;
 	}
 
 	_smf_last_read_end = start + duration;
+
+	A_CLASS_DATA2 (time, _smf_last_read_end);
 
 	while (true) {
 		gint ignored; /* XXX don't ignore note id's ??*/
@@ -276,8 +280,7 @@ SMFSource::read_unlocked (const Lock&                    lock,
 			continue;
 		}
 
-		DEBUG_TRACE (DEBUG::MidiSourceIO, string_compose ("SMF read_unlocked delta %1, time %2, buf[0] %3\n",
-								  ev_delta_t, time, ev_buffer[0]));
+		A_CLASS_DATA3 (ev_delta_t, time, ev_buffer[0]);
 
 		assert(time >= start_ticks);
 
@@ -316,6 +319,8 @@ SMFSource::write_unlocked (const Lock&                 lock,
                            samplepos_t                  position,
                            samplecnt_t                  cnt)
 {
+	A_CLASS_CALL2 (position, cnt);
+
 	if (!_writing) {
 		mark_streaming_write_started (lock);
 	}
@@ -395,6 +400,8 @@ void
 SMFSource::append_event_beats (const Glib::Threads::Mutex::Lock&   lock,
                                const Evoral::Event<Temporal::Beats>& ev)
 {
+	A_CLASS_CALL4 (name(), ev.id(), ev.time().to_double(), ev.size());
+
 	if (!_writing || ev.size() == 0)  {
 		return;
 	}
@@ -451,6 +458,8 @@ SMFSource::append_event_samples (const Glib::Threads::Mutex::Lock& lock,
                                 const Evoral::Event<samplepos_t>&  ev,
                                 samplepos_t                        position)
 {
+	A_CLASS_CALL5 (name(), ev.id(), ev.time(), ev.size(), position);
+
 	if (!_writing || ev.size() == 0)  {
 		return;
 	}
@@ -524,6 +533,8 @@ SMFSource::set_state (const XMLNode& node, int version)
 void
 SMFSource::mark_streaming_midi_write_started (const Lock& lock, NoteMode mode)
 {
+	A_CLASS_CALL1 (name());
+
 	if (!_open && open_for_write()) {
 		error << string_compose (_("cannot open MIDI file %1 for write"), _path) << endmsg;
 		/* XXX should probably throw or return something */
@@ -545,6 +556,8 @@ SMFSource::mark_streaming_write_completed (const Lock& lock)
 void
 SMFSource::mark_midi_streaming_write_completed (const Lock& lm, Evoral::Sequence<Temporal::Beats>::StuckNoteOption stuck_notes_option, Temporal::Beats when)
 {
+	A_CLASS_CALL1 (name());
+
 	MidiSource::mark_midi_streaming_write_completed (lm, stuck_notes_option, when);
 
 	if (!writable()) {
@@ -609,6 +622,8 @@ static bool compare_eventlist (
 void
 SMFSource::load_model (const Glib::Threads::Mutex::Lock& lock, bool force_reload)
 {
+	A_CLASS_CALL2 (name(), force_reload);
+
 	if (_writing) {
 		return;
 	}
@@ -672,7 +687,8 @@ SMFSource::load_model (const Glib::Threads::Mutex::Lock& lock, bool force_reload
 					event_id = Evoral::next_event_id();
 				}
 				const Temporal::Beats event_time = Temporal::Beats::ticks_at_rate(time, ppqn());
-#ifndef NDEBUG
+
+#ifdef A_LOGGING_ENABLED
 				std::string ss;
 
 				for (uint32_t xx = 0; xx < size; ++xx) {
@@ -681,8 +697,8 @@ SMFSource::load_model (const Glib::Threads::Mutex::Lock& lock, bool force_reload
 					ss += b;
 				}
 
-				DEBUG_TRACE (DEBUG::MidiSourceIO, string_compose ("SMF %7 load model delta %1, time %2, size %3 buf %4, id %6\n",
-							delta_t, time, size, ss, event_id, name()));
+				A_CLASS_MSG (A_FMT ("{} load model delta {}, time {}, size {}, buf {}, id {}", name (),
+				                    delta_t, time, size, ss, event_id));
 #endif
 
 				eventlist.push_back(make_pair (

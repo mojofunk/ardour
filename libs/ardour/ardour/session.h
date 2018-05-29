@@ -428,6 +428,8 @@ public:
 	void request_play_loop (bool yn, bool leave_rolling = false);
 	bool get_play_loop () const { return play_loop; }
 
+	void transport_toggle_playback ();
+
 	samplepos_t last_transport_start () const { return _last_roll_location; }
 	void goto_end ();
 	void goto_start (bool and_roll = false);
@@ -2122,6 +2124,8 @@ private:
 	CoreSelection* _selection;
 
 	bool _global_locate_pending;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::Session);
 };
 
 

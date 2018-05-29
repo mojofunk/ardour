@@ -146,31 +146,35 @@ merge_curves (boost::shared_ptr<Evoral::ControlList> dst,
 	}
 }
 
+namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS(ARDOUR::AudioRegion);
+
 void
 AudioRegion::make_property_quarks ()
 {
 	Properties::envelope_active.property_id = g_quark_from_static_string (X_("envelope-active"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for envelope-active = %1\n", 	Properties::envelope_active.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::envelope_active.property_id);
 	Properties::default_fade_in.property_id = g_quark_from_static_string (X_("default-fade-in"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for default-fade-in = %1\n", 	Properties::default_fade_in.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::default_fade_in.property_id);
 	Properties::default_fade_out.property_id = g_quark_from_static_string (X_("default-fade-out"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for default-fade-out = %1\n", 	Properties::default_fade_out.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::default_fade_out.property_id);
 	Properties::fade_in_active.property_id = g_quark_from_static_string (X_("fade-in-active"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for fade-in-active = %1\n", 	Properties::fade_in_active.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::fade_in_active.property_id);
 	Properties::fade_out_active.property_id = g_quark_from_static_string (X_("fade-out-active"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for fade-out-active = %1\n", 	Properties::fade_out_active.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::fade_out_active.property_id);
 	Properties::scale_amplitude.property_id = g_quark_from_static_string (X_("scale-amplitude"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for scale-amplitude = %1\n", 	Properties::scale_amplitude.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::scale_amplitude.property_id);
 	Properties::fade_in.property_id = g_quark_from_static_string (X_("FadeIn"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for FadeIn = %1\n",		Properties::fade_in.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::fade_in.property_id);
 	Properties::inverse_fade_in.property_id = g_quark_from_static_string (X_("InverseFadeIn"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for InverseFadeIn = %1\n",	Properties::inverse_fade_in.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::inverse_fade_in.property_id);
 	Properties::fade_out.property_id = g_quark_from_static_string (X_("FadeOut"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for FadeOut = %1\n",		Properties::fade_out.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::fade_out.property_id);
 	Properties::inverse_fade_out.property_id = g_quark_from_static_string (X_("InverseFadeOut"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for InverseFadeOut = %1\n",	Properties::inverse_fade_out.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::inverse_fade_out.property_id);
 	Properties::envelope.property_id = g_quark_from_static_string (X_("Envelope"));
-	DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for Envelope = %1\n",		Properties::envelope.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::envelope.property_id);
 }
 
 void
@@ -219,6 +223,8 @@ AudioRegion::register_properties ()
 void
 AudioRegion::init ()
 {
+	A_CLASS_CALL ();
+
 	register_properties ();
 
 	suspend_property_changes();
@@ -240,6 +246,8 @@ AudioRegion::AudioRegion (Session& s, samplepos_t start, samplecnt_t len, std::s
 	, _fade_in_suspended (0)
 	, _fade_out_suspended (0)
 {
+	A_CLASS_CALL ();
+
 	init ();
 	assert (_sources.size() == _master_sources.size());
 }
@@ -253,6 +261,8 @@ AudioRegion::AudioRegion (const SourceList& srcs)
 	, _fade_in_suspended (0)
 	, _fade_out_suspended (0)
 {
+	A_CLASS_CALL ();
+
 	init ();
 	assert (_sources.size() == _master_sources.size());
 }
@@ -268,6 +278,8 @@ AudioRegion::AudioRegion (boost::shared_ptr<const AudioRegion> other)
 	, _fade_in_suspended (0)
 	, _fade_out_suspended (0)
 {
+	A_CLASS_CALL ();
+
 	/* don't use init here, because we got fade in/out from the other region
 	*/
 	register_properties ();
@@ -290,6 +302,8 @@ AudioRegion::AudioRegion (boost::shared_ptr<const AudioRegion> other, MusicSampl
 	, _fade_in_suspended (0)
 	, _fade_out_suspended (0)
 {
+	A_CLASS_CALL ();
+
 	/* don't use init here, because we got fade in/out from the other region
 	*/
 	register_properties ();
@@ -309,6 +323,8 @@ AudioRegion::AudioRegion (boost::shared_ptr<const AudioRegion> other, const Sour
 	, _fade_in_suspended (0)
 	, _fade_out_suspended (0)
 {
+	A_CLASS_CALL ();
+
 	/* make-a-sort-of-copy-with-different-sources constructor (used by audio filter) */
 
 	register_properties ();
@@ -328,6 +344,8 @@ AudioRegion::AudioRegion (SourceList& srcs)
 	, _fade_in_suspended (0)
 	, _fade_out_suspended (0)
 {
+	A_CLASS_CALL ();
+
 	init ();
 
 	assert(_type == DataType::AUDIO);
@@ -336,11 +354,14 @@ AudioRegion::AudioRegion (SourceList& srcs)
 
 AudioRegion::~AudioRegion ()
 {
+	A_CLASS_CALL ();
 }
 
 void
 AudioRegion::post_set (const PropertyChange& /*ignored*/)
 {
+	A_CLASS_CALL ();
+
 	if (!_sync_marked) {
 		_sync_position = _start;
 	}
@@ -379,6 +400,8 @@ AudioRegion::connect_to_analysis_changed ()
 void
 AudioRegion::connect_to_header_position_offset_changed ()
 {
+	A_CLASS_CALL ();
+
 	set<boost::shared_ptr<Source> > unique_srcs;
 
 	for (SourceList::const_iterator i = _sources.begin(); i != _sources.end(); ++i) {
@@ -424,6 +447,8 @@ AudioRegion::set_envelope_active (bool yn)
 ARDOUR::samplecnt_t
 AudioRegion::read_peaks (PeakData *buf, samplecnt_t npeaks, samplecnt_t offset, samplecnt_t cnt, uint32_t chan_n, double samples_per_pixel) const
 {
+	A_CLASS_CALL5 (npeaks, offset, cnt, chan_n, samples_per_pixel);
+
 	if (chan_n >= _sources.size()) {
 		return 0;
 	}
@@ -480,6 +505,8 @@ AudioRegion::read_at (Sample *buf, Sample *mixdown_buffer, float *gain_buffer,
 		      samplecnt_t cnt,
 		      uint32_t chan_n) const
 {
+	A_CLASS_CALL3 (position, cnt, chan_n);
+
 	/* We are reading data from this region into buf (possibly via mixdown_buffer).
 	   The caller has verified that we cover the desired section.
 	*/
@@ -728,6 +755,8 @@ AudioRegion::read_at (Sample *buf, Sample *mixdown_buffer, float *gain_buffer,
 samplecnt_t
 AudioRegion::read_from_sources (SourceList const & srcs, samplecnt_t limit, Sample* buf, samplepos_t position, samplecnt_t cnt, uint32_t chan_n) const
 {
+	A_CLASS_CALL4 (limit, position, cnt, chan_n);
+
 	sampleoffset_t const internal_offset = position - _position;
 	if (internal_offset >= limit) {
 		return 0;
@@ -2030,3 +2059,4 @@ AudioRegion::verify_xfade_bounds (samplecnt_t len, bool start)
 
 }
 
+} // namespace ARDOUR

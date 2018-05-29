@@ -20,6 +20,8 @@
 #ifndef __CANVAS_CONTAINER_H__
 #define __CANVAS_CONTAINER_H__
 
+#include "pbd/dev_tools.h"
+
 #include "canvas/item.h"
 
 namespace ArdourCanvas
@@ -59,6 +61,9 @@ public:
 	 * overridden as necessary.
 	 */
 	void prepare_for_render (Rect const & area) const;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourCanvas::Container);
 };
 
 }

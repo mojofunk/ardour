@@ -27,6 +27,7 @@
 
 #include <glibmm/refptr.h>
 
+#include "pbd/dev_tools.h"
 #include "ardour/types.h"
 #include "canvas/item.h"
 #include "waveview/visibility.h"
@@ -261,6 +262,9 @@ private:
 	 * of the cache group.
 	 */
 	void reset_cache_group ();
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourWaveView::WaveView);
 };
 
 } /* namespace */

@@ -19,6 +19,8 @@
 #ifndef __CANVAS_SCROLL_GROUP_H__
 #define __CANVAS_SCROLL_GROUP_H__
 
+#include "pbd/dev_tools.h"
+
 #include "canvas/container.h"
 
 namespace ArdourCanvas {
@@ -51,6 +53,9 @@ class LIBCANVAS_API ScrollGroup : public Container
   private:
 	ScrollSensitivity _scroll_sensitivity;
 	Duple             _scroll_offset;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourCanvas::ScrollGroup);
 };
 
 }

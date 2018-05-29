@@ -36,6 +36,7 @@
 #include "ardour/export_status.h"
 #include "ardour/export_format_specification.h"
 #include "ardour/export_filename.h"
+#include "ardour/logging.h"
 #include "ardour/soundcloud_upload.h"
 #include "ardour/system_exec.h"
 #include "pbd/openuri.h"
@@ -116,10 +117,12 @@ ExportHandler::ExportHandler (Session & session)
   , cue_tracknum (0)
   , cue_indexnum (0)
 {
+	A_LOG_CALL (LOG::Export);
 }
 
 ExportHandler::~ExportHandler ()
 {
+	A_LOG_CALL (LOG::Export);
 	graph_builder->cleanup (export_status->aborted () );
 }
 
@@ -129,6 +132,7 @@ ExportHandler::add_export_config (ExportTimespanPtr timespan, ExportChannelConfi
                                   ExportFormatSpecPtr format, ExportFilenamePtr filename,
                                   BroadcastInfoPtr broadcast_info)
 {
+	A_LOG_CALL (LOG::Export);
 	FileSpec spec (channel_config, format, filename, broadcast_info);
 	config_map.insert (make_pair (timespan, spec));
 
@@ -138,6 +142,8 @@ ExportHandler::add_export_config (ExportTimespanPtr timespan, ExportChannelConfi
 void
 ExportHandler::do_export ()
 {
+	A_LOG_CALL (LOG::Export);
+
 	/* Count timespans */
 
 	export_status->init();
@@ -167,6 +173,8 @@ ExportHandler::do_export ()
 void
 ExportHandler::start_timespan ()
 {
+	A_LOG_CALL (LOG::Export);
+
 	export_status->timespan++;
 
 	if (config_map.empty()) {
@@ -244,6 +252,8 @@ ExportHandler::handle_duplicate_format_extensions()
 int
 ExportHandler::process (samplecnt_t samples)
 {
+	A_LOG_CALL1 (LOG::Export, samples);
+
 	if (!export_status->running ()) {
 		return 0;
 	} else if (post_processing) {
@@ -263,6 +273,8 @@ ExportHandler::process (samplecnt_t samples)
 int
 ExportHandler::process_timespan (samplecnt_t samples)
 {
+	A_LOG_CALL1 (LOG::Export, samples);
+
 	export_status->active_job = ExportStatus::Exporting;
 	/* update position */
 
@@ -278,6 +290,8 @@ ExportHandler::process_timespan (samplecnt_t samples)
 		samples_to_read = samples;
 	}
 
+	A_LOG_DATA4 (LOG::Export, samples_to_read, end, process_position, last_cycle);
+
 	process_position += samples_to_read;
 	export_status->processed_samples += samples_to_read;
 	export_status->processed_samples_current_timespan += samples_to_read;
@@ -288,6 +302,7 @@ ExportHandler::process_timespan (samplecnt_t samples)
 	/* Start post-processing/normalizing if necessary */
 	if (last_cycle) {
 		post_processing = graph_builder->need_postprocessing ();
+		A_LOG_DURATION (LOG::Export, A_FMT ("post_processing: {}", post_processing));
 		if (post_processing) {
 			export_status->total_postprocessing_cycles = graph_builder->get_postprocessing_cycle_count();
 			export_status->current_postprocessing_cycle = 0;
@@ -303,6 +318,8 @@ ExportHandler::process_timespan (samplecnt_t samples)
 int
 ExportHandler::post_process ()
 {
+	A_LOG_CALL (LOG::Export);
+
 	if (graph_builder->post_process ()) {
 		finish_timespan ();
 		export_status->active_job = ExportStatus::Exporting;
@@ -329,6 +346,8 @@ ExportHandler::command_output(std::string output, size_t size)
 void
 ExportHandler::finish_timespan ()
 {
+	A_LOG_CALL (LOG::Export);
+
 	graph_builder->get_analysis_results (export_status->result_map);
 
 	while (config_map.begin() != timespan_bounds.second) {

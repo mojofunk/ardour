@@ -26,7 +26,7 @@
 
 #include "pbd/i18n.h"
 
-static const char* state_node_name = "Channelmap";
+static const char* channel_map_state_node_name = "Channelmap";
 
 using namespace std;
 
@@ -55,7 +55,7 @@ ChanMapping::ChanMapping (const XMLNode& node)
 {
 	XMLNodeConstIterator iter = node.children().begin();
 	for ( ; iter != node.children().end(); ++iter) {
-		if ((*iter)->name() == X_(state_node_name)) {
+		if ((*iter)->name() == X_(channel_map_state_node_name)) {
 			DataType type(DataType::NIL);
 			uint32_t from;
 			uint32_t to;
@@ -159,7 +159,7 @@ ChanMapping::state(const std::string& name) const
 	const Mappings& mp (mappings());
 	for (Mappings::const_iterator tm = mp.begin(); tm != mp.end(); ++tm) {
 		for (TypeMapping::const_iterator i = tm->second.begin(); i != tm->second.end(); ++i) {
-			XMLNode* n = new XMLNode(X_(state_node_name));
+			XMLNode* n = new XMLNode(X_(channel_map_state_node_name));
 			n->set_property("type", tm->first.to_string());
 			n->set_property("from", i->first);
 			n->set_property("to", i->second);

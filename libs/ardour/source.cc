@@ -36,6 +36,7 @@
 #include "pbd/types_convert.h"
 
 #include "ardour/debug.h"
+#include "ardour/logging.h"
 #include "ardour/profile.h"
 #include "ardour/session.h"
 #include "ardour/source.h"
@@ -52,6 +53,8 @@ using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
 
+A_DEFINE_CLASS_MEMBERS (ARDOUR::Source);
+
 Source::Source (Session& s, DataType type, const string& name, Flag flags)
 	: SessionObject(s, name)
 	, _type(type)
@@ -60,6 +63,7 @@ Source::Source (Session& s, DataType type, const string& name, Flag flags)
         , _use_count (0)
 	, _level (0)
 {
+	A_CLASS_CALL1 (_name.val());
 	_analysed = false;
 	_timestamp = 0;
 	fix_writable_flags ();
@@ -80,12 +84,13 @@ Source::Source (Session& s, const XMLNode& node)
 		throw failed_constructor();
 	}
 
+	A_CLASS_DATA1 (_name.val());
+
 	fix_writable_flags ();
 }
 
 Source::~Source ()
 {
-	DEBUG_TRACE (DEBUG::Destruction, string_compose ("Source %1 destructor %2\n", _name, this));
 }
 
 void
@@ -171,6 +176,8 @@ Source::has_been_analysed() const
 void
 Source::set_been_analysed (bool yn)
 {
+	A_CLASS_CALL2 (_name.val(), yn);
+
 	if (yn) {
 		if (0 == load_transients (get_transients_path())) {
 			yn = false;
@@ -186,6 +193,8 @@ Source::set_been_analysed (bool yn)
 int
 Source::load_transients (const string& path)
 {
+	A_CLASS_CALL2 (_name.val(), path);
+
 	int rv = 0;
 	FILE *tf;
 	if (! (tf = g_fopen (path.c_str (), "rb"))) {
@@ -211,6 +220,8 @@ Source::load_transients (const string& path)
 string
 Source::get_transients_path () const
 {
+	A_CLASS_CALL1 (_name.val());
+
 	vector<string> parts;
 	string s;
 
@@ -226,12 +237,18 @@ Source::get_transients_path () const
 	s += TransientDetector::operational_identifier();
 	parts.push_back (s);
 
-	return Glib::build_filename (parts);
+	const std::string transient_path = Glib::build_filename (parts);
+
+	A_CLASS_DATA1 (transient_path);
+
+	return transient_path;
 }
 
 bool
 Source::check_for_analysis_data_on_disk ()
 {
+	A_CLASS_CALL1 (_name.val());
+
 	/* looks to see if the analysis files for this source are on disk.
 	   if so, mark us already analysed.
 	*/
@@ -252,6 +269,8 @@ Source::check_for_analysis_data_on_disk ()
 void
 Source::mark_for_remove ()
 {
+	A_CLASS_CALL1 (_name.val());
+
 	// This operation is not allowed for sources for destructive tracks or out-of-session files.
 
 	/* XXX need a way to detect _within_session() condition here - move it from FileSource?

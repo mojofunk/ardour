@@ -24,6 +24,7 @@
 
 #include <glibmm/threads.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/crossthread.h"
 #include "pbd/ringbuffer.h"
 #include "pbd/pool.h"
@@ -100,6 +101,7 @@ private:
 
 	CrossThreadChannel _xthread;
 
+	A_DECLARE_CLASS_MEMBERS(ARDOUR::Butler);
 };
 
 } // namespace ARDOUR

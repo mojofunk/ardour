@@ -30,6 +30,7 @@
 #include "ardour/gain_control.h"
 #include "ardour/io.h"
 #include "ardour/meter.h"
+#include "ardour/logging.h"
 #include "ardour/panner_shell.h"
 #include "ardour/send.h"
 #include "ardour/session.h"
@@ -45,6 +46,8 @@ class Pannable;
 using namespace ARDOUR;
 using namespace PBD;
 using namespace std;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::Send);
 
 PBD::Signal0<void> Send::ChangedLatency;
 
@@ -212,6 +215,8 @@ Send::set_delay_out (samplecnt_t delay)
 void
 Send::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_sample, double speed, pframes_t nframes, bool)
 {
+	A_CLASS_CALL4 (start_sample, end_sample, speed, nframes);
+
 	if (_output->n_ports() == ChanCount::ZERO) {
 		_meter->reset ();
 		_active = _pending_active;

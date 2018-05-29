@@ -38,8 +38,9 @@
 #include "pbd/i18n.h"
 
 using namespace std;
-using namespace ARDOUR;
 using namespace PBD;
+
+namespace ARDOUR {
 
 AudioPlaylistSource::AudioPlaylistSource (Session& s, const ID& orig, const std::string& name, boost::shared_ptr<AudioPlaylist> p,
 					  uint32_t chn, sampleoffset_t begin, samplecnt_t len, Source::Flag flags)
@@ -217,4 +218,4 @@ AudioPlaylistSource::construct_peak_filepath (const string& /*audio_path_*/, con
 	return _peak_path;
 }
 
-
+} // namespace ARDOUR

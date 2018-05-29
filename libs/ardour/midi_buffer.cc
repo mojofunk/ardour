@@ -21,16 +21,17 @@
 
 #include "pbd/malign.h"
 #include "pbd/compose.h"
-#include "pbd/debug.h"
 #include "pbd/stacktrace.h"
 
-#include "ardour/debug.h"
 #include "ardour/midi_buffer.h"
 #include "ardour/port.h"
+#include "ardour/logging.h"
 
 using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::MidiBuffer);
 
 // FIXME: mirroring for MIDI buffers?
 MidiBuffer::MidiBuffer(size_t capacity)
@@ -52,6 +53,8 @@ MidiBuffer::~MidiBuffer()
 void
 MidiBuffer::resize(size_t size)
 {
+	A_CLASS_CALL1 (size);
+
 	if (_data && size < _capacity) {
 
 		if (_size < size) {
@@ -75,6 +78,8 @@ MidiBuffer::resize(size_t size)
 void
 MidiBuffer::copy(const MidiBuffer& copy)
 {
+	A_CLASS_CALL2 (_capacity, copy._size);
+
 	assert(_capacity >= copy._size);
 	_size = copy._size;
 	memcpy(_data, copy._data, copy._size);
@@ -83,6 +88,8 @@ MidiBuffer::copy(const MidiBuffer& copy)
 void
 MidiBuffer::copy(MidiBuffer const * const copy)
 {
+	A_CLASS_CALL2 (_capacity, copy->_size);
+
 	assert(_capacity >= copy->size ());
 	_size = copy->size ();
 	memcpy(_data, copy->_data, _size);
@@ -97,6 +104,8 @@ MidiBuffer::copy(MidiBuffer const * const copy)
 void
 MidiBuffer::read_from (const Buffer& src, samplecnt_t nframes, sampleoffset_t dst_offset, sampleoffset_t /* src_offset*/)
 {
+	A_CLASS_CALL2 (nframes, dst_offset);
+
 	assert (src.type() == DataType::MIDI);
 	assert (&src != this);
 
@@ -152,6 +161,8 @@ MidiBuffer::read_from (const Buffer& src, samplecnt_t nframes, sampleoffset_t ds
 void
 MidiBuffer::merge_from (const Buffer& src, samplecnt_t /*nframes*/, sampleoffset_t /*dst_offset*/, sampleoffset_t /*src_offset*/)
 {
+	A_CLASS_CALL ();
+
 	const MidiBuffer* mbuf = dynamic_cast<const MidiBuffer*>(&src);
 	assert (mbuf);
 	assert (mbuf != this);
@@ -170,6 +181,7 @@ MidiBuffer::merge_from (const Buffer& src, samplecnt_t /*nframes*/, sampleoffset
 bool
 MidiBuffer::push_back(const Evoral::Event<TimeType>& ev)
 {
+	A_CLASS_CALL ();
 	return push_back (ev.time(), ev.size(), ev.buffer());
 }
 
@@ -184,22 +196,9 @@ MidiBuffer::push_back(const Evoral::Event<TimeType>& ev)
 bool
 MidiBuffer::push_back(TimeType time, size_t size, const uint8_t* data)
 {
-	const size_t stamp_size = sizeof(TimeType);
+	A_CLASS_CALL3 (time, size, LOG::midi_event_to_string (size, data).c_str ());
 
-#ifndef NDEBUG
-	if (DEBUG_ENABLED(DEBUG::MidiIO)) {
-		DEBUG_STR_DECL(a);
-		DEBUG_STR_APPEND(a, string_compose ("midibuffer %1 push event @ %2 sz %3 ", this, time, size));
-		for (size_t i=0; i < size; ++i) {
-			DEBUG_STR_APPEND(a,hex);
-			DEBUG_STR_APPEND(a,"0x");
-			DEBUG_STR_APPEND(a,(int)data[i]);
-			DEBUG_STR_APPEND(a,' ');
-		}
-		DEBUG_STR_APPEND(a,'\n');
-		DEBUG_TRACE (DEBUG::MidiIO, DEBUG_STR(a).str());
-	}
-#endif
+	const size_t stamp_size = sizeof(TimeType);
 
 	if (_size + stamp_size + size >= _capacity) {
 		return false;
@@ -222,6 +221,8 @@ MidiBuffer::push_back(TimeType time, size_t size, const uint8_t* data)
 bool
 MidiBuffer::insert_event(const Evoral::Event<TimeType>& ev)
 {
+	A_CLASS_CALL ();
+
 	if (size() == 0) {
 		return push_back(ev);
 	}
@@ -273,6 +274,8 @@ MidiBuffer::insert_event(const Evoral::Event<TimeType>& ev)
 uint32_t
 MidiBuffer::write(TimeType time, Evoral::EventType type, uint32_t size, const uint8_t* buf)
 {
+	A_CLASS_CALL ();
+
 	insert_event(Evoral::Event<TimeType>(type, time, size, const_cast<uint8_t*>(buf)));
 	return size;
 }
@@ -287,6 +290,8 @@ MidiBuffer::write(TimeType time, Evoral::EventType type, uint32_t size, const ui
 uint8_t*
 MidiBuffer::reserve(TimeType time, size_t size)
 {
+	A_CLASS_CALL2 (time, size);
+
 	const size_t stamp_size = sizeof(TimeType);
 	if (_size + stamp_size + size >= _capacity) {
 		return 0;
@@ -442,9 +447,7 @@ MidiBuffer::second_simultaneous_midi_byte_is_first (uint8_t a, uint8_t b)
 bool
 MidiBuffer::merge_in_place (const MidiBuffer &other)
 {
-	if (other.size() && size()) {
-		DEBUG_TRACE (DEBUG::MidiIO, string_compose ("merge in place, sizes %1/%2\n", size(), other.size()));
-	}
+	A_CLASS_CALL2 (size(), other.size());
 
 	if (other.size() == 0) {
 		return true;
@@ -522,17 +525,16 @@ MidiBuffer::merge_in_place (const MidiBuffer &other)
 
 		if ((*us).time() == (*them).time()) {
 
-			DEBUG_TRACE (DEBUG::MidiIO,
-				     string_compose ("simultaneous MIDI events discovered during merge, times %1/%2 status %3/%4\n",
-						     (*us).time(), (*them).time(),
-						     (int) *(_data + us.offset + sizeof (TimeType)),
-						     (int) *(other._data + them.offset + sizeof (TimeType))));
+			A_CLASS_MSG (
+			    A_FMT ("simultaneous MIDI events discovered during merge, times {}/{} status {}/{}",
+			           (*us).time (), (*them).time (), (int)*(_data + us.offset + sizeof (TimeType)),
+			           (int)*(other._data + them.offset + sizeof (TimeType))));
 
 			uint8_t our_midi_status_byte = *(_data + us.offset + sizeof (TimeType));
 			uint8_t their_midi_status_byte = *(other._data + them.offset + sizeof (TimeType));
 			bool them_first = second_simultaneous_midi_byte_is_first (our_midi_status_byte, their_midi_status_byte);
 
-			DEBUG_TRACE (DEBUG::MidiIO, string_compose ("other message came first ? %1\n", them_first));
+			A_CLASS_MSG (A_FMT ("other message came first ? {}", them_first));
 
 			if (!them_first) {
 				/* skip past our own event */

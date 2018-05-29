@@ -69,6 +69,9 @@ private:
 	bool _vcas_loaded;
 
 	void clear ();
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::VCAManager);
 };
 
 } // namespace

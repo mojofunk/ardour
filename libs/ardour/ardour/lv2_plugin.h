@@ -352,6 +352,9 @@ class LIBARDOUR_API LV2Plugin : public ARDOUR::Plugin, public ARDOUR::Workee
 	void do_remove_preset (std::string);
 	void find_presets ();
 	void add_state (XMLNode *) const;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::LV2Plugin);
 };
 
 

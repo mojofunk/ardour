@@ -95,6 +95,9 @@ class LIBARDOUR_API MidiPort : public Port {
 	MIDI::Parser _self_parser;
 
 	void resolve_notes (void* buffer, samplepos_t when);
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::MidiPort);
 };
 
 } // namespace ARDOUR

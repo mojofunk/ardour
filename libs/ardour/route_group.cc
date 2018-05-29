@@ -39,52 +39,54 @@
 
 #include "pbd/i18n.h"
 
-using namespace ARDOUR;
 using namespace PBD;
 using namespace std;
 
 namespace ARDOUR {
-	namespace Properties {
-		PropertyDescriptor<bool> active;
-		PropertyDescriptor<bool> group_relative;
-		PropertyDescriptor<bool> group_gain;
-		PropertyDescriptor<bool> group_mute;
-		PropertyDescriptor<bool> group_solo;
-		PropertyDescriptor<bool> group_recenable;
-		PropertyDescriptor<bool> group_select;
-		PropertyDescriptor<bool> group_route_active;
-		PropertyDescriptor<bool> group_color;
-		PropertyDescriptor<bool> group_monitoring;
-		PropertyDescriptor<int32_t> group_master_number;
-	}
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::RouteGroup);
+
+namespace Properties
+{
+PropertyDescriptor<bool> active;
+PropertyDescriptor<bool> group_relative;
+PropertyDescriptor<bool> group_gain;
+PropertyDescriptor<bool> group_mute;
+PropertyDescriptor<bool> group_solo;
+PropertyDescriptor<bool> group_recenable;
+PropertyDescriptor<bool> group_select;
+PropertyDescriptor<bool> group_route_active;
+PropertyDescriptor<bool> group_color;
+PropertyDescriptor<bool> group_monitoring;
+PropertyDescriptor<int32_t> group_master_number;
 }
 
 void
 RouteGroup::make_property_quarks ()
 {
 	Properties::active.property_id = g_quark_from_static_string (X_("active"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for active = %1\n",	Properties::active.property_id));
-
-        Properties::group_relative.property_id = g_quark_from_static_string (X_("relative"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for relative = %1\n",	Properties::group_relative.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::active.property_id);
+	Properties::group_relative.property_id = g_quark_from_static_string (X_("relative"));
+	A_CLASS_STATIC_DATA1 (Properties::group_relative.property_id);
 	Properties::group_gain.property_id = g_quark_from_static_string (X_("gain"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for gain = %1\n",	Properties::group_gain.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::group_gain.property_id);
 	Properties::group_mute.property_id = g_quark_from_static_string (X_("mute"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for mute = %1\n",	Properties::group_mute.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::group_mute.property_id);
 	Properties::group_solo.property_id = g_quark_from_static_string (X_("solo"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for solo = %1\n",	Properties::group_solo.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::group_solo.property_id);
 	Properties::group_recenable.property_id = g_quark_from_static_string (X_("recenable"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for recenable = %1\n",	Properties::group_recenable.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::group_recenable.property_id);
 	Properties::group_select.property_id = g_quark_from_static_string (X_("select"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for select = %1\n",	Properties::group_select.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::group_select.property_id);
 	Properties::group_route_active.property_id = g_quark_from_static_string (X_("route-active"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for route-active = %1\n", Properties::group_route_active.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::group_route_active.property_id);
 	Properties::group_color.property_id = g_quark_from_static_string (X_("color"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for color = %1\n", Properties::group_color.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::group_color.property_id);
 	Properties::group_monitoring.property_id = g_quark_from_static_string (X_("monitoring"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for monitoring = %1\n", Properties::group_monitoring.property_id));
-	Properties::group_master_number.property_id = g_quark_from_static_string (X_("group-master-number"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for group-master-number = %1\n", Properties::group_master_number.property_id));
+	A_CLASS_STATIC_DATA1 (Properties::group_monitoring.property_id);
+	Properties::group_master_number.property_id =
+	    g_quark_from_static_string (X_("group-master-number"));
+	A_CLASS_STATIC_DATA1 (Properties::group_master_number.property_id);
 }
 
 #define ROUTE_GROUP_DEFAULT_PROPERTIES  _relative (Properties::group_relative, true) \
@@ -130,6 +132,8 @@ RouteGroup::RouteGroup (Session& s, const string &n)
 
 RouteGroup::~RouteGroup ()
 {
+	A_CLASS_CALL1 (name());
+
 	_solo_group->clear ();
 	_mute_group->clear ();
 	_gain_group->clear ();
@@ -158,6 +162,8 @@ RouteGroup::~RouteGroup ()
 int
 RouteGroup::add (boost::shared_ptr<Route> r)
 {
+	A_CLASS_CALL1 (name());
+
 	if (r->is_master()) {
 		return 0;
 	}
@@ -208,6 +214,8 @@ RouteGroup::remove_when_going_away (boost::weak_ptr<Route> wr)
 int
 RouteGroup::remove (boost::shared_ptr<Route> r)
 {
+	A_CLASS_CALL1 (name());
+
 	RouteList::iterator i;
 
 	if ((i = find (routes->begin(), routes->end(), r)) != routes->end()) {
@@ -704,3 +712,5 @@ RouteGroup::has_control_master() const
 {
 	return group_master.lock() != 0;
 }
+
+} // namespace ARDOUR

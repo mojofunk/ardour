@@ -19,6 +19,8 @@
 #ifndef __ardour_amp_h__
 #define __ardour_amp_h__
 
+#include "pbd/dev_tools.h"
+
 #include "ardour/dB.h"
 #include "ardour/libardour_visibility.h"
 #include "ardour/types.h"
@@ -86,6 +88,8 @@ private:
 	/** Buffer that we should use for gain automation */
 	gain_t* _gain_automation_buffer;
 	bool _midi_amp;
+
+	A_DECLARE_CLASS_MEMBERS(ARDOUR::Amp);
 };
 
 

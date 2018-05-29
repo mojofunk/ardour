@@ -77,6 +77,8 @@ Analyser::queue_source_for_analysis (boost::shared_ptr<Source> src, bool force)
 void
 Analyser::work ()
 {
+	A_REGISTER_THREAD ("Analyser", adt::ThreadPriority::NORMAL);
+
 	SessionEvent::create_per_thread_pool ("Analyser", 64);
 
 	while (true) {

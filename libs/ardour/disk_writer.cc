@@ -26,6 +26,7 @@
 #include "ardour/butler.h"
 #include "ardour/debug.h"
 #include "ardour/disk_writer.h"
+#include "ardour/logging.h"
 #include "ardour/midi_playlist.h"
 #include "ardour/midi_source.h"
 #include "ardour/midi_track.h"
@@ -39,6 +40,8 @@
 using namespace ARDOUR;
 using namespace PBD;
 using namespace std;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::DiskWriter);
 
 ARDOUR::samplecnt_t DiskWriter::_chunk_samples = DiskWriter::default_chunk_samples ();
 PBD::Signal0<void> DiskWriter::Overrun;
@@ -63,7 +66,7 @@ DiskWriter::DiskWriter (Session& s, string const & str, DiskIOProcessor::Flag f)
 
 DiskWriter::~DiskWriter ()
 {
-	DEBUG_TRACE (DEBUG::Destruction, string_compose ("DiskWriter %1 @ %2 deleted\n", _name, this));
+	A_CLASS_CALL1 (name());
 
 	boost::shared_ptr<ChannelList> c = channels.reader();
 
@@ -88,6 +91,8 @@ DiskWriter::set_write_source_name (string const & str)
 void
 DiskWriter::check_record_status (samplepos_t transport_sample, double speed, bool can_record)
 {
+	A_CLASS_CALL3 (transport_sample, speed, can_record);
+
 	int possibly_recording;
 	const int transport_rolling = 0x4;
 	const int track_rec_enabled = 0x2;
@@ -135,23 +140,14 @@ DiskWriter::check_record_status (samplepos_t transport_sample, double speed, boo
 			last_recordable_sample = max_samplepos;
 		}
 
-		DEBUG_TRACE (DEBUG::CaptureAlignment, string_compose ("%1: @ %2 (STS: %3) CS:%4 FRS: %5 IL: %7, OL: %8 CO: %r9 PO: %10 WOL: %11 WIL: %12\n",
-		                                                      name(),
-		                                                      transport_sample,
-		                                                      _session.transport_sample(),
-																													capture_start_sample,
-																													first_recordable_sample,
-																													last_recordable_sample,
-		                                                      _input_latency,
-		                                                      _output_latency,
-		                                                      _capture_offset,
-		                                                      _playback_offset,
-		                                                      _session.worst_output_latency(),
-		                                                      _session.worst_input_latency()));
+		A_CLASS_DATA8 (name(), transport_sample, _session.transport_sample(),
+		               capture_start_sample, first_recordable_sample, last_recordable_sample,
+		               _input_latency, _output_latency);
 
+		A_CLASS_DATA4 (_capture_offset, _playback_offset, _session.worst_output_latency (),
+		               _session.worst_input_latency ());
 
 		prepare_record_status (capture_start_sample);
-
 	}
 
 	last_possibly_recording = possibly_recording;
@@ -200,9 +196,8 @@ DiskWriter::calculate_record_range (Evoral::OverlapType ot, samplepos_t transpor
 		break;
 	}
 
-	DEBUG_TRACE (DEBUG::CaptureAlignment, string_compose ("%1 rec? %2 @ %3 (for %4) FRF %5 LRF %6 : rf %7 @ %8\n",
-	                                                      _name, enum_2_string (ot), transport_sample, nframes,
-	                                                      first_recordable_sample, last_recordable_sample, rec_nframes, rec_offset));
+	A_CLASS_DATA8 (name(), enum_2_string (ot), transport_sample, nframes,
+	               first_recordable_sample, last_recordable_sample, rec_nframes, rec_offset);
 }
 
 void
@@ -343,6 +338,8 @@ void
 DiskWriter::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_sample,
                  double speed, pframes_t nframes, bool result_required)
 {
+	A_CLASS_CALL6 (name(), start_sample, end_sample, speed, nframes, result_required);
+
 	if (!_active && !_pending_active) {
 		return;
 	}
@@ -362,12 +359,6 @@ DiskWriter::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_samp
 	can_record |= speed != 0 && _session.get_record_enabled () && punch_in && _session.transport_sample () <= _session.locations()->auto_punch_location ()->start ();
 
 	_need_butler = false;
-
-#ifndef NDEBUG
-	if (speed != 0 && re) {
-		DEBUG_TRACE (DEBUG::CaptureAlignment, string_compose ("%1: run() start: %2 end: %3 NF: %4\n", _name, start_sample, end_sample, nframes));
-	}
-#endif
 
 	check_record_status (start_sample, speed, can_record);
 
@@ -400,7 +391,7 @@ DiskWriter::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_samp
 		// XXX also, first_recordable_sample & last_recordable_sample may both be == max_samplepos: coverage() will return OverlapNone in that case. Is thak OK?
 		calculate_record_range (ot, start_sample, nframes, rec_nframes, rec_offset);
 
-		DEBUG_TRACE (DEBUG::CaptureAlignment, string_compose ("%1: this time record %2 of %3 samples, offset %4\n", _name, rec_nframes, nframes, rec_offset));
+		A_CLASS_DATA4 (name(), rec_nframes, nframes, rec_offset);
 
 		if (rec_nframes && !was_recording) {
 			capture_captured = 0;
@@ -465,8 +456,9 @@ DiskWriter::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_samp
 				samplecnt_t total = chaninfo->rw_vector.len[0] + chaninfo->rw_vector.len[1];
 
 				if (rec_nframes > total) {
-					DEBUG_TRACE (DEBUG::Butler, string_compose ("%1 overrun in %2, rec_nframes = %3 total space = %4\n",
-					                                            DEBUG_THREAD_SELF, name(), rec_nframes, total));
+
+					A_CLASS_MSG (A_FMT ("Overrun in {}, rec_nframes = {} total space = {}", name (),
+					                    rec_nframes, total));
 					Overrun ();
 					return;
 				}
@@ -494,21 +486,9 @@ DiskWriter::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_samp
 			if (ev.time() + rec_offset > rec_nframes) {
 				break;
 			}
-#ifndef NDEBUG
-			if (DEBUG_ENABLED(DEBUG::MidiIO)) {
-				const uint8_t* __data = ev.buffer();
-				DEBUG_STR_DECL(a);
-				DEBUG_STR_APPEND(a, string_compose ("mididiskstream %1 capture event @ %2 + %3 sz %4 ", this, ev.time(), start_sample, ev.size()));
-				for (size_t i=0; i < ev.size(); ++i) {
-					DEBUG_STR_APPEND(a,hex);
-					DEBUG_STR_APPEND(a,"0x");
-					DEBUG_STR_APPEND(a,(int)__data[i]);
-					DEBUG_STR_APPEND(a,' ');
-				}
-				DEBUG_STR_APPEND(a,'\n');
-				DEBUG_TRACE (DEBUG::MidiIO, DEBUG_STR(a).str());
-			}
-#endif
+
+			A_CLASS_DATA2 (name(), LOG::midi_event_to_string (ev.size (), ev.buffer ()).c_str ());
+
 			/* Write events to the capture buffer in samples from session start,
 			   but ignoring looping so event time progresses monotonically.
 			   The source knows the loop length so it knows exactly where the
@@ -566,7 +546,8 @@ DiskWriter::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_samp
 		}
 
 		capture_captured += rec_nframes;
-		DEBUG_TRACE (DEBUG::CaptureAlignment, string_compose ("%1 now captured %2 (by %3)\n", name(), capture_captured, rec_nframes));
+
+		A_CLASS_DATA3 (name(), capture_captured, rec_nframes);
 
 	} else {
 
@@ -598,6 +579,8 @@ DiskWriter::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_samp
 void
 DiskWriter::finish_capture (boost::shared_ptr<ChannelList> c)
 {
+	A_CLASS_CALL1 (name());
+
 	was_recording = false;
 	first_recordable_sample = max_samplepos;
 	last_recordable_sample = max_samplepos;
@@ -630,7 +613,7 @@ DiskWriter::finish_capture (boost::shared_ptr<ChannelList> c)
 	ci->start =  capture_start_sample;
 	ci->samples = capture_captured;
 
-	DEBUG_TRACE (DEBUG::CaptureAlignment, string_compose ("Finish capture, add new CI, %1 + %2\n", ci->start, ci->samples));
+	A_CLASS_DATA2 (ci->start, ci->samples);
 
 	/* XXX theoretical race condition here. Need atomic exchange ?
 	   However, the circumstances when this is called right
@@ -779,6 +762,8 @@ DiskWriter::set_note_mode (NoteMode m)
 int
 DiskWriter::seek (samplepos_t sample, bool complete_refill)
 {
+	A_CLASS_CALL2 (sample, complete_refill);
+
 	uint32_t n;
 	ChannelList::iterator chan;
 	boost::shared_ptr<ChannelList> c = channels.reader();
@@ -805,6 +790,8 @@ DiskWriter::seek (samplepos_t sample, bool complete_refill)
 int
 DiskWriter::do_flush (RunContext ctxt, bool force_flush)
 {
+	A_CLASS_CALL2 (name(), force_flush);
+
 	uint32_t to_write;
 	int32_t ret = 0;
 	RingBufferNPT<Sample>::rw_vector vector;
@@ -911,7 +898,7 @@ DiskWriter::do_flush (RunContext ctxt, bool force_flush)
 
 			to_write = min ((samplecnt_t)(_chunk_samples - to_write), (samplecnt_t) vector.len[1]);
 
-                        DEBUG_TRACE (DEBUG::Butler, string_compose ("%1 additional write of %2\n", name(), to_write));
+			A_CLASS_MSG (A_FMT ("{} additional write of {}", name (), to_write));
 
 			if ((*chan)->write_source->write (vector.buf[1], to_write) != to_write) {
 				error << string_compose(_("AudioDiskstream %1: cannot write to disk"), id()) << endmsg;
@@ -975,6 +962,8 @@ DiskWriter::do_flush (RunContext ctxt, bool force_flush)
 void
 DiskWriter::reset_write_sources (bool mark_write_complete, bool /*force*/)
 {
+	A_CLASS_CALL1 (mark_write_complete);
+
 	ChannelList::iterator chan;
 	boost::shared_ptr<ChannelList> c = channels.reader();
 	uint32_t n;
@@ -1045,6 +1034,8 @@ DiskWriter::reset_write_sources (bool mark_write_complete, bool /*force*/)
 int
 DiskWriter::use_new_write_source (DataType dt, uint32_t n)
 {
+	A_CLASS_CALL2 (dt, n);
+
 	if (dt == DataType::MIDI) {
 
 		_accumulated_capture_offset = 0;
@@ -1102,6 +1093,8 @@ DiskWriter::use_new_write_source (DataType dt, uint32_t n)
 void
 DiskWriter::transport_stopped_wallclock (struct tm& when, time_t twhen, bool abort_capture)
 {
+	A_CLASS_CALL2 (twhen, abort_capture);
+
 	bool more_work = true;
 	int err = 0;
 	samplecnt_t total_capture;
@@ -1187,7 +1180,7 @@ DiskWriter::transport_stopped_wallclock (struct tm& when, time_t twhen, bool abo
 				Analyser::queue_source_for_analysis (as, true);
 			}
 
-			DEBUG_TRACE (DEBUG::CaptureAlignment, string_compose ("newly captured source %1 length %2\n", as->path(), as->length (0)));
+			A_CLASS_MSG (A_FMT ("newly captured source {} length {}", as->path (), as->length (0)));
 		}
 
 		if (_midi_write_source) {
@@ -1265,6 +1258,8 @@ DiskWriter::transport_stopped_wallclock (struct tm& when, time_t twhen, bool abo
 void
 DiskWriter::transport_looped (samplepos_t transport_sample)
 {
+	A_CLASS_CALL2 (transport_sample, was_recording);
+
 	if (was_recording) {
 		// all we need to do is finish this capture, with modified capture length
 		boost::shared_ptr<ChannelList> c = channels.reader();

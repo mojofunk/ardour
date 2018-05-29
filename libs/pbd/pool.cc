@@ -26,11 +26,15 @@
 #include "pbd/pool.h"
 #include "pbd/pthread_utils.h"
 #include "pbd/error.h"
-#include "pbd/debug.h"
-#include "pbd/compose.h"
 
 using namespace std;
 using namespace PBD;
+
+A_DEFINE_CLASS_AS_MEMBERS (Pool, "PBD::Pool");
+A_DEFINE_CLASS_AS_MEMBERS (SingleAllocMultiReleasePool, "PBD::SingleAllocMultiReleasePool");
+A_DEFINE_CLASS_AS_MEMBERS (MultiAllocSingleReleasePool, "PBD::MultiAllocSingleReleasePool");
+A_DEFINE_CLASS_AS_MEMBERS (CrossThreadPool, "PBD::CrossThreadPool");
+A_DEFINE_CLASS_AS_MEMBERS (PerThreadPool, "PBD::PerThreadPool");
 
 Pool::Pool (string n, unsigned long item_size, unsigned long nitems)
 	: free_list (nitems)
@@ -39,6 +43,8 @@ Pool::Pool (string n, unsigned long item_size, unsigned long nitems)
 	, max_usage (0)
 #endif
 {
+	A_CLASS_CALL3 (n, (int)item_size, (int)nitems);
+
 	_name = n;
 
 	/* since some overloaded ::operator new() might use this,
@@ -60,6 +66,8 @@ Pool::Pool (string n, unsigned long item_size, unsigned long nitems)
 
 Pool::~Pool ()
 {
+	A_CLASS_CALL ();
+
 #ifndef NDEBUG
 	// TODO: after collecting some stats, use DEBUG::PoolStats here
 	cerr << "Pool: '" << _name << "' max: " << max_usage << " / " << total() << endmsg;
@@ -73,6 +81,8 @@ Pool::~Pool ()
 void *
 Pool::alloc ()
 {
+	A_CLASS_CALL1 (_name);
+
 	void *ptr;
 
 #ifndef NDEBUG
@@ -94,6 +104,8 @@ Pool::alloc ()
 void
 Pool::release (void *ptr)
 {
+	A_CLASS_CALL1 (_name);
+
 	free_list.write (&ptr, 1);
 }
 
@@ -227,6 +239,8 @@ PerThreadPool::set_trash (RingBuffer<CrossThreadPool*>* t)
 void
 PerThreadPool::add_to_trash (CrossThreadPool* p)
 {
+	A_CLASS_CALL1 (_name);
+
 	Glib::Threads::Mutex::Lock lm (_trash_mutex);
 
 	if (!_trash) {
@@ -259,20 +273,19 @@ CrossThreadPool::flush_pending_with_ev (void *ptr)
 void
 CrossThreadPool::flush_pending ()
 {
+	A_CLASS_CALL5 (name(), pending.read_space(), total(), available(), used());
+
 	void* ptr;
 	bool did_release = false;
 
-	DEBUG_TRACE (DEBUG::Pool, string_compose ("%1 %2 has %3 pending free entries waiting, status size %4 free %5 used %6\n", pthread_name(), name(), pending.read_space(),
-	                                          total(), available(), used()));
-
 	while (pending.read (&ptr, 1) == 1) {
-		DEBUG_TRACE (DEBUG::Pool, string_compose ("%1 %2 pushes back a pending free list entry before allocating\n", pthread_name(), name()));
+		A_CLASS_MSG (A_FMT ("{}: push back a pending free list entry before allocating", name()));
 		free_list.write (&ptr, 1);
 		did_release = true;
 	}
 
 	if (did_release) {
-		DEBUG_TRACE (DEBUG::Pool, string_compose ("Pool size: %1 free %2 used %3 pending now %4\n", total(), available(), used(), pending_size()));
+		A_CLASS_DATA4 (total(), available(), used(), pending_size());
 	}
 }
 

@@ -56,6 +56,8 @@ private:
 	bool      have_ioconfig;
 	ChanCount *saved_input;
 	ChanCount *saved_output;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::UnknownProcessor);
 };
 
 }

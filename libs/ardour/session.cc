@@ -76,6 +76,7 @@
 #include "ardour/luabindings.h"
 #include "ardour/midiport_manager.h"
 #include "ardour/scene_changer.h"
+#include "ardour/logging.h"
 #include "ardour/midi_patch_manager.h"
 #include "ardour/midi_track.h"
 #include "ardour/midi_ui.h"
@@ -132,6 +133,8 @@ class Speakers;
 using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::Session);
 
 bool Session::_disable_all_loaded_plugins = false;
 bool Session::_bypass_all_loaded_plugins = false;
@@ -844,7 +847,7 @@ Session::destroy ()
 	while (!immediate_events.empty ()) {
 		Glib::Threads::Mutex::Lock lm (AudioEngine::instance()->process_lock ());
 		SessionEvent *ev = immediate_events.front ();
-		DEBUG_TRACE (DEBUG::SessionEvents, string_compose ("Drop event: %1\n", enum_2_string (ev->type)));
+		A_LOG_MSG (LOG::SessionEvents, A_FMT ("Drop event: {}", enum_2_string (ev->type)));
 		immediate_events.pop_front ();
 		bool remove = true;
 		bool del = true;
@@ -2364,18 +2367,18 @@ Session::resort_routes ()
 		/* writer goes out of scope and forces update */
 	}
 
-#ifndef NDEBUG
-	if (DEBUG_ENABLED(DEBUG::Graph)) {
+#ifdef A_LOGGING_ENABLED
+	if (A_LOG_ENABLED(LOG::Graph)) {
 		boost::shared_ptr<RouteList> rl = routes.reader ();
 		for (RouteList::iterator i = rl->begin(); i != rl->end(); ++i) {
-			DEBUG_TRACE (DEBUG::Graph, string_compose ("%1 fed by ...\n", (*i)->name()));
+			A_LOG_MSG (LOG::Graph, A_FMT ("{} fed by ...", (*i)->name ()));
 
 			const Route::FedBy& fb ((*i)->fed_by());
 
 			for (Route::FedBy::const_iterator f = fb.begin(); f != fb.end(); ++f) {
 				boost::shared_ptr<Route> sf = f->r.lock();
 				if (sf) {
-					DEBUG_TRACE (DEBUG::Graph, string_compose ("\t%1 (sends only ? %2)\n", sf->name(), f->sends_only));
+					A_LOG_MSG (LOG::Graph, A_FMT ("{} (sends only ? {})", sf->name (), f->sends_only));
 				}
 			}
 		}
@@ -2456,9 +2459,10 @@ Session::resort_routes_using (boost::shared_ptr<RouteList> r)
 		*r = *sorted_routes;
 
 #ifndef NDEBUG
-		DEBUG_TRACE (DEBUG::Graph, "Routes resorted, order follows:\n");
+		A_LOG_MSG (LOG::Graph, "Routes resorted, order follows:");
 		for (RouteList::iterator i = r->begin(); i != r->end(); ++i) {
-			DEBUG_TRACE (DEBUG::Graph, string_compose ("\t%1 presentation order %2\n", (*i)->name(), (*i)->presentation_info().order()));
+			A_LOG_MSG (LOG::Graph,
+			           A_FMT ("{} signal order {}", (*i)->name (), (*i)->presentation_info ().order ()));
 		}
 #endif
 
@@ -4033,7 +4037,7 @@ Session::route_solo_isolated_changed (boost::weak_ptr<Route> wpr)
 void
 Session::route_solo_changed (bool self_solo_changed, Controllable::GroupControlDisposition group_override,  boost::weak_ptr<Route> wpr)
 {
-	DEBUG_TRACE (DEBUG::Solo, string_compose ("route solo change, self = %1, update\n", self_solo_changed));
+	A_LOG_CLASS_CALL1 (LOG::Solo, self_solo_changed);
 
 	boost::shared_ptr<Route> route (wpr.lock());
 
@@ -4046,13 +4050,16 @@ Session::route_solo_changed (bool self_solo_changed, Controllable::GroupControlD
 		return;
 	}
 
-	DEBUG_TRACE (DEBUG::Solo, string_compose ("%1: self %2 masters %3 transition %4\n", route->name(), route->self_soloed(), route->solo_control()->get_masters_value(), route->solo_control()->transitioned_into_solo()));
+	A_LOG_DATA4 (LOG::Solo, route->name (), route->self_soloed (),
+	             route->solo_control ()->get_masters_value (),
+	             route->solo_control ()->transitioned_into_solo ());
 
 	if (route->solo_control()->transitioned_into_solo() == 0) {
 		/* route solo changed by upstream/downstream or clear all solo state; not interesting
 		   to Session.
 		*/
-		DEBUG_TRACE (DEBUG::Solo, string_compose ("%1 not self-soloed nor soloed by master (%2), ignoring\n", route->name(), route->solo_control()->get_masters_value()));
+		A_LOG_MSG (LOG::Solo, A_FMT ("Route: {} not self-soloed nor soloed by master ({}), ignoring",
+		                             route->name (), route->solo_control ()->get_masters_value ()));
 		return;
 	}
 
@@ -4109,11 +4116,9 @@ Session::route_solo_changed (bool self_solo_changed, Controllable::GroupControlD
 		}
 	}
 
-	DEBUG_TRACE (DEBUG::Solo, string_compose ("propagate solo change, delta = %1\n", delta));
+	A_LOG_MSG (LOG::Solo, A_FMT ("Route: {}, propagate solo change, delta: {}", route->name (), delta));
 
 	RouteList uninvolved;
-
-	DEBUG_TRACE (DEBUG::Solo, string_compose ("%1\n", route->name()));
 
 	for (RouteList::iterator i = r->begin(); i != r->end(); ++i) {
 		bool via_sends_only;
@@ -4126,8 +4131,9 @@ Session::route_solo_changed (bool self_solo_changed, Controllable::GroupControlD
 
 		if ((*i)->solo_isolate_control()->solo_isolated() || !(*i)->can_solo()) {
 			/* route does not get solo propagated to it */
-			DEBUG_TRACE (DEBUG::Solo, string_compose ("%1 excluded from solo because iso = %2 can_solo = %3\n", (*i)->name(), (*i)->solo_isolate_control()->solo_isolated(),
-			                                          (*i)->can_solo()));
+			A_LOG_MSG (LOG::Solo,
+			           A_FMT ("Route: {} excluded from solo because iso: {} can_solo: {}", (*i)->name (),
+			                  (*i)->solo_isolate_control ()->solo_isolated (), (*i)->can_solo ()));
 			continue;
 		}
 
@@ -4142,48 +4148,47 @@ Session::route_solo_changed (bool self_solo_changed, Controllable::GroupControlD
 
 		in_signal_flow = false;
 
-		DEBUG_TRACE (DEBUG::Solo, string_compose ("check feed from %1\n", (*i)->name()));
-
 		if ((*i)->feeds (route, &via_sends_only)) {
-			DEBUG_TRACE (DEBUG::Solo, string_compose ("\tthere is a feed from %1\n", (*i)->name()));
+			A_LOG_MSG (LOG::Solo, A_FMT ("There is a feed from Route: {} to Route: {}", (*i)->name (),
+			                             route->name ()));
 			if (!via_sends_only) {
 				if (!route->soloed_by_others_upstream()) {
 					(*i)->solo_control()->mod_solo_by_others_downstream (delta);
 				} else {
-					DEBUG_TRACE (DEBUG::Solo, "\talready soloed by others upstream\n");
+					A_LOG_MSG (LOG::Solo,
+					           A_FMT ("Route: {} is already soloed by others upstream", route->name ()));
 				}
 			} else {
-				DEBUG_TRACE (DEBUG::Solo, string_compose ("\tthere is a send-only feed from %1\n", (*i)->name()));
+				A_LOG_MSG (LOG::Solo, A_FMT ("There is a send-only feed from Route: {}", (*i)->name ()));
 			}
 			in_signal_flow = true;
 		} else {
-			DEBUG_TRACE (DEBUG::Solo, string_compose ("\tno feed from %1\n", (*i)->name()));
+			A_LOG_MSG (LOG::Solo,
+			           A_FMT ("There is no feed from Route: {} to {}", (*i)->name (), route->name ()));
 		}
-
-		DEBUG_TRACE (DEBUG::Solo, string_compose ("check feed to %1\n", (*i)->name()));
 
 		if (route->feeds (*i, &via_sends_only)) {
 			/* propagate solo upstream only if routing other than
 			   sends is involved, but do consider the other route
 			   (*i) to be part of the signal flow even if only
 			   sends are involved.
+			*
 			*/
-			DEBUG_TRACE (DEBUG::Solo, string_compose ("%1 feeds %2 via sends only %3 sboD %4 sboU %5\n",
-			                                          route->name(),
-			                                          (*i)->name(),
-			                                          via_sends_only,
-			                                          route->soloed_by_others_downstream(),
-			                                          route->soloed_by_others_upstream()));
+			A_LOG_MSG (LOG::Solo,
+			           A_FMT ("{} feeds {} via sends only: {} sboD: {} sboU {}", route->name (),
+			                  (*i)->name (), via_sends_only, route->soloed_by_others_downstream (),
+			                  route->soloed_by_others_upstream ()));
 			if (!via_sends_only) {
 				//NB. Triggers Invert Push, which handles soloed by downstream
-				DEBUG_TRACE (DEBUG::Solo, string_compose ("\tmod %1 by %2\n", (*i)->name(), delta));
+				A_LOG_MSG (LOG::Solo, A_FMT ("mod Route: {} by delta: {}", (*i)->name (), delta));
 				(*i)->solo_control()->mod_solo_by_others_upstream (delta);
 			} else {
-				DEBUG_TRACE (DEBUG::Solo, string_compose ("\tfeed to %1 ignored, sends-only\n", (*i)->name()));
+				A_LOG_MSG (LOG::Solo, A_FMT ("feed to Route: {} ignored, sends-only", (*i)->name ()));
 			}
 			in_signal_flow = true;
 		} else {
-			DEBUG_TRACE (DEBUG::Solo, "\tno feed to\n");
+			A_LOG_MSG (LOG::Solo,
+			           A_FMT ("There is no feed from Route: {} to {}", route->name (), (*i)->name ()));
 		}
 
 		if (!in_signal_flow) {
@@ -4191,14 +4196,16 @@ Session::route_solo_changed (bool self_solo_changed, Controllable::GroupControlD
 		}
 	}
 
-	DEBUG_TRACE (DEBUG::Solo, "propagation complete\n");
+	A_LOG_MSG (LOG::Solo, "Propagation complete");
 
 	/* now notify that the mute state of the routes not involved in the signal
 	   pathway of the just-solo-changed route may have altered.
 	*/
 
 	for (RouteList::iterator i = uninvolved.begin(); i != uninvolved.end(); ++i) {
-		DEBUG_TRACE (DEBUG::Solo, string_compose ("mute change for %1, which neither feeds or is fed by %2\n", (*i)->name(), route->name()));
+		A_LOG_MSG (LOG::Solo,
+		           A_FMT ("Mute change for Route: {}, which neither feeds or is fed by Route: {}",
+		                  (*i)->name (), route->name ()));
 		(*i)->act_on_mute ();
 		/* Session will emit SoloChanged() after all solo changes are
 		 * complete, which should be used by UIs to update mute status
@@ -4257,9 +4264,9 @@ Session::update_route_solo_state (boost::shared_ptr<RouteList> r)
 		IsolatedChanged (); /* EMIT SIGNAL */
 	}
 
-	DEBUG_TRACE (DEBUG::Solo, string_compose ("solo state updated by session, soloed? %1 listeners %2 isolated %3\n",
-						  something_soloed, listeners, isolated));
-
+	A_LOG_MSG (LOG::Solo,
+	           A_FMT ("Solo state updated by session, soloed: {} listeners: {} isolated: {}",
+	                  something_soloed, listeners, isolated));
 
 	SoloChanged (); /* EMIT SIGNAL */
 	set_dirty();
@@ -4727,6 +4734,8 @@ Session::playlist_regions_extended (list<Evoral::Range<samplepos_t> > const & ra
 boost::shared_ptr<Region>
 Session::find_whole_file_parent (boost::shared_ptr<Region const> child) const
 {
+	A_LOG_CLASS_CALL (LOG::Session);
+
 	const RegionFactory::RegionMap& regions (RegionFactory::regions());
 	RegionFactory::RegionMap::const_iterator i;
 	boost::shared_ptr<Region> region;
@@ -6087,6 +6096,8 @@ Session::write_one_track (Track& track, samplepos_t start, samplepos_t end,
 			  boost::shared_ptr<Processor> endpoint, bool include_endpoint,
 			  bool for_export, bool for_freeze)
 {
+	A_LOG_CLASS_CALL6 (LOG::Export, track.name(), start, end, include_endpoint, for_export, for_freeze);
+
 	boost::shared_ptr<Region> result;
 	boost::shared_ptr<Playlist> playlist;
 	boost::shared_ptr<Source> source;

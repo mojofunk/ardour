@@ -805,6 +805,8 @@ private:
 
 	RoutePinWindowProxy*   _pinmgr_proxy;
 	PatchChangeGridDialog* _patch_selector_dialog;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::Route);
 };
 
 } // namespace ARDOUR

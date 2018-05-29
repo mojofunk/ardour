@@ -24,6 +24,7 @@
 
 #include <gtkmm/action.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/signals.h"
 #include "gtkmm2ext/activatable.h"
 #include "gtkmm2ext/cairo_widget.h"
@@ -215,6 +216,8 @@ class LIBWIDGETS_API ArdourButton : public CairoWidget , public Gtkmm2ext::Activ
 	void action_sensitivity_changed ();
 	void action_visibility_changed ();
 	void action_tooltip_changed ();
+
+	A_DECLARE_CLASS_MEMBERS (ArdourButton);
 };
 
 } /* end namespace */

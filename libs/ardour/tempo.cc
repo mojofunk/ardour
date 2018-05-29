@@ -44,6 +44,14 @@ using namespace PBD;
 
 using Timecode::BBT_Time;
 
+A_DEFINE_CLASS_MEMBERS (ARDOUR::Tempo);
+A_DEFINE_CLASS_MEMBERS (ARDOUR::Meter);
+A_DEFINE_CLASS_MEMBERS (ARDOUR::MetricSection);
+A_DEFINE_CLASS_MEMBERS (ARDOUR::MeterSection);
+A_DEFINE_CLASS_MEMBERS (ARDOUR::TempoSection);
+A_DEFINE_CLASS_MEMBERS (ARDOUR::TempoMetric);
+A_DEFINE_CLASS_MEMBERS (ARDOUR::TempoMap);
+
 /* _default tempo is 4/4 qtr=120 */
 
 Meter    TempoMap::_default_meter (4.0, 4.0);
@@ -160,6 +168,8 @@ TempoSection::TempoSection (const XMLNode& node, samplecnt_t sample_rate)
 	, _locked_to_meter (false)
 	, _clamped (false)
 {
+	A_CLASS_CALL1 (sample_rate);
+
 	BBT_Time bbt;
 	std::string start_bbt;
 	_legacy_bbt.bars = 0; // legacy session check compars .bars != 0; default BBT_Time c'tor uses 1.
@@ -258,6 +268,8 @@ TempoSection::get_state() const
 Tempo
 TempoSection::tempo_at_minute (const double& m) const
 {
+	A_CLASS_CALL ();
+
 	const bool constant = type() == Constant || _c == 0.0 || (initial() && m < minute());
 	if (constant) {
 		return Tempo (note_types_per_minute(), note_type());
@@ -284,6 +296,8 @@ TempoSection::tempo_at_minute (const double& m) const
 double
 TempoSection::minute_at_ntpm (const double& ntpm, const double& p) const
 {
+	A_CLASS_CALL2 (ntpm, p);
+
 	const bool constant = type() == Constant || _c == 0.0 || (initial() && p < pulse());
 	if (constant) {
 		return ((p - pulse()) / pulses_per_minute()) + minute();
@@ -297,6 +311,8 @@ TempoSection::minute_at_ntpm (const double& ntpm, const double& p) const
 Tempo
 TempoSection::tempo_at_pulse (const double& p) const
 {
+	A_CLASS_CALL1 (p);
+
 	const bool constant = type() == Constant || _c == 0.0 || (initial() && p < pulse());
 
 	if (constant) {
@@ -319,6 +335,8 @@ TempoSection::tempo_at_pulse (const double& p) const
 double
 TempoSection::pulse_at_ntpm (const double& ntpm, const double& m) const
 {
+	A_CLASS_CALL2 (ntpm, m);
+
 	const bool constant = type() == Constant || _c == 0.0 || (initial() && m < minute());
 	if (constant) {
 		return ((m - minute()) * pulses_per_minute()) + pulse();
@@ -332,6 +350,8 @@ TempoSection::pulse_at_ntpm (const double& ntpm, const double& m) const
 double
 TempoSection::pulse_at_minute (const double& m) const
 {
+	A_CLASS_CALL1 (m);
+
 	const bool constant = type() == Constant || _c == 0.0 || (initial() && m < minute());
 	if (constant) {
 		return ((m - minute()) * pulses_per_minute()) + pulse();
@@ -345,6 +365,8 @@ TempoSection::pulse_at_minute (const double& m) const
 double
 TempoSection::minute_at_pulse (const double& p) const
 {
+	A_CLASS_CALL1 (p);
+
 	const bool constant = type() == Constant || _c == 0.0 || (initial() && p < pulse());
 	if (constant) {
 		return ((p - pulse()) / pulses_per_minute()) + minute();
@@ -362,6 +384,8 @@ TempoSection::minute_at_pulse (const double& p) const
 double
 TempoSection::pulse_at_sample (const samplepos_t f) const
 {
+	A_CLASS_CALL1 (f);
+
 	const bool constant = type() == Constant || _c == 0.0 || (initial() && f < sample());
 	if (constant) {
 		return (minute_at_sample (f - sample()) * pulses_per_minute()) + pulse();
@@ -373,6 +397,8 @@ TempoSection::pulse_at_sample (const samplepos_t f) const
 samplepos_t
 TempoSection::sample_at_pulse (const double& p) const
 {
+	A_CLASS_CALL1 (p);
+
 	const bool constant = type() == Constant || _c == 0.0 || (initial() && p < pulse());
 	if (constant) {
 		return sample_at_minute (((p - pulse()) / pulses_per_minute()) + minute());
@@ -464,6 +490,8 @@ https://www.zhdk.ch/fileadmin/data_subsites/data_icst/Downloads/Timegrid/ICST_Te
 double
 TempoSection::compute_c_pulse (const double& end_npm, const double& end_pulse) const
 {
+	A_CLASS_CALL2 (end_npm, end_pulse);
+
 	if (note_types_per_minute() == end_npm || type() == Constant) {
 		return 0.0;
 	}
@@ -480,6 +508,8 @@ TempoSection::compute_c_pulse (const double& end_npm, const double& end_pulse) c
 double
 TempoSection::compute_c_minute (const double& end_npm, const double& end_minute) const
 {
+	A_CLASS_CALL2 (end_npm, end_minute);
+
 	if (note_types_per_minute() == end_npm || type() == Constant) {
 		return 0.0;
 	}
@@ -550,6 +580,8 @@ const string MeterSection::xml_state_node_name = "Meter";
 MeterSection::MeterSection (const XMLNode& node, const samplecnt_t sample_rate)
 	: MetricSection (0.0, 0, MusicTime, false, sample_rate), Meter (TempoMap::default_meter())
 {
+	A_CLASS_CALL1 (sample_rate);
+
 	pair<double, BBT_Time> start;
 	start.first = 0.0;
 
@@ -717,6 +749,8 @@ struct MetricSectionFrameSorter {
 
 TempoMap::TempoMap (samplecnt_t fr)
 {
+	A_CLASS_CALL1 (fr);
+
 	_sample_rate = fr;
 	BBT_Time start (1, 1, 0);
 
@@ -738,6 +772,8 @@ TempoMap::TempoMap (samplecnt_t fr)
 TempoMap&
 TempoMap::operator= (TempoMap const & other)
 {
+	A_CLASS_CALL ();
+
 	if (&other != this) {
 		Glib::Threads::RWLock::ReaderLock lr (other.lock);
 		Glib::Threads::RWLock::WriterLock lm (lock);
@@ -794,6 +830,8 @@ TempoMap::minute_at_sample (const samplepos_t sample) const
 void
 TempoMap::remove_tempo (const TempoSection& tempo, bool complete_operation)
 {
+	A_CLASS_CALL1 (complete_operation);
+
 	bool removed = false;
 
 	{
@@ -833,6 +871,8 @@ TempoMap::remove_tempo_locked (const TempoSection& tempo)
 void
 TempoMap::remove_meter (const MeterSection& tempo, bool complete_operation)
 {
+	A_CLASS_CALL1 (complete_operation);
+
 	bool removed = false;
 
 	{
@@ -852,6 +892,7 @@ TempoMap::remove_meter (const MeterSection& tempo, bool complete_operation)
 bool
 TempoMap::remove_meter_locked (const MeterSection& meter)
 {
+	A_CLASS_CALL ();
 
 	if (meter.position_lock_style() == AudioTime) {
 		/* remove meter-locked tempo */
@@ -885,6 +926,8 @@ TempoMap::remove_meter_locked (const MeterSection& meter)
 void
 TempoMap::do_insert (MetricSection* section)
 {
+	A_CLASS_CALL ();
+
 	bool need_add = true;
 	/* we only allow new meters to be inserted on beat 1 of an existing
 	 * measure.
@@ -1022,6 +1065,8 @@ TempoMap::do_insert (MetricSection* section)
 TempoSection*
 TempoMap::add_tempo (const Tempo& tempo, const double& pulse, const samplepos_t sample, PositionLockStyle pls)
 {
+	A_CLASS_CALL ();
+
 	if (tempo.note_types_per_minute() <= 0.0) {
 		warning << "Cannot add tempo. note types per minute must be greater than zero." << endmsg;
 		return 0;
@@ -1044,6 +1089,8 @@ TempoMap::add_tempo (const Tempo& tempo, const double& pulse, const samplepos_t 
 void
 TempoMap::replace_tempo (TempoSection& ts, const Tempo& tempo, const double& pulse, const samplepos_t sample, PositionLockStyle pls)
 {
+	A_CLASS_CALL ();
+
 	if (tempo.note_types_per_minute() <= 0.0) {
 		warning << "Cannot replace tempo. note types per minute must be greater than zero." << endmsg;
 		return;
@@ -1094,6 +1141,8 @@ TempoSection*
 TempoMap::add_tempo_locked (const Tempo& tempo, double pulse, double minute
 			    , PositionLockStyle pls, bool recompute, bool locked_to_meter, bool clamped)
 {
+	A_CLASS_CALL5 (pulse, minute, pls, recompute, locked_to_meter);
+
 	TempoSection* t = new TempoSection (pulse, minute, tempo, pls, _sample_rate);
 	t->set_locked_to_meter (locked_to_meter);
 	t->set_clamped (clamped);
@@ -1129,6 +1178,8 @@ TempoMap::add_tempo_locked (const Tempo& tempo, double pulse, double minute
 MeterSection*
 TempoMap::add_meter (const Meter& meter, const Timecode::BBT_Time& where, samplepos_t sample, PositionLockStyle pls)
 {
+	A_CLASS_CALL1 (sample);
+
 	MeterSection* m = 0;
 	{
 		Glib::Threads::RWLock::WriterLock lm (lock);
@@ -1149,6 +1200,8 @@ TempoMap::add_meter (const Meter& meter, const Timecode::BBT_Time& where, sample
 void
 TempoMap::replace_meter (const MeterSection& ms, const Meter& meter, const BBT_Time& where, samplepos_t sample, PositionLockStyle pls)
 {
+	A_CLASS_CALL1 (sample);
+
 	{
 		Glib::Threads::RWLock::WriterLock lm (lock);
 
@@ -1179,6 +1232,8 @@ TempoMap::replace_meter (const MeterSection& ms, const Meter& meter, const BBT_T
 MeterSection*
 TempoMap::add_meter_locked (const Meter& meter, const BBT_Time& bbt, samplepos_t sample, PositionLockStyle pls, bool recompute)
 {
+	A_CLASS_CALL2 (sample, recompute);
+
 	double const minute_at_bbt = minute_at_bbt_locked (_metrics, bbt);
 	const MeterSection& prev_m = meter_section_at_minute_locked  (_metrics, minute_at_bbt - minute_at_sample (1));
 	double const pulse = ((bbt.bars - prev_m.bbt().bars) * (prev_m.divisions_per_bar() / prev_m.note_divisor())) + prev_m.pulse();
@@ -1236,6 +1291,8 @@ TempoMap::add_meter_locked (const Meter& meter, const BBT_Time& bbt, samplepos_t
 void
 TempoMap::change_initial_tempo (double note_types_per_minute, double note_type, double end_note_types_per_minute)
 {
+	A_CLASS_CALL3 (note_types_per_minute, note_type, end_note_types_per_minute);
+
 	Tempo newtempo (note_types_per_minute, note_type, end_note_types_per_minute);
 	TempoSection* t;
 
@@ -1258,6 +1315,8 @@ TempoMap::change_initial_tempo (double note_types_per_minute, double note_type, 
 void
 TempoMap::change_existing_tempo_at (samplepos_t where, double note_types_per_minute, double note_type, double end_ntpm)
 {
+	A_CLASS_CALL4 (where, note_types_per_minute, note_type, end_ntpm);
+
 	Tempo newtempo (note_types_per_minute, note_type, end_ntpm);
 
 	TempoSection* prev;
@@ -1387,6 +1446,8 @@ TempoMap::first_tempo ()
 void
 TempoMap::recompute_tempi (Metrics& metrics)
 {
+	A_CLASS_CALL ();
+
 	TempoSection* prev_t = 0;
 
 	for (Metrics::const_iterator i = metrics.begin(); i != metrics.end(); ++i) {
@@ -1433,6 +1494,8 @@ TempoMap::recompute_tempi (Metrics& metrics)
 void
 TempoMap::recompute_meters (Metrics& metrics)
 {
+	A_CLASS_CALL ();
+
 	MeterSection* meter = 0;
 	MeterSection* prev_m = 0;
 
@@ -1510,6 +1573,8 @@ TempoMap::recompute_meters (Metrics& metrics)
 void
 TempoMap::recompute_map (Metrics& metrics, samplepos_t end)
 {
+	A_CLASS_CALL ();
+
 	/* CALLER MUST HOLD WRITE LOCK */
 
 	DEBUG_TRACE (DEBUG::TempoMath, string_compose ("recomputing tempo map, zero to %1\n", end));
@@ -1609,6 +1674,8 @@ TempoMap::beat_at_sample (const samplecnt_t sample) const
 double
 TempoMap::beat_at_minute_locked (const Metrics& metrics, const double& minute) const
 {
+	A_CLASS_CALL1 (minute);
+
 	const TempoSection& ts = tempo_section_at_minute_locked (metrics, minute);
 	MeterSection* prev_m = 0;
 	MeterSection* next_m = 0;
@@ -1651,6 +1718,8 @@ TempoMap::sample_at_beat (const double& beat) const
 double
 TempoMap::minute_at_beat_locked (const Metrics& metrics, const double& beat) const
 {
+	A_CLASS_CALL1 (beat);
+
 	MeterSection* prev_m = 0;
 	TempoSection* prev_t = 0;
 
@@ -1742,6 +1811,8 @@ TempoMap::sample_at_tempo (const Tempo& tempo) const
 double
 TempoMap::minute_at_tempo_locked (const Metrics& metrics, const Tempo& tempo) const
 {
+	A_CLASS_CALL ();
+
 	TempoSection* prev_t = 0;
 	const double tempo_bpm = tempo.note_types_per_minute();
 
@@ -1782,6 +1853,8 @@ TempoMap::minute_at_tempo_locked (const Metrics& metrics, const Tempo& tempo) co
 Tempo
 TempoMap::tempo_at_pulse_locked (const Metrics& metrics, const double& pulse) const
 {
+	A_CLASS_CALL ();
+
 	TempoSection* prev_t = 0;
 
 	TempoSection* t;
@@ -1806,6 +1879,8 @@ TempoMap::tempo_at_pulse_locked (const Metrics& metrics, const double& pulse) co
 double
 TempoMap::pulse_at_tempo_locked (const Metrics& metrics, const Tempo& tempo) const
 {
+	A_CLASS_CALL ();
+
 	TempoSection* prev_t = 0;
 	const double tempo_bpm = tempo.note_types_per_minute();
 
@@ -2169,6 +2244,8 @@ TempoMap::bbt_at_quarter_note (const double& qn)
 Timecode::BBT_Time
 TempoMap::bbt_at_pulse_locked (const Metrics& metrics, const double& pulse) const
 {
+	A_CLASS_CALL ();
+
 	MeterSection* prev_m = 0;
 
 	MeterSection* m = 0;
@@ -2229,6 +2306,8 @@ TempoMap::bbt_at_pulse_locked (const Metrics& metrics, const double& pulse) cons
 BBT_Time
 TempoMap::bbt_at_sample (samplepos_t sample)
 {
+	A_CLASS_CALL ();
+
 	if (sample < 0) {
 		BBT_Time bbt;
 		bbt.bars = 1;
@@ -2250,6 +2329,8 @@ TempoMap::bbt_at_sample (samplepos_t sample)
 BBT_Time
 TempoMap::bbt_at_sample_rt (samplepos_t sample)
 {
+	A_CLASS_CALL ();
+
 	const double minute =  minute_at_sample (sample);
 
 	Glib::Threads::RWLock::ReaderLock lm (lock, Glib::Threads::TRY_LOCK);
@@ -2264,6 +2345,8 @@ TempoMap::bbt_at_sample_rt (samplepos_t sample)
 Timecode::BBT_Time
 TempoMap::bbt_at_minute_locked (const Metrics& metrics, const double& minute) const
 {
+	A_CLASS_CALL ();
+
 	if (minute < 0) {
 		BBT_Time bbt;
 		bbt.bars = 1;
@@ -2379,6 +2462,8 @@ TempoMap::minute_at_bbt_locked (const Metrics& metrics, const BBT_Time& bbt) con
 double
 TempoMap::quarter_note_at_sample (const samplepos_t sample) const
 {
+	A_CLASS_CALL ();
+
 	const double minute =  minute_at_sample (sample);
 
 	Glib::Threads::RWLock::ReaderLock lm (lock);
@@ -2389,6 +2474,8 @@ TempoMap::quarter_note_at_sample (const samplepos_t sample) const
 double
 TempoMap::quarter_note_at_sample_rt (const samplepos_t sample) const
 {
+	A_CLASS_CALL1 (sample);
+
 	const double minute =  minute_at_sample (sample);
 
 	Glib::Threads::RWLock::ReaderLock lm (lock, Glib::Threads::TRY_LOCK);
@@ -2411,6 +2498,8 @@ TempoMap::quarter_note_at_sample_rt (const samplepos_t sample) const
 samplepos_t
 TempoMap::sample_at_quarter_note (const double quarter_note) const
 {
+	A_CLASS_CALL1 (quarter_note);
+
 	double minute;
 	{
 		Glib::Threads::RWLock::ReaderLock lm (lock);
@@ -2492,6 +2581,8 @@ TempoMap::quarter_notes_between_samples (const samplecnt_t start, const samplecn
 double
 TempoMap::quarter_notes_between_samples_locked (const Metrics& metrics, const samplecnt_t start, const samplecnt_t end) const
 {
+	A_CLASS_CALL2 (start, end);
+
 	const TempoSection* prev_t = 0;
 
 	for (Metrics::const_iterator i = metrics.begin(); i != metrics.end(); ++i) {
@@ -2533,6 +2624,8 @@ TempoMap::quarter_notes_between_samples_locked (const Metrics& metrics, const sa
 bool
 TempoMap::check_solved (const Metrics& metrics) const
 {
+	A_CLASS_CALL ();
+
 	TempoSection* prev_t = 0;
 	MeterSection* prev_m = 0;
 
@@ -2615,6 +2708,8 @@ TempoMap::set_active_tempi (const Metrics& metrics, const samplepos_t sample)
 bool
 TempoMap::solve_map_minute (Metrics& imaginary, TempoSection* section, const double& minute)
 {
+	A_CLASS_CALL1 (minute);
+
 	TempoSection* prev_t = 0;
 	TempoSection* section_prev = 0;
 	double first_m_minute = 0.0;
@@ -2698,6 +2793,8 @@ TempoMap::solve_map_minute (Metrics& imaginary, TempoSection* section, const dou
 bool
 TempoMap::solve_map_pulse (Metrics& imaginary, TempoSection* section, const double& pulse)
 {
+	A_CLASS_CALL1 (pulse);
+
 	TempoSection* prev_t = 0;
 	TempoSection* section_prev = 0;
 
@@ -2764,6 +2861,8 @@ TempoMap::solve_map_pulse (Metrics& imaginary, TempoSection* section, const doub
 bool
 TempoMap::solve_map_minute (Metrics& imaginary, MeterSection* section, const double& minute)
 {
+	A_CLASS_CALL1 (minute);
+
 	/* disallow moving first meter past any subsequent one, and any initial meter before the first one */
 	const MeterSection* other =  &meter_section_at_minute_locked (imaginary, minute);
 	if ((section->initial() && !other->initial()) || (other->initial() && !section->initial() && other->minute() >= minute)) {
@@ -2913,6 +3012,8 @@ TempoMap::solve_map_minute (Metrics& imaginary, MeterSection* section, const dou
 bool
 TempoMap::solve_map_bbt (Metrics& imaginary, MeterSection* section, const BBT_Time& when)
 {
+	A_CLASS_CALL ();
+
 	/* disallow setting section to an existing meter's bbt */
 	for (Metrics::iterator i = imaginary.begin(); i != imaginary.end(); ++i) {
 		MeterSection* m;
@@ -3181,6 +3282,8 @@ TempoMap::predict_tempo_position (TempoSection* section, const BBT_Time& bbt)
 void
 TempoMap::gui_set_tempo_position (TempoSection* ts, const samplepos_t sample, const int& sub_num)
 {
+	A_CLASS_CALL ();
+
 	Metrics future_map;
 
 	if (ts->position_lock_style() == MusicTime) {
@@ -3253,6 +3356,8 @@ TempoMap::gui_set_tempo_position (TempoSection* ts, const samplepos_t sample, co
 void
 TempoMap::gui_set_meter_position (MeterSection* ms, const samplepos_t sample)
 {
+	A_CLASS_CALL ();
+
 	Metrics future_map;
 
 	if (ms->position_lock_style() == AudioTime) {
@@ -3293,6 +3398,8 @@ TempoMap::gui_set_meter_position (MeterSection* ms, const samplepos_t sample)
 bool
 TempoMap::gui_change_tempo (TempoSection* ts, const Tempo& bpm)
 {
+	A_CLASS_CALL ();
+
 	Metrics future_map;
 	bool can_solve = false;
 	{
@@ -3352,6 +3459,8 @@ TempoMap::gui_change_tempo (TempoSection* ts, const Tempo& bpm)
 void
 TempoMap::gui_stretch_tempo (TempoSection* ts, const samplepos_t sample, const samplepos_t end_sample, const double start_qnote, const double end_qnote)
 {
+	A_CLASS_CALL ();
+
 	/*
 	  Ts (future prev_t)   Tnext
 	  |                    |
@@ -3458,6 +3567,8 @@ out:
 void
 TempoMap::gui_stretch_tempo_end (TempoSection* ts, const samplepos_t sample, const samplepos_t end_sample)
 {
+	A_CLASS_CALL ();
+
 	/*
 	  Ts (future prev_t)   Tnext
 	  |                    |
@@ -3539,6 +3650,8 @@ out:
 bool
 TempoMap::gui_twist_tempi (TempoSection* ts, const Tempo& bpm, const samplepos_t sample, const samplepos_t end_sample)
 {
+	A_CLASS_CALL ();
+
 	TempoSection* next_t = 0;
 	TempoSection* next_to_next_t = 0;
 	Metrics future_map;
@@ -3845,6 +3958,8 @@ TempoMap::exact_qn_at_sample_locked (const Metrics& metrics, const samplepos_t s
 samplecnt_t
 TempoMap::bbt_duration_at (samplepos_t pos, const BBT_Time& bbt, int dir)
 {
+	A_CLASS_CALL ();
+
 	Glib::Threads::RWLock::ReaderLock lm (lock);
 
 	BBT_Time pos_bbt = bbt_at_minute_locked (_metrics, minute_at_sample (pos));
@@ -3926,6 +4041,8 @@ TempoMap::round_to_beat (samplepos_t fr, RoundMode dir)
 MusicSample
 TempoMap::round_to_quarter_note_subdivision (samplepos_t fr, int sub_num, RoundMode dir)
 {
+	A_CLASS_CALL ();
+
 	Glib::Threads::RWLock::ReaderLock lm (lock);
 	uint32_t ticks = (uint32_t) floor (max (0.0, pulse_at_minute_locked (_metrics, minute_at_sample (fr))) * BBT_Time::ticks_per_beat * 4.0);
 	uint32_t beats = (uint32_t) floor (ticks / BBT_Time::ticks_per_beat);
@@ -4108,6 +4225,8 @@ void
 TempoMap::get_grid (vector<TempoMap::BBTPoint>& points,
 		    samplepos_t lower, samplepos_t upper, uint32_t bar_mod)
 {
+	A_CLASS_CALL ();
+
 	Glib::Threads::RWLock::ReaderLock lm (lock);
 	int32_t cnt = ceil (beat_at_minute_locked (_metrics, minute_at_sample (lower)));
 	samplecnt_t pos = 0;
@@ -4444,6 +4563,8 @@ TempoMap::meter_at_sample (samplepos_t sample) const
 void
 TempoMap::fix_legacy_session ()
 {
+	A_CLASS_CALL ();
+
 	MeterSection* prev_m = 0;
 	TempoSection* prev_t = 0;
 	bool have_initial_t = false;
@@ -4761,6 +4882,8 @@ TempoMap::insert_time (samplepos_t where, samplecnt_t amount)
 bool
 TempoMap::remove_time (samplepos_t where, samplecnt_t amount)
 {
+	A_CLASS_CALL ();
+
 	bool moved = false;
 
 	std::list<MetricSection*> metric_kill_list;
@@ -4834,6 +4957,8 @@ TempoMap::samplepos_plus_qn (samplepos_t sample, Temporal::Beats beats) const
 samplepos_t
 TempoMap::samplepos_plus_bbt (samplepos_t pos, BBT_Time op) const
 {
+	A_CLASS_CALL ();
+
 	Glib::Threads::RWLock::ReaderLock lm (lock);
 
 	BBT_Time pos_bbt = bbt_at_beat_locked (_metrics, beat_at_minute_locked (_metrics, minute_at_sample (pos)));

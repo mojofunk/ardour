@@ -191,6 +191,9 @@ private:
 
 	uint32_t _rgba;
 	bool _used_to_share_gain;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::RouteGroup);
 };
 
 } /* namespace */

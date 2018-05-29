@@ -31,10 +31,10 @@ def build(bld):
             ]
             obj.export_includes = ['.']
             obj.includes = ['.']
-            obj.name     = 'ardouralsautil'
+            obj.name     = 'ARDOUR_ALSA_UTIL'
             obj.target   = 'ardouralsautil'
-            obj.use      = 'libpbd'
-            obj.uselib   = [ 'ALSA', 'GLIBMM' ]
+            obj.use      = 'PBD'
+            obj.uselib   = [ 'ALSA' ]
             obj.vnum     = '0.0.1'
             obj.install_path = os.path.join(bld.env['LIBDIR'])
 

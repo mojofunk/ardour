@@ -38,9 +38,12 @@ namespace PBD {
 	DEFINE_ENUM_CONVERT(ARDOUR::PresentationInfo::Flag);
 }
 
-using namespace ARDOUR;
 using namespace PBD;
 using std::string;
+
+namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::PresentationInfo);
 
 string PresentationInfo::state_node_name = X_("PresentationInfo");
 
@@ -50,12 +53,10 @@ int PresentationInfo::_change_signal_suspended = 0;
 PBD::PropertyChange PresentationInfo::_pending_static_changes;
 int PresentationInfo::selection_counter= 0;
 
-namespace ARDOUR {
-	namespace Properties {
-		PBD::PropertyDescriptor<bool>     selected;
-		PBD::PropertyDescriptor<uint32_t> order;
-		PBD::PropertyDescriptor<uint32_t> color;
-	}
+namespace Properties {
+	PBD::PropertyDescriptor<bool>     selected;
+	PBD::PropertyDescriptor<uint32_t> order;
+	PBD::PropertyDescriptor<uint32_t> color;
 }
 
 void
@@ -121,12 +122,12 @@ const PresentationInfo::Flag PresentationInfo::AllStripables = PresentationInfo:
 void
 PresentationInfo::make_property_quarks ()
 {
-        Properties::selected.property_id = g_quark_from_static_string (X_("selected"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for selected = %1\n",	Properties::selected.property_id));
-        Properties::color.property_id = g_quark_from_static_string (X_("color"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for color = %1\n",	Properties::color.property_id));
-        Properties::order.property_id = g_quark_from_static_string (X_("order"));
-        DEBUG_TRACE (DEBUG::Properties, string_compose ("quark for order = %1\n",	Properties::order.property_id));
+	Properties::selected.property_id = g_quark_from_static_string (X_ ("selected"));
+	A_CLASS_STATIC_DATA1 (Properties::selected.property_id);
+	Properties::color.property_id = g_quark_from_static_string (X_ ("color"));
+	A_CLASS_STATIC_DATA1 (Properties::color.property_id);
+	Properties::order.property_id = g_quark_from_static_string (X_ ("order"));
+	A_CLASS_STATIC_DATA1 (Properties::order.property_id);
 }
 
 PresentationInfo::PresentationInfo (Flag f)
@@ -281,6 +282,8 @@ PresentationInfo::operator= (PresentationInfo const& other)
 
 	return *this;
 }
+
+} // namespace ARDOUR
 
 std::ostream&
 operator<<(std::ostream& o, ARDOUR::PresentationInfo const& pi)

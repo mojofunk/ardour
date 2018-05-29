@@ -169,6 +169,8 @@ class LIBARDOUR_API AudioSource : virtual public Source,
 	mutable off_t _last_map_off;
 	mutable size_t  _last_raw_map_length;
 	mutable boost::scoped_array<PeakData> peak_cache;
+
+	A_DECLARE_CLASS_MEMBERS(ARDOUR::AudioSource);
 };
 
 }

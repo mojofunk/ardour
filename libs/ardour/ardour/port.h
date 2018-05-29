@@ -181,6 +181,9 @@ private:
 	void drop ();
 	PBD::ScopedConnection drop_connection;
 	PBD::ScopedConnection engine_connection;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::Port);
 };
 
 }

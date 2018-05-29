@@ -26,6 +26,7 @@
 #include "ardour/buffer_set.h"
 #include "ardour/gain_control.h"
 #include "ardour/io.h"
+#include "ardour/logging.h"
 #include "ardour/meter.h"
 #include "ardour/return.h"
 #include "ardour/session.h"
@@ -34,6 +35,8 @@
 
 using namespace ARDOUR;
 using namespace PBD;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::Return);
 
 std::string
 Return::name_and_id_new_return (Session& s, uint32_t& bitslot)
@@ -109,6 +112,8 @@ Return::set_state (const XMLNode& node, int version)
 void
 Return::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_sample, double speed, pframes_t nframes, bool)
 {
+	A_CLASS_CALL4 (start_sample, end_sample, speed, nframes);
+
 	if ((!_active && !_pending_active) || _input->n_ports() == ChanCount::ZERO) {
 		return;
 	}

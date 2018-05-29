@@ -107,6 +107,8 @@ private:
 	std::vector<Vumeterdsp *> _vumeter;
 
 	MeterType _meter_type;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::PeakMeter);
 };
 
 } // namespace ARDOUR

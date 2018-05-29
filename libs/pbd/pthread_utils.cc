@@ -23,6 +23,8 @@
 #include <cstring>
 #include <stdint.h>
 
+#include "pbd/dev_tools.h"
+
 #include "pbd/pthread_utils.h"
 #ifdef WINE_THREAD_SUPPORT
 #include <fst.h>
@@ -144,8 +146,8 @@ pthread_create_and_store (string name, pthread_t  *thread, void * (*start_routin
 void
 pthread_set_name (const char *str)
 {
+	A_REGISTER_THREAD (str, adt::ThreadPriority::NORMAL);
 	/* copy string and delete it when exiting */
-
 	thread_name.set (strdup (str)); // leaks
 }
 

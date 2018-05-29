@@ -19,6 +19,8 @@
 
 #include "canvas/container.h"
 
+A_DEFINE_CLASS_MEMBERS (ArdourCanvas::Container);
+
 using namespace ArdourCanvas;
 
 Container::Container (Canvas* canvas)
@@ -40,12 +42,15 @@ Container::Container (Item* parent, Duple const & p)
 void
 Container::prepare_for_render (Rect const & area) const
 {
+	A_CLASS_CALL ();
+
 	Item::prepare_for_render_children (area);
 }
 
 void
 Container::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) const
 {
+	A_CLASS_CALL ();
 	Item::render_children (area, context);
 }
 

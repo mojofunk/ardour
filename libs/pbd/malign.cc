@@ -41,7 +41,7 @@ int cache_aligned_malloc (void** memptr, size_t size)
 #ifdef PLATFORM_WINDOWS
 	if (((*memptr) = _aligned_malloc (size, CPU_CACHE_ALIGN)) == 0) {
 		fatal << string_compose (_("Memory allocation error: malloc (%1 * %2) failed (%3)"),
-					 CPU_CACHE_ALIGN, size, strerror (errno)) << endmsg;
+					 CPU_CACHE_ALIGN, size, std::strerror (errno)) << endmsg;
 		return errno;
 	} else {
 		return 0;
@@ -49,7 +49,7 @@ int cache_aligned_malloc (void** memptr, size_t size)
 #else
 	if (((*memptr) = malloc (size)) == 0) {
 		fatal << string_compose (_("Memory allocation error: malloc (%1 * %2) failed (%3)"),
-					 CPU_CACHE_ALIGN, size, strerror (errno)) << endmsg;
+					 CPU_CACHE_ALIGN, size, std::strerror (errno)) << endmsg;
 		return errno;
 	} else {
 		return 0;
@@ -58,7 +58,7 @@ int cache_aligned_malloc (void** memptr, size_t size)
 #else
         if (posix_memalign (memptr, CPU_CACHE_ALIGN, size)) {
 		fatal << string_compose (_("Memory allocation error: posix_memalign (%1 * %2) failed (%3)"),
-					 CPU_CACHE_ALIGN, size, strerror (errno)) << endmsg;
+					 CPU_CACHE_ALIGN, size, std::strerror (errno)) << endmsg;
 	}
 
 	return 0;
@@ -80,7 +80,7 @@ int  aligned_malloc (void** memptr, size_t size, size_t alignment)
 #ifdef PLATFORM_WINDOWS
 	if (((*memptr) = _aligned_malloc (size, alignment)) == 0) {
 		fatal << string_compose (_("Memory allocation error: malloc (%1 * %2) failed (%3)"),
-					 alignment, size, strerror (errno)) << endmsg;
+					 alignment, size, std::strerror (errno)) << endmsg;
 		return errno;
 	} else {
 		return 0;
@@ -88,7 +88,7 @@ int  aligned_malloc (void** memptr, size_t size, size_t alignment)
 #else
 	if (((*memptr) = malloc (size)) == 0) {
 		fatal << string_compose (_("Memory allocation error: malloc (%1 * %2) failed (%3)"),
-					 alignment, size, strerror (errno)) << endmsg;
+					 alignment, size, std::strerror (errno)) << endmsg;
 		return errno;
 	} else {
 		return 0;
@@ -97,7 +97,7 @@ int  aligned_malloc (void** memptr, size_t size, size_t alignment)
 #else
         if (posix_memalign (memptr, alignment, size)) {
 		fatal << string_compose (_("Memory allocation error: posix_memalign (%1 * %2) failed (%3)"),
-					 alignment, size, strerror (errno)) << endmsg;
+					 alignment, size, std::strerror (errno)) << endmsg;
 	}
 
 	return 0;

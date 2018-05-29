@@ -107,6 +107,9 @@ class LIBARDOUR_API CoreSelection : public PBD::Stateful {
 	SelectedStripables _stripables;
 
 	void send_selection_change ();
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::CoreSelection);
 };
 
 } // namespace ARDOUR

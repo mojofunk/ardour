@@ -20,6 +20,8 @@
 #ifndef __ardour_midi_buffer_h__
 #define __ardour_midi_buffer_h__
 
+#include "pbd/dev_tools.h"
+
 #include "evoral/EventSink.hpp"
 #include "evoral/midi_util.h"
 #include "evoral/types.hpp"
@@ -180,6 +182,8 @@ private:
 
 	uint8_t* _data; ///< timestamp, event, timestamp, event, ...
 	pframes_t _size;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::MidiBuffer);
 };
 
 } // namespace ARDOUR

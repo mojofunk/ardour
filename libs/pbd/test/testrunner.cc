@@ -12,11 +12,11 @@
 #include "pbd/textreceiver.h"
 
 int
-main ()
+main (int argc, char** argv)
 {
 	TextReceiver text_receiver ("pbd_test");
 
-	if (!PBD::init ()) return 1;
+	if (!PBD::init (&argc, &argv)) return 1;
 
 	text_receiver.listen_to (PBD::error);
 	text_receiver.listen_to (PBD::info);

@@ -35,9 +35,6 @@
 
 #include <gtkmm/widget.h>
 #include <gtkmm/style.h>
-#ifndef GTK_NEW_TOOLTIP_API
-#include <gtkmm/tooltips.h>
-#endif
 #include <gtkmm/textbuffer.h>
 #include <gtkmm/main.h>
 #include <gdkmm/color.h>
@@ -46,6 +43,7 @@
 #define ABSTRACT_UI_EXPORTS
 #endif
 #include "pbd/abstract_ui.h"
+#include "pbd/dev_tools.h"
 #include "pbd/ringbufferNPT.h"
 #include "pbd/pool.h"
 #include "pbd/error.h"
@@ -114,7 +112,7 @@ private:
 	MyReceiver _receiver;
 
 public:
-	UI (std::string, std::string, int *argc, char **argv[]);
+	UI (std::string, std::string);
 	virtual ~UI ();
 
 	static UI *instance() { return theGtkUI; }
@@ -145,8 +143,6 @@ public:
 	void set_tip (Gtk::Widget &w, const std::string &tip);
 	void set_tip (Gtk::Widget *w, const gchar *tip, const gchar *hlp="");
 	void idle_add (int (*func)(void *), void *arg);
-
-	Gtk::Main& main() const { return *theMain; }
 
 	template<class T> static bool idle_delete (T *obj) { delete obj; return false; }
 	template<class T> static void delete_when_idle (T *obj) {
@@ -180,9 +176,7 @@ private:
 
 	bool _active;
 	Gtk::Main *theMain;
-#ifndef GTK_NEW_TOOLTIP_API
-	Gtk::Tooltips *tips;
-#endif
+
 	TextViewer *errors;
 	Glib::RefPtr<Gtk::TextBuffer::Tag> error_ptag;
 	Glib::RefPtr<Gtk::TextBuffer::Tag> error_mtag;
@@ -206,6 +200,8 @@ private:
 
 	void do_request (UIRequest*);
 
+private:
+	A_DECLARE_CLASS_MEMBERS (Gtkmm2ext::UI);
 };
 
 } /* namespace */

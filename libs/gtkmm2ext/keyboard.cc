@@ -220,11 +220,11 @@ Keyboard::snooper (GtkWidget *widget, GdkEventKey *event)
 			)
 		);
 
-	if (event->keyval == GDK_Shift_R) {
-		keyval = GDK_Shift_L;
+	if (event->keyval == GDK_KEY_Shift_R) {
+		keyval = GDK_KEY_Shift_L;
 
-	} else if (event->keyval == GDK_Control_R) {
-		keyval = GDK_Control_L;
+	} else if (event->keyval == GDK_KEY_Control_R) {
+		keyval = GDK_KEY_Control_L;
 
 	} else {
 		keyval = event->keyval;
@@ -304,7 +304,7 @@ Keyboard::snooper (GtkWidget *widget, GdkEventKey *event)
 			*/
 
 			switch (event->keyval) {
-			case GDK_w:
+			case GDK_KEY_w:
 				close_current_dialog ();
 				ret = true;
 				break;
@@ -677,7 +677,7 @@ Keyboard::reset_bindings ()
 		new_path += ".old";
 
 		if (::g_rename (user_keybindings_path.c_str(), new_path.c_str())) {
-			error << string_compose (_("Cannot rename your own keybinding file (%1)"), strerror (errno)) << endmsg;
+			error << string_compose (_("Cannot rename your own keybinding file (%1)"), std::strerror (errno)) << endmsg;
 			return -1;
 		}
 	}

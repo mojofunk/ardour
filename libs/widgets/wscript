@@ -54,30 +54,29 @@ widgets_sources = [
         'ui_config.cc',
 ]
 
+widgets_amalgamated_sources = [
+        'libwidgets.cc',
+]
+
 def options(opt):
     autowaf.set_options(opt)
 
 def configure(conf):
     conf.load ('compiler_cxx')
     autowaf.configure(conf)
-    autowaf.check_pkg(conf, 'cairomm-1.0', uselib_store='CAIROMM', atleast_version='1.8.4')
 
 def build(bld):
+    sources = list(widgets_sources)
+    if bld.env['AMALGAMATE']:
+        sources = list(widgets_amalgamated_sources)
     # Library
-    if bld.is_defined ('INTERNAL_SHARED_LIBS'):
-        obj = bld.shlib(features = 'cxx cxxshlib', source=widgets_sources)
-        obj.defines      = [ 'LIBWIDGETS_DLL_EXPORTS=1' ]
-    else:
-        obj = bld.stlib(features = 'cxx cxxstlib', source=widgets_sources)
-        obj.cxxflags     = [ '-fPIC' ]
-        obj.cflags       = [ '-fPIC' ]
-        obj.defines      = [ ]
+    obj = bld.shlib(features = 'cxx cxxshlib', source=sources)
+    obj.defines      = [ 'LIBWIDGETS_DLL_EXPORTS=1' ]
 
     obj.export_includes = ['.']
-    obj.includes     = ['.']
-    obj.uselib       = 'SIGCPP CAIROMM GTKMM BOOST XML'
-    obj.use          = [ 'libpbd', 'libgtkmm2ext' ]
-    obj.name         = 'libwidgets'
+    obj.includes     = obj.export_includes
+    obj.use          = [ 'PBD', 'GTKMM2EXT' ]
+    obj.name         = 'WIDGETS'
     obj.target       = 'widgets'
     obj.vnum         = WIDGETS_LIB_VERSION
     obj.install_path = bld.env['LIBDIR']

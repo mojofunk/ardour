@@ -24,6 +24,8 @@
 #include <string>
 #include <exception>
 
+#include "pbd/dev_tools.h"
+
 #include "ardour/ardour.h"
 #include "ardour/io_processor.h"
 #include "ardour/delivery.h"
@@ -93,6 +95,8 @@ private:
 	bool       _latency_detect;
 	samplecnt_t _latency_flush_samples;
 	samplecnt_t _measured_latency;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::PortInsert);
 };
 
 } // namespace ARDOUR

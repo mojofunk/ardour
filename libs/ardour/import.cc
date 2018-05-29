@@ -51,6 +51,7 @@
 #include "ardour/audioengine.h"
 #include "ardour/audioregion.h"
 #include "ardour/import_status.h"
+#include "ardour/logging.h"
 #include "ardour/region_factory.h"
 #include "ardour/resampled_source.h"
 #include "ardour/runtime_functions.h"
@@ -76,6 +77,8 @@ using namespace PBD;
 static boost::shared_ptr<ImportableSource>
 open_importable_source (const string& path, samplecnt_t samplerate, ARDOUR::SrcQuality quality)
 {
+	A_LOG_CALL3 (LOG::Import, path, samplerate, quality);
+
 	/* try libsndfile first, because it can get BWF info from .wav, which ExtAudioFile cannot.
 	   We don't necessarily need that information in an ImportableSource, but it keeps the
 	   logic the same as in SourceFactory::create()
@@ -122,6 +125,8 @@ Session::get_paths_for_new_sources (bool /*allow_replacing*/, const string& impo
                                     vector<string> const & smf_track_names)
 
 {
+	A_LOG_CALL2 (LOG::Import, import_file_path, channels);
+
 	vector<string> new_paths;
 	const string basename = basename_nosuffix (import_file_path);
 
@@ -186,6 +191,8 @@ create_mono_sources_for_writing (const vector<string>& new_paths,
                                  vector<boost::shared_ptr<Source> >& newfiles,
                                  samplepos_t timeline_position)
 {
+	A_LOG_CALL (LOG::Import);
+
 	for (vector<string>::const_iterator i = new_paths.begin(); i != new_paths.end(); ++i) {
 
 		boost::shared_ptr<Source> source;
@@ -239,6 +246,8 @@ static void
 write_audio_data_to_new_files (ImportableSource* source, ImportStatus& status,
                                vector<boost::shared_ptr<Source> >& newfiles)
 {
+	A_LOG_CALL (LOG::Import);
+
 	const samplecnt_t nframes = ResampledImportableSource::blocksize;
 	boost::shared_ptr<AudioFileSource> afs;
 	uint32_t channels = source->channels();
@@ -263,6 +272,8 @@ write_audio_data_to_new_files (ImportableSource* source, ImportStatus& status,
 	float progress_base = 0;
 
 	if (!source->clamped_at_unity() && s->clamped_at_unity()) {
+
+		A_LOG_DURATION (LOG::Import, "Normalizing AudioSource");
 
 		/* The source we are importing from can return sample values with a magnitude greater than 1,
 		   and the file we are writing the imported data to cannot handle such values.  Compute the gain
@@ -302,40 +313,48 @@ write_audio_data_to_new_files (ImportableSource* source, ImportStatus& status,
 		uint32_t x;
 		uint32_t chn;
 
-		if ((nread = source->read (data.get(), nframes * channels)) == 0) {
+		{
+			A_LOG_DURATION (LOG::Import, "Reading AudioSource data");
+
+			if ((nread = source->read (data.get(), nframes * channels)) == 0) {
 #ifdef PLATFORM_WINDOWS
-			/* Flush the data once we've finished importing the file. Windows can  */
-			/* cache the data for very long periods of time (perhaps not writing   */
-			/* it to disk until Ardour closes). So let's force it to flush now.    */
-			for (chn = 0; chn < channels; ++chn)
-				if ((afs = boost::dynamic_pointer_cast<AudioFileSource>(newfiles[chn])) != 0)
-					afs->flush ();
+				/* Flush the data once we've finished importing the file. Windows can  */
+				/* cache the data for very long periods of time (perhaps not writing   */
+				/* it to disk until Ardour closes). So let's force it to flush now.    */
+				for (chn = 0; chn < channels; ++chn)
+					if ((afs = boost::dynamic_pointer_cast<AudioFileSource>(newfiles[chn])) != 0)
+						afs->flush ();
 #endif
-			break;
+				break;
+			}
 		}
 
 		if (gain != 1) {
-			/* here is the gain fix for out-of-range sample values that we computed earlier */
+			A_LOG_DURATION (LOG::Import, "Apply Gain to fix out-of-range sample values");
 			apply_gain_to_buffer (data.get(), nread, gain);
 		}
 
 		nfread = nread / channels;
 
-		/* de-interleave */
+		{
+			A_LOG_DURATION (LOG::Import, "De-interleaving audio data");
 
-		for (chn = 0; chn < channels; ++chn) {
+			for (chn = 0; chn < channels; ++chn) {
 
-			samplecnt_t n;
-			for (x = chn, n = 0; n < nfread; x += channels, ++n) {
-				channel_data[chn][n] = (Sample) data[x];
+				samplecnt_t n;
+				for (x = chn, n = 0; n < nfread; x += channels, ++n) {
+					channel_data[chn][n] = (Sample)data[x];
+				}
 			}
 		}
 
-		/* flush to disk */
+		{
+			A_LOG_DURATION (LOG::Import, "Flushing to audio data to disk");
 
-		for (chn = 0; chn < channels; ++chn) {
-			if ((afs = boost::dynamic_pointer_cast<AudioFileSource>(newfiles[chn])) != 0) {
-				afs->write (channel_data[chn].get(), nfread);
+			for (chn = 0; chn < channels; ++chn) {
+				if ((afs = boost::dynamic_pointer_cast<AudioFileSource>(newfiles[chn])) != 0) {
+					afs->write (channel_data[chn].get(), nfread);
+				}
 			}
 		}
 
@@ -349,6 +368,8 @@ write_midi_data_to_new_files (Evoral::SMF* source, ImportStatus& status,
                               vector<boost::shared_ptr<Source> >& newfiles,
                               bool split_type0)
 {
+	A_LOG_CALL (LOG::Import);
+
 	uint32_t buf_size = 4;
 	uint8_t* buf      = (uint8_t*) malloc (buf_size);
 
@@ -487,6 +508,8 @@ remove_file_source (boost::shared_ptr<Source> source)
 void
 Session::import_files (ImportStatus& status)
 {
+	A_LOG_CALL1 (LOG::Import, status.paths.size());
+
 	typedef vector<boost::shared_ptr<Source> > Sources;
 	Sources all_new_sources;
 	boost::shared_ptr<AudioFileSource> afs;

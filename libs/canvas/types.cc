@@ -22,6 +22,8 @@
 
 #include <cairomm/context.h>
 
+#include "pbd/string_convert.h"
+
 #include "canvas/types.h"
 
 using namespace std;
@@ -29,17 +31,31 @@ using namespace ArdourCanvas;
 
 Coord const ArdourCanvas::COORD_MAX = 1.7e307;
 
+std::string
+Duple::to_string () const
+{
+	return std::string ("(") + PBD::to_string (x) + ", " + PBD::to_string (y) + ")";
+}
+
+std::string
+Rect::to_string () const
+{
+	return std::string ("[(") + PBD::to_string (x0) + ", " + PBD::to_string (y0) + "), (" +
+	       PBD::to_string (x1) + ", " + PBD::to_string (y1) + ") " + PBD::to_string (width ()) +
+	       " x " + PBD::to_string (height ()) + "]";
+}
+
 ostream &
 ArdourCanvas::operator<< (ostream & s, Duple const & r)
 {
-	s << "(" << r.x << ", " << r.y << ")";
+	s << r.to_string ();
 	return s;
 }
 
 ostream &
 ArdourCanvas::operator<< (ostream & s, Rect const & r)
 {
-	s << "[(" << r.x0 << ", " << r.y0 << "), (" << r.x1 << ", " << r.y1 << ") " << r.width() << " x " << r.height() << "]";
+	s << r.to_string ();
 	return s;
 }
 

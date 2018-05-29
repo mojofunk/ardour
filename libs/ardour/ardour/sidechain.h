@@ -22,6 +22,7 @@
 
 #include <string>
 
+#include "pbd/dev_tools.h"
 #include "pbd/stateful.h"
 #include "ardour/ardour.h"
 #include "ardour/io_processor.h"
@@ -47,6 +48,8 @@ protected:
 private:
 	/* disallow copy construction */
 	SideChain (const SideChain&);
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::SideChain);
 };
 
 } // namespace ARDOUR

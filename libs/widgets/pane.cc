@@ -100,13 +100,11 @@ Pane::on_size_request (GtkRequisition* req)
 	}
 
 	for (Children::iterator c = children.begin(); c != children.end(); ++c) {
-		GtkRequisition r;
-
-		if (!(*c)->w->is_visible ()) {
+		if (!(*c)->w->get_visible ()) {
 			continue;
 		}
 
-		(*c)->w->size_request (r);
+		GtkRequisition r = (*c)->w->size_request ();
 
 		if (horizontal) {
 			largest.height = max (largest.height, r.height);
@@ -247,7 +245,7 @@ Pane::reallocate (Gtk::Allocation const & alloc)
 
 	if (children.size() == 1) {
 		/* only child gets the full allocation */
-		if (children.front()->w->is_visible ()) {
+		if (children.front()->w->get_visible ()) {
 			children.front()->w->size_allocate (alloc);
 		}
 		return;
@@ -268,7 +266,7 @@ Pane::reallocate (Gtk::Allocation const & alloc)
 	/* skip initial hidden children */
 
 	while (child != children.end()) {
-		if ((*child)->w->is_visible()) {
+		if ((*child)->w->get_visible()) {
 			break;
 		}
 		++child;
@@ -283,7 +281,7 @@ Pane::reallocate (Gtk::Allocation const & alloc)
 		/* Move on to next *visible* child */
 
 		while (++next != children.end()) {
-			if ((*next)->w->is_visible()) {
+			if ((*next)->w->get_visible()) {
 				break;
 			}
 		}
@@ -298,9 +296,6 @@ Pane::reallocate (Gtk::Allocation const & alloc)
 			/* child gets the fraction of the remaining space given by the divider that follows it */
 			fract = (*div)->fract;
 		}
-
-		Gtk::Requisition cr;
-		(*child)->w->size_request (cr);
 
 		if (horizontal) {
 			child_alloc.set_width ((gint) floor (remaining * fract));
@@ -322,7 +317,7 @@ Pane::reallocate (Gtk::Allocation const & alloc)
 			}
 		}
 
-		if ((*child)->w->is_visible ()) {
+		if ((*child)->w->get_visible ()) {
 			(*child)->w->size_allocate (child_alloc);
 		}
 
@@ -373,12 +368,12 @@ Pane::on_expose_event (GdkEventExpose* ev)
 
 	for (child = children.begin(), div = dividers.begin(); child != children.end(); ++child) {
 
-		if ((*child)->w->is_visible()) {
+		if ((*child)->w->get_visible()) {
 			propagate_expose (*((*child)->w), ev);
 		}
 
 		if (div != dividers.end()) {
-			if ((*div)->is_visible()) {
+			if ((*div)->get_visible()) {
 				propagate_expose (**div, ev);
 			}
 			++div;
@@ -644,7 +639,7 @@ Pane::Divider::on_expose_event (GdkEventExpose* ev)
 	Gdk::Color c = (dragging ? get_style()->get_bg (Gtk::STATE_ACTIVE) :
 			get_style()->get_bg (get_state()));
 
-	Cairo::RefPtr<Cairo::Context> draw_context = get_window()->create_cairo_context ();
+	::Cairo::RefPtr<::Cairo::Context> draw_context = get_window()->create_cairo_context ();
 	draw_context->rectangle (ev->area.x, ev->area.y, ev->area.width, ev->area.height);
 	draw_context->clip_preserve ();
 	draw_context->set_source_rgba (c.get_red_p(), c.get_green_p(), c.get_blue_p(), 1.0);

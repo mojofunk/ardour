@@ -36,9 +36,9 @@ def build(bld):
     obj.defines      = [ 'PACKAGE="ardour_tranzport"' ]
     obj.defines     += [ 'ARDOURSURFACE_DLL_EXPORTS' ]
     obj.includes     = ['.', './tranzport']
-    obj.name         = 'libardour_tranzport'
+    obj.name         = 'ARDOUR_TRANZPORT'
     obj.target       = 'ardour_tranzport'
-    obj.use          = 'libardour libardour_cp'
+    obj.use          = 'ARDOUR_CP'
     obj.install_path = os.path.join(bld.env['LIBDIR'], 'surfaces')
 
 def shutdown():

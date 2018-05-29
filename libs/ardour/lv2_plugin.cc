@@ -121,6 +121,10 @@ using namespace PBD;
 
 bool LV2Plugin::force_state_save = false;
 
+namespace LOG {
+	A_DEFINE_LOG_CATEGORY (LV2Plugin, "ARDOUR::LV2Plugin");
+}
+
 class LV2World : boost::noncopyable {
 public:
 	LV2World ();
@@ -230,6 +234,8 @@ work_respond(LV2_Worker_Respond_Handle handle,
 	        : LV2_WORKER_ERR_UNKNOWN);
 }
 
+A_DEFINE_CLASS_MEMBERS (ARDOUR::LV2Plugin);
+
 #ifdef LV2_EXTENDED
 /* inline display extension */
 void
@@ -289,7 +295,7 @@ log_vprintf(LV2_Log_Handle /*handle*/,
 	} else if (type == URIMap::instance().urids.log_Note) {
 		info << str << endmsg;
 	} else if (type == URIMap::instance().urids.log_Trace) {
-		DEBUG_TRACE(DEBUG::LV2, str);
+		A_LOG_MSG (LOG::LV2Plugin, str);
 	}
 	return ret;
 }
@@ -395,7 +401,7 @@ LV2Plugin::LV2Plugin (const LV2Plugin& other)
 void
 LV2Plugin::init(const void* c_plugin, samplecnt_t rate)
 {
-	DEBUG_TRACE(DEBUG::LV2, "init\n");
+	A_CLASS_CALL1 (rate);
 
 	_impl->plugin           = (const LilvPlugin*)c_plugin;
 	_impl->ui               = NULL;
@@ -757,7 +763,7 @@ LV2Plugin::init(const void* c_plugin, samplecnt_t rate)
 
 		_port_flags.push_back(flags);
 		_port_minimumSize.push_back(minimumSize);
-		DEBUG_TRACE(DEBUG::LV2, string_compose("port %1 buffer %2 bytes\n", i, minimumSize));
+		A_CLASS_MSG (A_FMT ("Port {} buffer {} bytes", i, minimumSize));
 	}
 
 	_control_data = new float[num_ports];
@@ -915,7 +921,7 @@ LV2Plugin::requires_fixed_sized_buffers () const
 
 LV2Plugin::~LV2Plugin ()
 {
-	DEBUG_TRACE(DEBUG::LV2, string_compose("%1 destroy\n", name()));
+	A_CLASS_CALL1 (name());
 
 	deactivate();
 	cleanup();
@@ -1150,8 +1156,7 @@ LV2Plugin::port_index (const char* symbol) const
 void
 LV2Plugin::set_parameter(uint32_t which, float val)
 {
-	DEBUG_TRACE(DEBUG::LV2, string_compose(
-		            "%1 set parameter %2 to %3\n", name(), which, val));
+	A_CLASS_CALL3 (name(), which, val);
 
 	if (which < lilv_plugin_get_num_ports(_impl->plugin)) {
 		if (get_parameter (which) == val) {
@@ -1346,8 +1351,7 @@ LV2Plugin::lv2_state_make_path(LV2_State_Make_Path_Handle handle,
 	const std::string dirname  = Glib::path_get_dirname(abs_path);
 	g_mkdir_with_parents(dirname.c_str(), 0744);
 
-	DEBUG_TRACE(DEBUG::LV2, string_compose("new file path %1 => %2\n",
-	                                       path, abs_path));
+	A_CLASS_STATIC_MSG (A_FMT ("New file path {} => {}", path, abs_path));
 
 	return g_strndup(abs_path.c_str(), abs_path.length());
 }
@@ -2389,7 +2393,7 @@ void
 LV2Plugin::set_automation_control (uint32_t i, boost::shared_ptr<AutomationControl> c)
 {
 	if ((_port_flags[i] & (PORT_CTRLED | PORT_CTRLER))) {
-		DEBUG_TRACE(DEBUG::LV2Automate, string_compose ("Ctrl Port %1\n", i));
+		A_CLASS_MSG (A_FMT ("Ctrl Port {}", i));
 		_ctrl_map [i] = AutomationCtrlPtr (new AutomationCtrl(c));
 	}
 }
@@ -2406,7 +2410,7 @@ LV2Plugin::get_automation_control (uint32_t i)
 void
 LV2Plugin::activate()
 {
-	DEBUG_TRACE(DEBUG::LV2, string_compose("%1 activate\n", name()));
+	A_CLASS_CALL1 (name());
 
 	if (!_was_activated) {
 		lilv_instance_activate(_impl->instance);
@@ -2417,7 +2421,7 @@ LV2Plugin::activate()
 void
 LV2Plugin::deactivate()
 {
-	DEBUG_TRACE(DEBUG::LV2, string_compose("%1 deactivate\n", name()));
+	A_CLASS_CALL1 (name());
 
 	if (_was_activated) {
 		lilv_instance_deactivate(_impl->instance);
@@ -2428,7 +2432,7 @@ LV2Plugin::deactivate()
 void
 LV2Plugin::cleanup()
 {
-	DEBUG_TRACE(DEBUG::LV2, string_compose("%1 cleanup\n", name()));
+	A_CLASS_CALL1 (name());
 
 	deactivate();
 	lilv_instance_free(_impl->instance);
@@ -2474,15 +2478,16 @@ LV2Plugin::allocate_atom_event_buffers()
 		}
 	}
 
-	DEBUG_TRACE(DEBUG::LV2, string_compose("%1 need buffers for %2 atom-in and %3 atom-out event-ports\n",
-				name(), count_atom_in, count_atom_out));
+	A_CLASS_MSG (A_FMT ("{} need buffers for {} atom-in and {} atom-out event-ports", name(),
+	                    count_atom_in, count_atom_out));
 
 	const int total_atom_buffers = (count_atom_in + count_atom_out);
 	if (_atom_ev_buffers || total_atom_buffers == 0) {
 		return;
 	}
 
-	DEBUG_TRACE(DEBUG::LV2, string_compose("allocate %1 atom_ev_buffers of %2 bytes\n", total_atom_buffers, minimumSize));
+	A_CLASS_MSG (A_FMT ("Allocate {} atom_ev_buffers of {} bytes", total_atom_buffers, minimumSize));
+
 	_atom_ev_buffers = (LV2_Evbuf**) malloc((total_atom_buffers + 1) * sizeof(LV2_Evbuf*));
 	for (int i = 0; i < total_atom_buffers; ++i ) {
 		_atom_ev_buffers[i] = lv2_evbuf_new(minimumSize, LV2_EVBUF_ATOM,
@@ -2558,7 +2563,8 @@ LV2Plugin::connect_and_run(BufferSet& bufs,
 		ChanMapping in_map, ChanMapping out_map,
 		pframes_t nframes, samplecnt_t offset)
 {
-	DEBUG_TRACE(DEBUG::LV2, string_compose("%1 run %2 offset %3\n", name(), nframes, offset));
+	A_CLASS_CALL3 (name(), nframes, offset);
+
 	Plugin::connect_and_run(bufs, start, end, speed, in_map, out_map, nframes, offset);
 
 	cycles_t then = get_cycles();
@@ -2805,8 +2811,7 @@ LV2Plugin::connect_and_run(BufferSet& bufs,
 								const uint32_t p = ((const LV2_Atom_Int*)parameter)->body;
 								const float v = ((const LV2_Atom_Float*)value)->body;
 								// -> add automation event..
-								DEBUG_TRACE(DEBUG::LV2Automate,
-										string_compose ("Event p: %1 t: %2 v: %3\n", p, samples, v));
+								A_CLASS_DATA3 (p, samples, v);
 								AutomationCtrlPtr c = get_automation_control (p);
 								if (c &&
 								     (c->ac->automation_state() == Touch || c->ac->automation_state() == Write)
@@ -2828,8 +2833,7 @@ LV2Plugin::connect_and_run(BufferSet& bufs,
 							// -> put them in "touch" mode (preferably "exclusive plugin touch(TM)"
 							for (AutomationCtrlMap::iterator i = _ctrl_map.begin(); i != _ctrl_map.end(); ++i) {
 								if (_port_flags[i->first] & PORT_CTRLED) {
-									DEBUG_TRACE(DEBUG::LV2Automate,
-										string_compose ("Setup p: %1\n", i->first));
+									A_CLASS_DURATION (A_FMT ("Setup p: {}", i->first));
 									i->second->ac->set_automation_state (Touch);
 								}
 							}
@@ -2847,19 +2851,17 @@ LV2Plugin::connect_and_run(BufferSet& bufs,
 								const uint32_t p = ((const LV2_Atom_Int*)parameter)->body;
 								const float v = ((const LV2_Atom_Float*)value)->body;
 								AutomationCtrlPtr c = get_automation_control (p);
-								DEBUG_TRACE(DEBUG::LV2Automate,
-										string_compose ("Finalize p: %1 v: %2\n", p, v));
+								A_CLASS_MSG (A_FMT ("Finalize p: {} v: {}", p, v));
 								if (c && _port_flags[p] & PORT_CTRLER) {
 									c->ac->set_value(v, Controllable::NoGroup);
 								}
 							} else {
-								DEBUG_TRACE(DEBUG::LV2Automate, "Finalize\n");
+								A_CLASS_MSG ("Finalize");
 							}
 							for (AutomationCtrlMap::iterator i = _ctrl_map.begin(); i != _ctrl_map.end(); ++i) {
 								// guard will be false if an event was written
 								if ((_port_flags[i->first] & PORT_CTRLED) && !i->second->guard) {
-									DEBUG_TRACE(DEBUG::LV2Automate,
-										string_compose ("Thin p: %1\n", i->first));
+									A_CLASS_MSG (A_FMT("Thin p: {}", i->first));
 									i->second->ac->alist ()->thin (20);
 								}
 							}
@@ -2872,7 +2874,7 @@ LV2Plugin::connect_and_run(BufferSet& bufs,
 							if (parameter) {
 								const uint32_t p = ((const LV2_Atom_Int*)parameter)->body;
 								AutomationCtrlPtr c = get_automation_control (p);
-								DEBUG_TRACE(DEBUG::LV2Automate, string_compose ("Start Touch p: %1\n", p));
+								A_CLASS_MSG (A_FMT ("Start Touch p: {}", p));
 								if (c) {
 									c->ac->start_touch (std::max ((samplepos_t)0, start - _current_latency));
 									c->guard = true;
@@ -2887,7 +2889,7 @@ LV2Plugin::connect_and_run(BufferSet& bufs,
 							if (parameter) {
 								const uint32_t p = ((const LV2_Atom_Int*)parameter)->body;
 								AutomationCtrlPtr c = get_automation_control (p);
-								DEBUG_TRACE(DEBUG::LV2Automate, string_compose ("End Touch p: %1\n", p));
+								A_CLASS_MSG (A_FMT ("End Touch p: {}", p));
 								if (c) {
 									c->ac->stop_touch (std::max ((samplepos_t)0, start - _current_latency));
 								}

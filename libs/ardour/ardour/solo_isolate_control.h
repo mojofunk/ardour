@@ -23,6 +23,8 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "pbd/dev_tools.h"
+
 #include "ardour/slavable_automation_control.h"
 #include "ardour/libardour_visibility.h"
 
@@ -84,6 +86,7 @@ class LIBARDOUR_API SoloIsolateControl : public SlavableAutomationControl
 
 	void set_solo_isolated (bool yn, Controllable::GroupControlDisposition group_override);
 
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::SoloIsolateControl);
 };
 
 } /* namespace */

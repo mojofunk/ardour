@@ -19,62 +19,63 @@ VERSION = QM_DSP_VERSION
 top = '.'
 out = 'build'
 
+qmdsp_sources = [
+    'base/Pitch.cpp',
+    'base/KaiserWindow.cpp',
+    'base/SincWindow.cpp',
+    'dsp/chromagram/Chromagram.cpp',
+    'dsp/chromagram/ConstantQ.cpp',
+    'dsp/keydetection/GetKeyMode.cpp',
+    'dsp/mfcc/MFCC.cpp',
+    'dsp/onsets/DetectionFunction.cpp',
+    'dsp/onsets/PeakPicking.cpp',
+    'dsp/phasevocoder/PhaseVocoder.cpp',
+    'dsp/rateconversion/Decimator.cpp',
+    'dsp/rateconversion/DecimatorB.cpp',
+    'dsp/rhythm/BeatSpectrum.cpp',
+    'dsp/signalconditioning/DFProcess.cpp',
+    'dsp/signalconditioning/Filter.cpp',
+    'dsp/signalconditioning/FiltFilt.cpp',
+    'dsp/signalconditioning/Framer.cpp',
+    'dsp/tempotracking/DownBeat.cpp',
+    'dsp/tempotracking/TempoTrack.cpp',
+    'dsp/tempotracking/TempoTrackV2.cpp',
+    'dsp/tonal/ChangeDetectionFunction.cpp',
+    'dsp/tonal/TCSgram.cpp',
+    'dsp/tonal/TonalEstimator.cpp',
+    'dsp/transforms/FFT.cpp',
+    'dsp/wavelet/Wavelet.cpp',
+    'maths/Correlation.cpp',
+    'maths/CosineDistance.cpp',
+    'maths/KLDivergence.cpp',
+    'maths/MathUtilities.cpp',
+    'maths/pca/pca.c',
+    'ext/kissfft/kiss_fft.c',
+    'ext/kissfft/tools/kiss_fftr.c'
+]
+
+qmdsp_amalgamated_sources = [ 'qm-dsp.cpp' ]
+
 def options(opt):
     autowaf.set_options(opt)
 
 def configure(conf):
-    if conf.is_defined('USE_EXTERNAL_LIBS'):
-        conf.check_cxx(header_name="base/Pitch.h", mandatory=True)
-        conf.check_cxx(lib="qm-dsp", uselib_store="QMDSP", mandatory=True)
-    else:
-        conf.load('compiler_cxx')
-        autowaf.configure(conf)
+    conf.load('compiler_cxx')
+    autowaf.configure(conf)
 
 def build(bld):
-    if bld.is_defined('USE_EXTERNAL_LIBS'):
-        return
+    sources = qmdsp_sources
+    if bld.env['AMALGAMATE']:
+        sources = qmdsp_amalgamated_sources
 
     # Host Library
     obj = bld(features = 'c cxx cxxstlib')
-    obj.source = '''
-            base/Pitch.cpp
-            base/KaiserWindow.cpp
-            base/SincWindow.cpp
-            dsp/chromagram/Chromagram.cpp
-            dsp/chromagram/ConstantQ.cpp
-            dsp/keydetection/GetKeyMode.cpp
-            dsp/mfcc/MFCC.cpp
-            dsp/onsets/DetectionFunction.cpp
-            dsp/onsets/PeakPicking.cpp
-            dsp/phasevocoder/PhaseVocoder.cpp
-            dsp/rateconversion/Decimator.cpp
-            dsp/rateconversion/DecimatorB.cpp
-            dsp/rhythm/BeatSpectrum.cpp
-            dsp/signalconditioning/DFProcess.cpp
-            dsp/signalconditioning/Filter.cpp
-            dsp/signalconditioning/FiltFilt.cpp
-            dsp/signalconditioning/Framer.cpp
-            dsp/tempotracking/DownBeat.cpp
-            dsp/tempotracking/TempoTrack.cpp
-            dsp/tempotracking/TempoTrackV2.cpp
-            dsp/tonal/ChangeDetectionFunction.cpp
-            dsp/tonal/TCSgram.cpp
-            dsp/tonal/TonalEstimator.cpp
-            dsp/transforms/FFT.cpp
-            dsp/wavelet/Wavelet.cpp
-            maths/Correlation.cpp
-            maths/CosineDistance.cpp
-            maths/KLDivergence.cpp
-            maths/MathUtilities.cpp
-            maths/pca/pca.c
-            ext/kissfft/kiss_fft.c
-            ext/kissfft/tools/kiss_fftr.c
-    '''
+    obj.source = sources
     autowaf.ensure_visible_symbols (obj, False)
     obj.export_includes = ['.']
     obj.includes     = ['.', 'ext/kissfft', 'ext/kissfft/tools/']
     obj.defines      = ['kiss_fft_scalar=double']
-    obj.name         = 'libqm-dsp'
+    obj.name         = 'QMDSP'
     obj.target       = 'qm-dsp'
     obj.vnum         = QM_DSP_VERSION
     obj.install_path = bld.env['LIBDIR']

@@ -23,6 +23,7 @@
 #include <vector>
 #include <list>
 
+#include "pbd/dev_tools.h"
 #include "pbd/fastlog.h"
 #include "pbd/undo.h"
 
@@ -247,6 +248,9 @@ class LIBARDOUR_API AudioRegion : public Region
 	AudioRegion (Session& s, samplepos_t, samplecnt_t, std::string name);
 
 	int _set_state (const XMLNode&, int version, PBD::PropertyChange& what_changed, bool send_signal);
+
+private:
+	A_DECLARE_CLASS_MEMBERS(ARDOUR::AudioRegion);
 };
 
 } /* namespace ARDOUR */

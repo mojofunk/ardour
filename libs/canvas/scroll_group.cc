@@ -24,6 +24,8 @@
 #include "canvas/debug.h"
 #include "canvas/scroll_group.h"
 
+A_DEFINE_CLASS_MEMBERS (ArdourCanvas::ScrollGroup);
+
 using namespace std;
 using namespace ArdourCanvas;
 
@@ -42,6 +44,8 @@ ScrollGroup::ScrollGroup (Item* parent, ScrollSensitivity s)
 void
 ScrollGroup::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) const
 {
+	A_CLASS_CALL1 (name);
+
 	/* clip the draw to the area that this scroll group nominally occupies
 	 * WITHOUT scroll offsets in effect
 	 */
@@ -72,6 +76,8 @@ ScrollGroup::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) c
 void
 ScrollGroup::scroll_to (Duple const& d)
 {
+	A_CLASS_CALL1 (name);
+
 	if (_scroll_sensitivity & ScrollsHorizontally) {
 		_scroll_offset.x = d.x;
 	}

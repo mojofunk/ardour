@@ -37,24 +37,16 @@ def options(opt):
 def configure(conf):
     conf.load ('compiler_cxx')
     autowaf.configure(conf)
-    autowaf.check_pkg(conf, 'cairomm-1.0', uselib_store='CAIROMM', atleast_version='1.8.4')
 
 def build(bld):
     # Library
-    if bld.is_defined ('INTERNAL_SHARED_LIBS'):
-        obj = bld.shlib(features = 'cxx cxxshlib', source=waveview_sources)
-        obj.defines      = [ 'LIBWAVEVIEW_DLL_EXPORTS=1' ]
-    else:
-        obj = bld.stlib(features = 'cxx cxxstlib', source=waveview_sources)
-        obj.cxxflags     = [ '-fPIC' ]
-        obj.cflags       = [ '-fPIC' ]
-        obj.defines      = [ ]
+    obj = bld.shlib(features = 'cxx cxxshlib', source=waveview_sources)
+    obj.defines      = [ 'LIBWAVEVIEW_DLL_EXPORTS=1' ]
 
     obj.export_includes = ['.']
-    obj.includes     = ['.']
-    obj.uselib       = 'SIGCPP CAIROMM GTKMM BOOST XML'
-    obj.use          = [ 'libpbd', 'libcanvas', 'libardour', 'libgtkmm2ext' ]
-    obj.name         = 'libwaveview'
+    obj.includes     = obj.export_includes
+    obj.use          = [ 'CANVAS', 'ARDOUR' ]
+    obj.name         = 'WAVEVIEW'
     obj.target       = 'waveview'
     obj.vnum         = WAVEVIEW_LIB_VERSION
     obj.install_path = bld.env['LIBDIR']

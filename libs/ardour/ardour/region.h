@@ -25,6 +25,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/utility.hpp>
 
+#include "pbd/dev_tools.h"
 #include "pbd/undo.h"
 #include "pbd/signals.h"
 #include "ardour/ardour.h"
@@ -458,6 +459,8 @@ private:
 	void register_properties ();
 
 	void use_sources (SourceList const &);
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::Region);
 };
 
 } /* namespace ARDOUR */

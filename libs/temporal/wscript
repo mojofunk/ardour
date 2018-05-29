@@ -35,18 +35,12 @@ def configure(conf):
 
 def build(bld):
     # Library
-    if bld.is_defined ('INTERNAL_SHARED_LIBS'):
-        obj = bld.shlib(features = 'cxx cxxshlib', source=temporal_sources)
-        obj.defines      = [ 'LIBTEMPORAL_DLL_EXPORTS=1' ]
-    else:
-        obj = bld.stlib(features = 'cxx cxxstlib', source=temporal_sources)
-        obj.cxxflags     = [ '-fPIC' ]
-        obj.cflags       = [ '-fPIC' ]
-        obj.defines      = [ ]
+    obj = bld.shlib(features = 'cxx cxxshlib', source=temporal_sources)
+    obj.defines      = [ 'LIBTEMPORAL_DLL_EXPORTS=1' ]
 
     obj.export_includes = ['.']
     obj.includes     = ['.']
-    obj.name         = 'libtemporal'
+    obj.name         = 'TEMPORAL'
     obj.target       = 'temporal'
     obj.vnum         = TEMPORAL_LIB_VERSION
     obj.install_path = bld.env['LIBDIR']

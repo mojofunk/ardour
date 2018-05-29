@@ -26,6 +26,8 @@
 #include "canvas/item.h"
 #include "canvas/scroll_group.h"
 
+A_DEFINE_CLASS_MEMBERS (ArdourCanvas::Item);
+
 using namespace std;
 using namespace PBD;
 using namespace ArdourCanvas;
@@ -40,10 +42,9 @@ Item::Item (Canvas* canvas)
 	, _scroll_parent (0)
 	, _visible (true)
 	, _bounding_box_dirty (true)
-	, _lut (0)
 	, _ignore_events (false)
 {
-	DEBUG_TRACE (DEBUG::CanvasItems, string_compose ("new canvas item %1\n", this));
+	A_CLASS_CALL ();
 }
 
 Item::Item (Item* parent)
@@ -54,10 +55,9 @@ Item::Item (Item* parent)
 	, _scroll_parent (0)
 	, _visible (true)
 	, _bounding_box_dirty (true)
-	, _lut (0)
 	, _ignore_events (false)
 {
-	DEBUG_TRACE (DEBUG::CanvasItems, string_compose ("new canvas item %1\n", this));
+	A_CLASS_CALL ();
 
 	if (parent) {
 		_parent->add (this);
@@ -75,10 +75,9 @@ Item::Item (Item* parent, Duple const& p)
 	, _position (p)
 	, _visible (true)
 	, _bounding_box_dirty (true)
-	, _lut (0)
 	, _ignore_events (false)
 {
-	DEBUG_TRACE (DEBUG::CanvasItems, string_compose ("new canvas item %1\n", this));
+	A_CLASS_CALL ();
 
 	if (parent) {
 		_parent->add (this);
@@ -90,6 +89,8 @@ Item::Item (Item* parent, Duple const& p)
 
 Item::~Item ()
 {
+	A_CLASS_CALL ();
+
 	if (_parent) {
 		_parent->remove (this);
 	}
@@ -99,7 +100,6 @@ Item::~Item ()
 	}
 
 	clear_items (true);
-	delete _lut;
 }
 
 bool
@@ -322,6 +322,8 @@ Item::lower_to_bottom ()
 void
 Item::hide ()
 {
+	A_CLASS_CALL ();
+
 	if (_visible) {
 		_visible = false;
 
@@ -353,6 +355,8 @@ Item::hide ()
 void
 Item::show ()
 {
+	A_CLASS_CALL1 (whatami());
+
 	if (!_visible) {
 
 		_visible = true;
@@ -410,6 +414,8 @@ Item::unparent ()
 void
 Item::reparent (Item* new_parent, bool already_added)
 {
+	A_CLASS_CALL ();
+
 	if (new_parent == _parent) {
 		return;
 	}
@@ -435,6 +441,8 @@ Item::reparent (Item* new_parent, bool already_added)
 void
 Item::find_scroll_parent ()
 {
+	A_CLASS_CALL ();
+
 	Item const * i = this;
 	ScrollGroup const * last_scroll_group = 0;
 
@@ -620,6 +628,8 @@ Item::width () const
 void
 Item::redraw () const
 {
+	A_CLASS_CALL4 (name, visible(), whatami(), _items.size());
+
 	if (visible() && _bounding_box && _canvas) {
 		_canvas->request_redraw (item_to_window (_bounding_box));
 	}
@@ -628,12 +638,16 @@ Item::redraw () const
 void
 Item::begin_change ()
 {
+	A_CLASS_CALL3 (name, whatami(), _items.size());
+
 	_pre_change_bounding_box = bounding_box ();
 }
 
 void
 Item::end_change ()
 {
+	A_CLASS_CALL3 (name, whatami(), _items.size());
+
 	if (visible()) {
 		_canvas->item_changed (this, _pre_change_bounding_box);
 
@@ -741,42 +755,27 @@ Item::covers (Duple const & point) const
 void
 Item::render_children (Rect const & area, Cairo::RefPtr<Cairo::Context> context) const
 {
+	A_CLASS_CALL4 (area.to_string(), whatami(), name, _items.size());
+
 	if (_items.empty()) {
 		return;
 	}
 
-	ensure_lut ();
-	std::vector<Item*> items = _lut->get (area);
-
-#ifdef CANVAS_DEBUG
-	if (DEBUG_ENABLED(PBD::DEBUG::CanvasRender)) {
-		cerr << string_compose ("%1%7 %2 @ %7 render %5 @ %6 %3 items out of %4\n",
-					_canvas->render_indent(), (name.empty() ? string ("[unnamed]") : name), items.size(), _items.size(), area, _position, this,
-					whatami());
-	}
-#endif
-
 	++render_depth;
 
-	for (std::vector<Item*>::const_iterator i = items.begin(); i != items.end(); ++i) {
+	for (std::list<Item*>::const_iterator i = _items.begin(); i != _items.end(); ++i) {
 
 		if (!(*i)->visible ()) {
-#ifdef CANVAS_DEBUG
-			if (DEBUG_ENABLED(PBD::DEBUG::CanvasRender)) {
-				cerr << _canvas->render_indent() << "Item " << (*i)->whatami() << " [" << (*i)->name << "] invisible - skipped\n";
-			}
-#endif
+			A_CLASS_MSG (
+			    A_FMT ("Child item {} with name {} invisible - skipped", (*i)->whatami (), (*i)->name));
 			continue;
 		}
 
 		Rect item_bbox = (*i)->bounding_box ();
 
 		if (!item_bbox) {
-#ifdef CANVAS_DEBUG
-			if (DEBUG_ENABLED(PBD::DEBUG::CanvasRender)) {
-				cerr << _canvas->render_indent() << "Item " << (*i)->whatami() << " [" << (*i)->name << "] empty - skipped\n";
-			}
-#endif
+			A_CLASS_MSG (
+			    A_FMT ("Child item {} with name {} empty - skipped", (*i)->whatami (), (*i)->name));
 			continue;
 		}
 
@@ -786,42 +785,16 @@ Item::render_children (Rect const & area, Cairo::RefPtr<Cairo::Context> context)
 		if (d) {
 			Rect draw = d;
 			if (draw.width() && draw.height()) {
-#ifdef CANVAS_DEBUG
-				if (DEBUG_ENABLED(PBD::DEBUG::CanvasRender)) {
-					if (dynamic_cast<Container*>(*i) == 0) {
-						cerr << _canvas->render_indent() << "render "
-						     << ' '
-						     << (*i)
-						     << ' '
-						     << (*i)->whatami()
-						     << ' '
-						     << (*i)->name
-						     << " item "
-						     << item_bbox
-						     << " window = "
-						     << item
-						     << " intersect = "
-						     << draw
-						     << " @ "
-						     << _position
-						     << endl;
-					}
-				}
-#endif
+				A_CLASS_DATA6 ((*i)->whatami (), (*i)->name, item_bbox.to_string (), item.to_string (),
+				               draw.to_string (), _position.to_string ());
 
 				(*i)->render (area, context);
 				++render_count;
 			}
 
 		} else {
-
-#ifdef CANVAS_DEBUG
-			if (DEBUG_ENABLED(PBD::DEBUG::CanvasRender)) {
-				cerr << string_compose ("%1skip render of %2 %3, no intersection between %4 and %5\n", _canvas->render_indent(), (*i)->whatami(),
-							(*i)->name, item, area);
-			}
-#endif
-
+			A_CLASS_MSG (A_FMT ("Skip render of {} {}, no intersection between {} and {}",
+			                    (*i)->whatami (), (*i)->name, item.to_string (), area.to_string ()));
 		}
 	}
 
@@ -831,22 +804,25 @@ Item::render_children (Rect const & area, Cairo::RefPtr<Cairo::Context> context)
 void
 Item::prepare_for_render_children (Rect const & area) const
 {
+	A_CLASS_CALL4 (area.to_string(), whatami(), name, _items.size());
+
 	if (_items.empty()) {
 		return;
 	}
 
-	ensure_lut ();
-	std::vector<Item*> items = _lut->get (area);
-
-	for (std::vector<Item*>::const_iterator i = items.begin(); i != items.end(); ++i) {
+	for (std::list<Item*>::const_iterator i = _items.begin(); i != _items.end(); ++i) {
 
 		if (!(*i)->visible ()) {
+			A_CLASS_MSG (
+			    A_FMT ("Child item {} with name {} invisible - skipped", (*i)->whatami (), (*i)->name));
 			continue;
 		}
 
 		Rect item_bbox = (*i)->bounding_box ();
 
 		if (!item_bbox) {
+			A_CLASS_MSG (
+			    A_FMT ("Child item {} with name {} empty - skipped", (*i)->whatami (), (*i)->name));
 			continue;
 		}
 
@@ -860,7 +836,8 @@ Item::prepare_for_render_children (Rect const & area) const
 			}
 
 		} else {
-			// Item does not intersect with visible canvas area
+			A_CLASS_MSG (A_FMT ("Skip render of {} {}, no intersection between {} and {}",
+			                    (*i)->whatami (), (*i)->name, item.to_string (), area.to_string ()));
 		}
 	}
 }
@@ -912,7 +889,6 @@ Item::add (Item* i)
 
 	_items.push_back (i);
 	i->reparent (this, true);
-	invalidate_lut ();
 	_bounding_box_dirty = true;
 }
 
@@ -923,7 +899,6 @@ Item::add_front (Item* i)
 
 	_items.push_front (i);
 	i->reparent (this, true);
-	invalidate_lut ();
 	_bounding_box_dirty = true;
 }
 
@@ -949,7 +924,6 @@ Item::remove (Item* i)
 
 	i->unparent ();
 	_items.remove (i);
-	invalidate_lut ();
 	_bounding_box_dirty = true;
 
 	end_change ();
@@ -962,7 +936,6 @@ Item::clear (bool with_delete)
 
 	clear_items (with_delete);
 
-	invalidate_lut ();
 	_bounding_box_dirty = true;
 
 	end_change ();
@@ -1006,7 +979,6 @@ Item::raise_child_to_top (Item* i)
 	_items.remove (i);
 	_items.push_back (i);
 
-	invalidate_lut ();
         redraw ();
 }
 
@@ -1025,7 +997,6 @@ Item::raise_child (Item* i, int levels)
 	}
 
 	_items.insert (j, i);
-	invalidate_lut ();
         redraw ();
 }
 
@@ -1039,29 +1010,12 @@ Item::lower_child_to_bottom (Item* i)
 	}
 	_items.remove (i);
 	_items.push_front (i);
-	invalidate_lut ();
         redraw ();
-}
-
-void
-Item::ensure_lut () const
-{
-	if (!_lut) {
-		_lut = new DumbLookupTable (*this);
-	}
-}
-
-void
-Item::invalidate_lut () const
-{
-	delete _lut;
-	_lut = 0;
 }
 
 void
 Item::child_changed ()
 {
-	invalidate_lut ();
 	_bounding_box_dirty = true;
 
 	if (_parent) {
@@ -1088,8 +1042,11 @@ Item::add_items_at_point (Duple const point, vector<Item const *>& items) const
 	vector<Item*> our_items;
 
 	if (!_items.empty() && visible() && !_ignore_events) {
-		ensure_lut ();
-		our_items = _lut->items_at_point (point);
+		for (list<Item*>::const_iterator i = _items.begin (); i != _items.end (); ++i) {
+			if ((*i)->covers (point)) {
+				our_items.push_back (*i);
+			}
+		}
 	}
 
 	if (!our_items.empty() || covers (point)) {

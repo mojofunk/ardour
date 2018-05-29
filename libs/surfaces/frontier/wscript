@@ -24,9 +24,9 @@ def build(bld):
     obj.defines      = [ 'PACKAGE="ardour_frontier"' ]
     obj.defines     += [ 'ARDOURSURFACE_DLL_EXPORTS' ]
     obj.includes     = ['.', './generic_midi']
-    obj.name         = 'libgeneric_midi'
+    obj.name         = 'GENERIC_MIDI'
     obj.target       = 'generic_midi'
-    obj.use          = 'libardour libardourcp'
+    obj.use          = 'ARDOUR_CP'
     obj.install_path = os.path.join(bld.env['LIBDIR'], 'surfaces')
 
 def shutdown():

@@ -23,6 +23,7 @@
 
 #include <cstdio>
 #include <time.h>
+#include "pbd/dev_tools.h"
 #include "evoral/SMF.hpp"
 #include "ardour/midi_source.h"
 #include "ardour/file_source.h"
@@ -103,6 +104,7 @@ public:
 	                           samplepos_t                  position,
 	                           samplecnt_t                  cnt);
 
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::SMFSource);
 };
 
 }; /* namespace ARDOUR */

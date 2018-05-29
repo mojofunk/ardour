@@ -118,6 +118,8 @@ using namespace std;
 PluginManager* PluginManager::_instance = 0;
 std::string PluginManager::scanner_bin_path = "";
 
+A_DEFINE_CLASS_MEMBERS(ARDOUR::PluginManager);
+
 PluginManager&
 PluginManager::instance()
 {
@@ -261,13 +263,14 @@ PluginManager::~PluginManager()
 void
 PluginManager::refresh (bool cache_only)
 {
+	A_CLASS_CALL1 (cache_only);
+
 	Glib::Threads::Mutex::Lock lm (_lock, Glib::Threads::TRY_LOCK);
 
 	if (!lm.locked()) {
 		return;
 	}
 
-	DEBUG_TRACE (DEBUG::PluginManager, "PluginManager::refresh\n");
 	_cancel_scan = false;
 
 	BootMessage (_("Scanning LADSPA Plugins"));
@@ -541,7 +544,7 @@ PluginManager::ladspa_refresh ()
 
 	vector<string> ladspa_modules;
 
-	DEBUG_TRACE (DEBUG::PluginManager, string_compose ("LADSPA: search along: [%1]\n", ladspa_search_path().to_string()));
+	A_CLASS_DATA1 (ladspa_search_path().to_string());
 
 	find_files_matching_pattern (ladspa_modules, ladspa_search_path (), "*.so");
 	find_files_matching_pattern (ladspa_modules, ladspa_search_path (), "*.dylib");
@@ -635,7 +638,7 @@ PluginManager::add_lrdf_data (const string &path)
 int
 PluginManager::ladspa_discover (string path)
 {
-	DEBUG_TRACE (DEBUG::PluginManager, string_compose ("Checking for LADSPA plugin at %1\n", path));
+	A_CLASS_CALL1 (path);
 
 	Glib::Module module(path);
 	const LADSPA_Descriptor *descriptor;
@@ -657,7 +660,7 @@ PluginManager::ladspa_discover (string path)
 
 	dfunc = (LADSPA_Descriptor_Function)func;
 
-	DEBUG_TRACE (DEBUG::PluginManager, string_compose ("LADSPA plugin found at %1\n", path));
+	A_CLASS_MSG (A_FMT ("LADSPA plugin found at {}", path));
 
 	for (uint32_t i = 0; ; ++i) {
 		/* if a ladspa plugin allocates memory here
@@ -736,7 +739,8 @@ PluginManager::ladspa_discover (string path)
 			set_tags (info->type, info->unique_id, info->category, info->name, FromPlug);
 		}
 
-		DEBUG_TRACE (DEBUG::PluginManager, string_compose ("Found LADSPA plugin, name: %1, Inputs: %2, Outputs: %3\n", info->name, info->n_inputs, info->n_outputs));
+		A_CLASS_MSG (A_FMT ("Found LADSPA plugin, name: {}, Inputs: {}, Outputs: {}", info->name,
+		                    info->n_inputs.to_string(), info->n_outputs.to_string()));
 	}
 
 // GDB WILL NOT LIKE YOU IF YOU DO THIS
@@ -815,7 +819,7 @@ PluginManager::get_ladspa_category (uint32_t plugin_id)
 void
 PluginManager::lv2_refresh ()
 {
-	DEBUG_TRACE (DEBUG::PluginManager, "LV2: refresh\n");
+	A_CLASS_CALL();
 	delete _lv2_plugin_info;
 	_lv2_plugin_info = LV2PluginInfo::discover();
 
@@ -829,7 +833,7 @@ PluginManager::lv2_refresh ()
 void
 PluginManager::au_refresh (bool cache_only)
 {
-	DEBUG_TRACE (DEBUG::PluginManager, "AU: refresh\n");
+	A_CLASS_CALL();
 
 	// disable automatic discovery in case we crash
 	bool discover_at_start = Config->get_discover_audio_units ();
@@ -873,11 +877,11 @@ static bool windows_vst_filter (const string& str, void * /*arg*/)
 int
 PluginManager::windows_vst_discover_from_path (string path, bool cache_only)
 {
+	A_CLASS_CALL2 (path, cache_only);
+
 	vector<string> plugin_objects;
 	vector<string>::iterator x;
 	int ret = 0;
-
-	DEBUG_TRACE (DEBUG::PluginManager, string_compose ("Discovering Windows VST plugins along %1\n", path));
 
 	if (Session::get_disable_all_loaded_plugins ()) {
 		info << _("Disabled WindowsVST scan (safe mode)") << endmsg;
@@ -965,7 +969,7 @@ errorout:
 int
 PluginManager::windows_vst_discover (string path, bool cache_only)
 {
-	DEBUG_TRACE (DEBUG::PluginManager, string_compose ("windows_vst_discover '%1'\n", path));
+	A_CLASS_CALL2 (path, cache_only);
 
 	if (Config->get_verbose_plugin_scan()) {
 		if (cache_only) {
@@ -983,7 +987,7 @@ PluginManager::windows_vst_discover (string path, bool cache_only)
 	// .err file scanner output etc.
 
 	if (finfos->empty()) {
-		DEBUG_TRACE (DEBUG::PluginManager, string_compose ("Cannot get Windows VST information from '%1'\n", path));
+		A_CLASS_MSG (A_FMT ("Cannot get Windows VST information from {}", path));
 		if (Config->get_verbose_plugin_scan()) {
 			info << _(" -> Cannot get Windows VST information, plugin ignored.") << endmsg;
 		}
@@ -1042,7 +1046,7 @@ PluginManager::windows_vst_discover (string path, bool cache_only)
 		}
 
 		if (!duplicate) {
-			DEBUG_TRACE (DEBUG::PluginManager, string_compose ("Windows VST plugin ID '%1'\n", info->unique_id));
+			A_CLASS_MSG (A_FMT ("Windows VST plugin ID {}", info->unique_id));
 			_windows_vst_plugin_info->push_back (info);
 			discovered++;
 			if (Config->get_verbose_plugin_scan()) {
@@ -1125,7 +1129,7 @@ PluginManager::mac_vst_discover_from_path (string path, bool cache_only)
 int
 PluginManager::mac_vst_discover (string path, bool cache_only)
 {
-	DEBUG_TRACE (DEBUG::PluginManager, string_compose ("checking apparent MacVST plugin at %1\n", path));
+	A_CLASS_CALL2 (path, cache_only);
 
 	_cancel_timeout = false;
 
@@ -1133,7 +1137,7 @@ PluginManager::mac_vst_discover (string path, bool cache_only)
 			cache_only ? VST_SCAN_CACHE_ONLY : VST_SCAN_USE_APP);
 
 	if (finfos->empty()) {
-		DEBUG_TRACE (DEBUG::PluginManager, string_compose ("Cannot get Mac VST information from '%1'\n", path));
+		A_CLASS_MSG (A_FMT ("Cannot get Mac VST information from {}", path));
 		return -1;
 	}
 
@@ -1228,7 +1232,7 @@ PluginManager::lxvst_discover_from_path (string path, bool cache_only)
 	(void) path;
 #endif
 
-	DEBUG_TRACE (DEBUG::PluginManager, string_compose ("Discovering linuxVST plugins along %1\n", path));
+	A_CLASS_MSG (A_FMT ("Discovering linuxVST plugins along {}", path));
 
 	find_files_matching_filter (plugin_objects, Config->get_plugin_path_lxvst(), lxvst_filter, 0, false, true, true);
 
@@ -1243,14 +1247,14 @@ PluginManager::lxvst_discover_from_path (string path, bool cache_only)
 int
 PluginManager::lxvst_discover (string path, bool cache_only)
 {
-	DEBUG_TRACE (DEBUG::PluginManager, string_compose ("checking apparent LXVST plugin at %1\n", path));
+	A_CLASS_CALL2 (path, cache_only);
 
 	_cancel_timeout = false;
 	vector<VSTInfo*> * finfos = vstfx_get_info_lx (const_cast<char *> (path.c_str()),
 			cache_only ? VST_SCAN_CACHE_ONLY : VST_SCAN_USE_APP);
 
 	if (finfos->empty()) {
-		DEBUG_TRACE (DEBUG::PluginManager, string_compose ("Cannot get Linux VST information from '%1'\n", path));
+		A_CLASS_MSG (A_FMT ("Cannot get Linux VST information from {}", path));
 		return -1;
 	}
 

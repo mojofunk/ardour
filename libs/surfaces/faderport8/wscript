@@ -27,11 +27,9 @@ def build(bld):
     obj.source      += [ 'faderport8_interface.cc' ]
     obj.defines      = [ 'PACKAGE="ardour_faderport8"' ]
     obj.defines     += [ 'ARDOURSURFACE_DLL_EXPORTS' ]
-    obj.includes     = [ '.' ]
-    obj.name         = 'libardour_faderport8'
+    obj.includes     = [ '.', './faderport8']
     obj.target       = 'ardour_faderport8'
-    obj.uselib       = 'GTKMM GTK GDK XML'
-    obj.use          = 'libardour libardour_cp libgtkmm2ext libpbd'
+    obj.use          = 'ARDOUR_CP GTKMM2EXT'
     obj.install_path = os.path.join(bld.env['LIBDIR'], 'surfaces')
 
     obj = bld(features = 'cxx cxxshlib')
@@ -41,10 +39,8 @@ def build(bld):
     obj.defines     += [ 'ARDOURSURFACE_DLL_EXPORTS' ]
     obj.defines     += [ 'FADERPORT16' ]
     obj.includes     = [ '.' ]
-    obj.name         = 'libardour_faderport16'
     obj.target       = 'ardour_faderport16'
-    obj.uselib       = 'GTKMM GTK GDK XML'
-    obj.use          = 'libardour libardour_cp libgtkmm2ext libpbd'
+    obj.use          = 'ARDOUR_CP GTKMM2EXT'
     obj.install_path = os.path.join(bld.env['LIBDIR'], 'surfaces')
 
 def shutdown():

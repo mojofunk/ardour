@@ -137,7 +137,7 @@ Push2Knob::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) con
 		float progress_radius = inner_progress_radius + progress_width/2.0;
 
 		//dark arc background
-		set_source_rgb (context, p2.get_color (Push2::KnobArcBackground));
+		::set_source_rgb (context, p2.get_color (Push2::KnobArcBackground));
 		context->set_line_width (progress_width);
 		context->arc (0, 0, progress_radius, start_angle, end_angle);
 		context->stroke ();
@@ -182,13 +182,13 @@ Push2Knob::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) con
 		//knob shadow
 		context->save();
 		context->translate(pointer_thickness+1, pointer_thickness+1 );
-		set_source_rgba (context, p2.get_color (Push2::KnobShadow));
+		::set_source_rgba (context, p2.get_color (Push2::KnobShadow));
 		context->arc (0, 0, center_radius-1, 0, 2.0*G_PI);
 		context->fill ();
 		context->restore();
 
 		//inner circle
-		set_source_rgb (context, p2.get_color (Push2::KnobForeground));
+		::set_source_rgb (context, p2.get_color (Push2::KnobForeground));
 		context->arc (0, 0, center_radius, 0, 2.0*G_PI);
 		context->fill ();
 
@@ -204,7 +204,7 @@ Push2Knob::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) con
 
 	//black knob border
 	context->set_line_width (border_width);
-	set_source_rgba (context, p2.get_color (Push2::KnobBorder));
+	::set_source_rgba (context, p2.get_color (Push2::KnobBorder));
 	context->set_source_rgba (0, 0, 0, 1 );
 	context->arc (0, 0, center_radius, 0, 2.0*G_PI);
 	context->stroke ();
@@ -213,7 +213,7 @@ Push2Knob::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) con
 	if (!flat) {
 		context->save();
 		context->translate(1, 1 );
-		set_source_rgba (context, p2.get_color (Push2::KnobLineShadow));
+		::set_source_rgba (context, p2.get_color (Push2::KnobLineShadow));
 		context->set_line_cap (Cairo::LINE_CAP_ROUND);
 		context->set_line_width (pointer_thickness);
 		context->move_to ((center_radius * value_x), (center_radius * value_y));
@@ -223,7 +223,7 @@ Push2Knob::render (Rect const & area, Cairo::RefPtr<Cairo::Context> context) con
 	}
 
 	//line
-	set_source_rgba (context, p2.get_color (Push2::KnobLine));
+	::set_source_rgba (context, p2.get_color (Push2::KnobLine));
 	context->set_line_cap (Cairo::LINE_CAP_ROUND);
 	context->set_line_width (pointer_thickness);
 	context->move_to ((center_radius * value_x), (center_radius * value_y));

@@ -38,6 +38,8 @@ libmidi_sources = [
         'mtc.cc',
 ]
 
+libmidi_amalgamated_sources = 'midipp.cc'
+
 def options(opt):
     autowaf.set_options(opt)
     opt.add_option('--test', action='store_true', default=False, dest='build_tests',
@@ -46,31 +48,28 @@ def options(opt):
 def configure(conf):
     conf.load('compiler_cxx')
     autowaf.configure(conf)
-    autowaf.check_pkg(conf, 'cppunit', uselib_store='CPPUNIT', atleast_version='1.12.0', mandatory=False)
-    autowaf.check_pkg(conf, 'libxml-2.0', uselib_store='XML')
-    autowaf.check_pkg(conf, 'sigc++-2.0', uselib_store='SIGCPP', atleast_version='2.0')
 
-    # Boost headers
-    autowaf.check_header(conf, 'cxx', 'boost/shared_ptr.hpp')
-    autowaf.check_header(conf, 'cxx', 'boost/weak_ptr.hpp')
+    if Options.options.build_tests:
+        autowaf.check_pkg(conf, 'cppunit', uselib_store='CPPUNIT', atleast_version='1.12.0')
+
 
 def build(bld):
+    sources = libmidi_sources
+
+    if bld.env['AMALGAMATE']:
+        sources = libmidi_amalgamated_sources
+
     # Library
-    if bld.is_defined ('INTERNAL_SHARED_LIBS'):
-        obj              = bld.shlib(features = 'cxx cxxshlib', source=libmidi_sources)
-        obj.defines      = [ 'LIBMIDIPP_DLL_EXPORTS=1' ]
-    else:
-        obj              = bld.stlib(features = 'cxx cxxstlib', source=libmidi_sources)
-        obj.cxxflags     = [ '-fPIC' ]
-        obj.defines      = []
+    obj              = bld.shlib(features = 'cxx cxxshlib', source=sources)
+    obj.defines      = [ 'LIBMIDIPP_DLL_EXPORTS=1' ]
 
     # everybody loves JACK
     obj.export_includes = ['.']
     obj.includes     = ['.', '../surfaces/control_protocol', '../ardour' ]
-    obj.name         = 'libmidipp'
+    obj.name         = 'MIDIPP'
     obj.target       = 'midipp'
-    obj.uselib       = 'GLIBMM SIGCPP XML OSX'
-    obj.use          = 'libpbd libevoral libtemporal'
+    obj.uselib       = 'OSX'
+    obj.use          = 'EVORAL'
     obj.vnum         = LIBMIDIPP_LIB_VERSION
     obj.install_path = bld.env['LIBDIR']
 
@@ -82,10 +81,10 @@ def build(bld):
                 test/testrunner.cpp
         '''
         obj.includes     = ['.', './src']
-        obj.use          = 'libmidipp'
-        obj.uselib       = 'CPPUNIT XML'
+        obj.use          = 'MIDIPP'
+        obj.uselib       = 'CPPUNIT'
         obj.target       = 'run-tests'
-        obj.name         = 'libmidipp-tests'
+        obj.name         = 'MIDIPP_TESTS'
         obj.install_path = ''
 
 def shutdown():

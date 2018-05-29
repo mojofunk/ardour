@@ -72,12 +72,12 @@ def build(bld):
             'weak_libjack.c',
             ]
     obj.includes = ['.']
-    obj.name     = 'jack_audiobackend'
+    obj.name     = 'JACK_AUDIOBACKEND'
     obj.target   = 'jack_audiobackend'
     obj.defines = ['PACKAGE="' + I18N_PACKAGE + '"',
                    'ARDOURBACKEND_DLL_EXPORTS'
                    ]
-    obj.use      = 'libardour libpbd ardouralsautil'
+    obj.use      = 'ARDOUR ARDOUR_ALSA_UTIL'
     obj.install_path  = os.path.join(bld.env['LIBDIR'], 'backends')
     if bld.env['build_target'] != 'mingw':
         obj.cxxflags = [ '-fPIC' ]
@@ -107,8 +107,6 @@ def build(bld):
     else:
         obj.defines += [ 'USE_WEAK_JACK', 'HAVE_JACK_PORT_RENAME' ]
         obj.deps = [ 'weak_libjack.def' ]
-
-    obj.uselib   += [ 'GLIBMM', 'XML' ];
 
     #
     # device discovery code in the jack backend needs ALSA

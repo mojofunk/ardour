@@ -34,6 +34,7 @@
 #include "ardour/debug.h"
 #include "ardour/disk_reader.h"
 #include "ardour/graph.h"
+#include "ardour/logging.h"
 #include "ardour/port.h"
 #include "ardour/process_thread.h"
 #include "ardour/scene_changer.h"
@@ -59,6 +60,8 @@ using namespace std;
 void
 Session::process (pframes_t nframes)
 {
+	A_LOG_CALL1 (LOG::ProcessThreads, nframes);
+
 	samplepos_t transport_at_start = _transport_sample;
 
 	_silent = false;
@@ -132,6 +135,8 @@ Session::fail_roll (pframes_t nframes)
 int
 Session::no_roll (pframes_t nframes)
 {
+	A_LOG_CALL1 (LOG::ProcessThreads, nframes);
+
 	PT_TIMING_CHECK (4);
 
 	samplepos_t end_sample = _transport_sample + nframes; // FIXME: varispeed + no_roll ??
@@ -151,7 +156,6 @@ Session::no_roll (pframes_t nframes)
 	}
 
 	if (_process_graph) {
-		DEBUG_TRACE(DEBUG::ProcessThreads,"calling graph/no-roll\n");
 		_process_graph->routes_no_roll( nframes, _transport_sample, end_sample, non_realtime_work_pending(), declick);
 	} else {
 		PT_TIMING_CHECK (10);
@@ -182,6 +186,8 @@ Session::no_roll (pframes_t nframes)
 int
 Session::process_routes (pframes_t nframes, bool& need_butler)
 {
+	A_LOG_CALL1 (LOG::ProcessThreads, nframes);
+
 	int declick = (config.get_use_transport_fades() ? get_transport_declick_required() : false);
 	boost::shared_ptr<RouteList> r = routes.reader ();
 
@@ -196,7 +202,6 @@ Session::process_routes (pframes_t nframes, bool& need_butler)
 	_global_locate_pending = locate_pending ();
 
 	if (_process_graph) {
-		DEBUG_TRACE(DEBUG::ProcessThreads,"calling graph/process-routes\n");
 		if (_process_graph->process_routes (nframes, start_sample, end_sample, declick, need_butler) < 0) {
 			stop_transport ();
 			return -1;
@@ -261,6 +266,8 @@ Session::get_track_statistics ()
 void
 Session::process_with_events (pframes_t nframes)
 {
+	A_LOG_CALL1 (LOG::ProcessThreads, nframes);
+
 	PT_TIMING_CHECK (3);
 
 	SessionEvent*  ev;
@@ -860,6 +867,8 @@ Session::track_slave_state (float slave_speed, samplepos_t slave_transport_sampl
 void
 Session::process_without_events (pframes_t nframes)
 {
+	A_LOG_CALL1 (LOG::ProcessThreads, nframes);
+
 	bool session_needs_butler = false;
 	samplecnt_t samples_moved;
 
@@ -934,6 +943,8 @@ Session::process_without_events (pframes_t nframes)
 void
 Session::process_audition (pframes_t nframes)
 {
+	A_LOG_CALL1 (LOG::ProcessThreads, nframes);
+
 	SessionEvent* ev;
 	boost::shared_ptr<RouteList> r = routes.reader ();
 
@@ -1028,6 +1039,8 @@ Session::maybe_sync_start (pframes_t & nframes)
 void
 Session::queue_event (SessionEvent* ev)
 {
+	A_LOG_CALL (LOG::SessionEvents);
+
 	if (_state_of_the_state & Deletion) {
 		return;
 	} else if (_state_of_the_state & Loading) {
@@ -1041,6 +1054,8 @@ Session::queue_event (SessionEvent* ev)
 void
 Session::set_next_event ()
 {
+	A_LOG_CALL (LOG::SessionEvents);
+
 	if (events.empty()) {
 		next_event = events.end();
 		return;
@@ -1064,6 +1079,8 @@ Session::set_next_event ()
 void
 Session::process_event (SessionEvent* ev)
 {
+	A_LOG_CALL2 (LOG::SessionEvents, enum_2_string(ev->type), _transport_sample);
+
 	bool remove = true;
 	bool del = true;
 
@@ -1083,8 +1100,6 @@ Session::process_event (SessionEvent* ev)
 			return;
 		}
 	}
-
-	DEBUG_TRACE (DEBUG::SessionEvents, string_compose ("Processing event: %1 @ %2\n", enum_2_string (ev->type), _transport_sample));
 
 	switch (ev->type) {
 	case SessionEvent::SetLoop:

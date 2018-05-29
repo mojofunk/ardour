@@ -162,6 +162,9 @@ public: // methods
 	{
 		return (sample_start <= start && end <= sample_end);
 	}
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourWaveView::WaveViewProperties);
 };
 
 struct WaveViewImage {
@@ -195,6 +198,9 @@ public: // methods
 		// 4 = bytes per FORMAT_ARGB32 pixel
 		return props.height * props.get_width_pixels() * 4;
 	}
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourWaveView::WaveViewImage);
 };
 
 struct WaveViewDrawRequest
@@ -215,6 +221,9 @@ public:
 
 private:
 	gint stop; /* intended for atomic access */
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourWaveView::WaveViewDrawRequest);
 };
 
 class WaveViewCache;
@@ -250,6 +259,9 @@ private:
 
 	typedef std::list<boost::shared_ptr<WaveViewImage> > ImageCache;
 	ImageCache _cached_images;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourWaveView::WaveViewCacheGroup);
 };
 
 class WaveViewCache
@@ -286,6 +298,9 @@ private:
 	void decrease_size (uint64_t bytes);
 
 	bool full () { return image_cache_size > _image_cache_threshold; }
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourWaveView::WaveViewCache);
 };
 
 class WaveViewDrawRequestQueue
@@ -306,6 +321,9 @@ private:
 
 	typedef std::deque<boost::shared_ptr<WaveViewDrawRequest> > DrawRequestQueueType;
 	DrawRequestQueueType _queue;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourWaveView::WaveViewDrawRequestQueue);
 };
 
 class WaveViewDrawingThread
@@ -322,6 +340,9 @@ private:
 private:
 	Glib::Threads::Thread* _thread;
 	gint _quit;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourWaveView::WaveViewDrawRequestQueue);
 };
 
 class WaveViewThreads {
@@ -357,8 +378,14 @@ private:
 
 	WaveViewThreadList _threads;
 	WaveViewDrawRequestQueue _request_queue;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ArdourWaveView::WaveViewThreads);
 };
 
+namespace LOG {
+	A_DECLARE_LOG_CATEGORY (WaveViewProperties);
+};
 
 } /* namespace */
 

@@ -27,6 +27,7 @@ def build(bld):
                includes = ['.'],
                export_includes = ['.'],
                target = 'liblua',
+               name = 'LUA',
                uselib = [ 'SIGCPP', 'DL' ]
                )
     autowaf.ensure_visible_symbols (obj, True)

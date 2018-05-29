@@ -30,6 +30,7 @@
 #include <glibmm/threads.h>
 
 #include "pbd/libpbd_visibility.h"
+#include "pbd/dev_tools.h"
 
 namespace PBD
 {
@@ -71,6 +72,8 @@ public:
 		void unref ()  { (void) g_atomic_int_dec_and_test (&_ref); }
 		bool in_use () { return g_atomic_int_get (&_ref) > 0; }
 		int  use_count () { return g_atomic_int_get (&_ref); }
+
+		A_DECLARE_CLASS_MEMBERS (InvalidationRecord);
 	};
 
 	static void* invalidate_request (void* data);
@@ -86,6 +89,8 @@ public:
 				invalidation->unref ();
 			}
 		}
+
+		A_DECLARE_CLASS_MEMBERS (BaseRequestObject);
 	};
 
 	virtual void call_slot (InvalidationRecord*, const boost::function<void()>&) = 0;
@@ -133,6 +138,8 @@ private:
 	};
 	typedef std::vector<RequestBufferSupplier> RequestBufferSuppliers;
 	static RequestBufferSuppliers request_buffer_suppliers;
+
+	A_DECLARE_CLASS_MEMBERS (EventLoop);
 };
 
 }

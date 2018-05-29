@@ -45,6 +45,7 @@
 #include "ardour/boost_debug.h"
 #include "ardour/buffer_set.h"
 #include "ardour/debug.h"
+#include "ardour/logging.h"
 #include "ardour/pannable.h"
 #include "ardour/panner.h"
 #include "ardour/panner_manager.h"
@@ -60,6 +61,8 @@
 using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::PannerShell);
 
 PannerShell::PannerShell (string name, Session& s, boost::shared_ptr<Pannable> p, bool is_send)
 	: SessionObject (s, name)
@@ -342,6 +345,9 @@ PannerShell::distribute_no_automation (BufferSet& inbufs, BufferSet& outbufs, pf
 void
 PannerShell::run (BufferSet& inbufs, BufferSet& outbufs, samplepos_t start_sample, samplepos_t end_sample, pframes_t nframes)
 {
+	A_CLASS_CALL5 (inbufs.count ().n_audio (), outbufs.count ().n_audio (), start_sample,
+	               end_sample, nframes);
+
 	if (inbufs.count().n_audio() == 0) {
 		/* Input has no audio buffers (e.g. Aux Send in a MIDI track at a
 		   point with no audio because there is no preceding instrument)

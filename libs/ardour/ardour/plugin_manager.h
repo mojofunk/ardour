@@ -224,6 +224,9 @@ private:
 
 	static PluginManager* _instance; // singleton
 	PluginManager ();
+
+private:
+	A_DECLARE_CLASS_MEMBERS(ARDOUR::PluginManager);
 };
 
 } /* namespace ARDOUR */

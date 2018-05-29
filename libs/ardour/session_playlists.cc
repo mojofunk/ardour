@@ -22,7 +22,10 @@
 #include "ardour/playlist.h"
 #include "ardour/playlist_factory.h"
 #include "ardour/session_playlists.h"
+#include "ardour/source.h"
 #include "ardour/track.h"
+#include "ardour/logging.h"
+
 #include "pbd/i18n.h"
 #include "pbd/compose.h"
 #include "pbd/xml++.h"
@@ -257,6 +260,8 @@ SessionPlaylists::find_equivalent_playlist_regions (boost::shared_ptr<Region> re
 uint32_t
 SessionPlaylists::source_use_count (boost::shared_ptr<const Source> src) const
 {
+	A_LOG_CLASS_CALL1 (LOG::SessionCleanup, src->name ());
+
 	uint32_t count = 0;
 
 	/* XXXX this can go wildly wrong in the presence of circular references

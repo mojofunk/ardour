@@ -76,6 +76,9 @@ private:
 
 	double _ratio;
 	samplecnt_t src_buffer_size;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::SrcFileSource);
 };
 
 } // namespace ARDOUR

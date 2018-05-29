@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from waflib.extras import autowaf as autowaf
+from waflib import Options
 import os
 
 # Version of this package (even if built as a child)
@@ -24,24 +25,21 @@ out = 'build'
 
 def options(opt):
     autowaf.set_options(opt)
+    opt.add_option('--test', action='store_true', default=False, dest='build_tests',
+                    help="Build unit tests")
 
 def configure(conf):
     conf.load('compiler_cxx')
     autowaf.configure(conf)
 
-    autowaf.check_pkg(conf, 'cppunit', uselib_store='CPPUNIT', atleast_version='1.12.0', mandatory=False)
-    autowaf.check_pkg(conf, 'sigc++-2.0', uselib_store='SIGCPP', atleast_version='2.0', mandatory=False)
-    autowaf.check_pkg(conf, 'glib-2.0', uselib_store='GLIB', atleast_version='2.2', mandatory=False)
-    autowaf.check_pkg(conf, 'glibmm-2.4', uselib_store='GLIBMM', atleast_version='2.14.0', mandatory=False)
-    autowaf.check_pkg(conf, 'gthread-2.0', uselib_store='GTHREAD', atleast_version='2.14.0', mandatory=False)
     autowaf.check_pkg(conf, 'samplerate', uselib_store='SAMPLERATE', atleast_version='0.1.7', mandatory=False)
     autowaf.check_pkg(conf, 'sndfile', uselib_store='SNDFILE', atleast_version='1.0.18', mandatory=False)
     autowaf.check_pkg(conf, 'fftw3f', uselib_store='FFTW3F', mandatory=True)
     autowaf.check_pkg(conf, 'fftw3f', uselib_store='FFTW35F', atleast_version='3.3.5', mandatory=False)
+    autowaf.check_pkg(conf, 'vamp-hostsdk', uselib_store='VAMPHOSTSDK', atleast_version='2.1', mandatory=True)
 
-    # Boost headers
-    autowaf.check_header(conf, 'cxx', 'boost/shared_ptr.hpp')
-    autowaf.check_header(conf, 'cxx', 'boost/format.hpp')
+    if Options.options.build_tests:
+        autowaf.check_pkg(conf, 'cppunit', uselib_store='CPPUNIT', atleast_version='1.12.0')
 
 def build(bld):
 
@@ -72,22 +70,15 @@ def build(bld):
     if bld.is_defined('HAVE_SAMPLERATE'):
         audiographer_sources += [ 'src/general/sr_converter.cc' ]
 
-    if bld.is_defined ('INTERNAL_SHARED_LIBS'):
-        audiographer              = bld.shlib(features = 'c cxx cshlib cxxshlib', source=audiographer_sources)
-        # macros for this shared library
-        audiographer.defines      = [ 'LIBAUDIOGRAPHER_DLL_EXPORTS=1' ]
-    else:
-        audiographer              = bld.stlib(features = 'c cxx cstlib cxxstlib', source=audiographer_sources)
-        audiographer.cxxflags     = [ '-fPIC' ]
-        audiographer.cflags       = [ '-fPIC' ]
-        audiographer.defines      = []
+    audiographer              = bld.shlib(features = 'c cxx cshlib cxxshlib', source=audiographer_sources)
+    # macros for this shared library
+    audiographer.defines      = [ 'LIBAUDIOGRAPHER_DLL_EXPORTS=1' ]
 
-    audiographer.name           = 'libaudiographer'
+    audiographer.name           = 'AUDIOGRAPHER'
     audiographer.target         = 'audiographer'
     audiographer.export_includes = ['.', './src']
     audiographer.includes       = ['.', './src','../ardour','../temporal','../evoral']
-    audiographer.uselib         = 'GLIB GLIBMM GTHREAD SAMPLERATE SNDFILE FFTW3F VAMPSDK VAMPHOSTSDK XML'
-    audiographer.use            = 'libpbd'
+    audiographer.use            = ['PBD','VAMPHOSTSDK','FFTW3F','SAMPLERATE','SNDFILE']
     audiographer.vnum           = AUDIOGRAPHER_LIB_VERSION
     audiographer.install_path   = bld.env['LIBDIR']
 
@@ -124,8 +115,8 @@ def build(bld):
                     tests/general/sr_converter_test.cc
             '''
 
-        obj.use          = 'libaudiographer'
-        obj.uselib       = 'CPPUNIT GLIBMM SAMPLERATE SNDFILE FFTW3F VAMPSDK VAMPHOSTSDK'
+        obj.use          = 'AUDIOGRAPHER'
+        obj.uselib       = ['CPPUNIT']
         obj.target       = 'run-tests'
         obj.install_path = ''
 

@@ -103,7 +103,7 @@ int
 AudioAnalyser::analyse (const string& path, Readable* src, uint32_t channel)
 {
 	stringstream outss;
-	Plugin::FeatureSet features;
+	Vamp::Plugin::FeatureSet features;
 	int ret = -1;
 	bool done = false;
 	Sample* data = 0;

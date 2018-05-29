@@ -211,6 +211,9 @@ class LIBARDOUR_API PortManager
 	void fill_midi_port_info_locked ();
 
 	void filter_midi_ports (std::vector<std::string>&, MidiPortFlags, MidiPortFlags);
+
+private:
+	A_DECLARE_CLASS_MEMBERS(ARDOUR::PortManager);
 };
 
 

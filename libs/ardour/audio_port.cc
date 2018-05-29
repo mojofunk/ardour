@@ -30,6 +30,10 @@
 using namespace ARDOUR;
 using namespace std;
 
+namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::AudioPort);
+
 #define port_engine AudioEngine::instance()->port_engine()
 
 AudioPort::AudioPort (const std::string& name, PortFlags flags)
@@ -51,6 +55,8 @@ AudioPort::~AudioPort ()
 void
 AudioPort::cycle_start (pframes_t nframes)
 {
+	A_CLASS_CALL1 (nframes);
+
 	/* caller must hold process lock */
 	Port::cycle_start (nframes);
 
@@ -79,6 +85,8 @@ AudioPort::cycle_start (pframes_t nframes)
 void
 AudioPort::cycle_end (pframes_t nframes)
 {
+	A_CLASS_CALL1 (nframes);
+
 	if (sends_output() && !_buffer->written() && _port_handle) {
 		if (!_buffer->data (0)) {
 			get_audio_buffer (nframes);
@@ -137,3 +145,5 @@ AudioPort::engine_get_whole_audio_buffer ()
 	assert (_port_handle);
 	return (Sample *) port_engine.get_buffer (_port_handle, _cycle_nframes);
 }
+
+} // namespace ARDOUR

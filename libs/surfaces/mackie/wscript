@@ -39,10 +39,9 @@ def build(bld):
     obj.defines      = [ 'PACKAGE="ardour_mackie"' ]
     obj.defines     += [ 'ARDOURSURFACE_DLL_EXPORTS' ]
     obj.includes     = [ '.' ]
-    obj.name         = 'libardour_mcp'
+    obj.name         = 'ARDOUR_MCP'
     obj.target       = 'ardour_mcp'
-    obj.uselib       = 'GTKMM XML'
-    obj.use          = 'libardour libardour_cp libgtkmm2ext'
+    obj.use          = 'ARDOUR_CP GTKMM2EXT'
     obj.install_path = os.path.join(bld.env['LIBDIR'], 'surfaces')
 
 def shutdown():

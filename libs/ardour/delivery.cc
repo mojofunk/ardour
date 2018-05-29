@@ -28,6 +28,7 @@
 #include "ardour/debug.h"
 #include "ardour/delivery.h"
 #include "ardour/io.h"
+#include "ardour/logging.h"
 #include "ardour/mute_master.h"
 #include "ardour/pannable.h"
 #include "ardour/panner_shell.h"
@@ -45,6 +46,8 @@ namespace ARDOUR { class Panner; }
 using namespace std;
 using namespace PBD;
 using namespace ARDOUR;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::Delivery);
 
 PBD::Signal0<void>            Delivery::PannersLegal;
 bool                          Delivery::panners_legal = false;
@@ -101,8 +104,6 @@ Delivery::Delivery (Session& s, boost::shared_ptr<Pannable> pannable, boost::sha
 
 Delivery::~Delivery()
 {
-	DEBUG_TRACE (DEBUG::Destruction, string_compose ("delivery %1 destructor\n", _name));
-
 	/* this object should vanish from any signal callback lists
 	   that it is on before we get any further. The full qualification
 	   of the method name is not necessary, but is here to make it
@@ -134,6 +135,8 @@ Delivery::display_name () const
 bool
 Delivery::can_support_io_configuration (const ChanCount& in, ChanCount& out)
 {
+	A_CLASS_CALL ();
+
 	if (_role == Main) {
 
 		/* the out buffers will be set to point to the port output buffers
@@ -187,6 +190,8 @@ Delivery::can_support_io_configuration (const ChanCount& in, ChanCount& out)
 bool
 Delivery::configure_io (ChanCount in, ChanCount out)
 {
+	A_CLASS_CALL ();
+
 #ifndef NDEBUG
 	bool r = AudioEngine::instance()->process_lock().trylock();
 	assert (!r && "trylock inside Delivery::configure_io");
@@ -235,6 +240,8 @@ Delivery::configure_io (ChanCount in, ChanCount out)
 void
 Delivery::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_sample, double /*speed*/, pframes_t nframes, bool result_required)
 {
+	A_CLASS_CALL4 (start_sample, end_sample, nframes, result_required);
+
 	assert (_output);
 
 	PortSet& ports (_output->ports());
@@ -530,6 +537,8 @@ Delivery::realtime_locate ()
 gain_t
 Delivery::target_gain ()
 {
+	A_CLASS_CALL ();
+
 	/* if we've been requested to deactivate, our target gain is zero */
 
 	if (!_pending_active) {

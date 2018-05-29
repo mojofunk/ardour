@@ -647,7 +647,7 @@ SVAModifier::operator () (HSV& hsv)  const
 	return r;
 }
 
-Color
+Gtkmm2ext::Color
 Gtkmm2ext::color_at_alpha (Gtkmm2ext::Color c, double a)
 {
 	double r, g, b, unused;
@@ -656,7 +656,7 @@ Gtkmm2ext::color_at_alpha (Gtkmm2ext::Color c, double a)
 }
 
 void
-Gtkmm2ext::set_source_rgba (Cairo::RefPtr<Cairo::Context> context, Color color)
+Gtkmm2ext::set_source_rgba (::Cairo::RefPtr<::Cairo::Context> context, Gtkmm2ext::Color color)
 {
 	context->set_source_rgba (
 		((color >> 24) & 0xff) / 255.0,
@@ -667,7 +667,7 @@ Gtkmm2ext::set_source_rgba (Cairo::RefPtr<Cairo::Context> context, Color color)
 }
 
 void
-Gtkmm2ext::set_source_rgb_a (Cairo::RefPtr<Cairo::Context> context, Color color, float alpha)
+Gtkmm2ext::set_source_rgb_a (::Cairo::RefPtr<::Cairo::Context> context, Gtkmm2ext::Color color, float alpha)
 {
 	context->set_source_rgba (
 		((color >> 24) & 0xff) / 255.0,

@@ -97,6 +97,7 @@
 #include "ardour/directory_names.h"
 #include "ardour/event_type_map.h"
 #include "ardour/filesystem_paths.h"
+#include "ardour/logging.h"
 #include "ardour/midi_region.h"
 #include "ardour/midi_ui.h"
 #include "ardour/midiport_manager.h"
@@ -440,8 +441,6 @@ ARDOUR::init (bool use_windows_vst, bool try_optimization, const char* localedir
 	}
 #endif
 
-	if (!PBD::init()) return false;
-
 #ifdef ENABLE_NLS
 	(void) bindtextdomain(PACKAGE, localedir);
 	(void) bind_textdomain_codeset (PACKAGE, "UTF-8");
@@ -582,6 +581,13 @@ ARDOUR::init (bool use_windows_vst, bool try_optimization, const char* localedir
 	reserved_io_names[_("FaderPort8 Send")] = false;
 	reserved_io_names[_("FaderPort16 Recv")] = false;
 	reserved_io_names[_("FaderPort16 Send")] = false;
+
+#ifdef WITH_DEV_TOOLS
+	adt::Log::add_preset (LOG::ProcessingPreset::create ());
+	adt::Log::add_preset (LOG::IOPreset::create ());
+	adt::Log::add_preset (LOG::ProcessorsPreset::create ());
+	adt::Log::add_preset (LOG::PluginsPreset::create ());
+#endif
 
 	libardour_initialized = true;
 

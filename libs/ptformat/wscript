@@ -32,9 +32,9 @@ def build(bld):
     obj.source = 'ptfformat.cc'
     obj.export_includes = ['.']
     obj.includes     = ['.']
-    obj.name         = 'libptformat'
+    obj.name         = 'PT_FORMAT'
     obj.target       = 'ptformat'
-    obj.use          = 'libardour'
+    obj.use          = 'ARDOUR'
     autowaf.ensure_visible_symbols (obj, True)
     obj.vnum         = LIBPTFORMAT_LIB_VERSION
     obj.install_path = bld.env['LIBDIR']

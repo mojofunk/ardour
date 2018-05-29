@@ -24,7 +24,7 @@
 
 #include "pbd/i18n.h"
 
-static const char* state_node_name = "Channels";
+static const char* chan_count_state_node_name = "Channels";
 
 using namespace std;
 
@@ -38,7 +38,7 @@ ChanCount::ChanCount(const XMLNode& node)
 	reset();
 	XMLNodeConstIterator iter = node.children().begin();
 	for ( ; iter != node.children().end(); ++iter) {
-		if ((*iter)->name() == X_(state_node_name)) {
+		if ((*iter)->name() == X_(chan_count_state_node_name)) {
 			DataType type(DataType::NIL);
 			uint32_t count;
 			(*iter)->get_property("type", type);
@@ -48,6 +48,13 @@ ChanCount::ChanCount(const XMLNode& node)
 	}
 }
 
+std::string
+ChanCount::to_string () const
+{
+	return std::string ("AUDIO=") + PBD::to_string (n_audio ()) +
+	       ":MIDI=" + PBD::to_string (n_midi ());
+}
+
 XMLNode*
 ChanCount::state(const std::string& name) const
 {
@@ -55,7 +62,7 @@ ChanCount::state(const std::string& name) const
 	for (DataType::iterator t = DataType::begin(); t != DataType::end(); ++t) {
 		uint32_t count = get(*t);
 		if (count > 0) {
-			XMLNode* n = new XMLNode(X_(state_node_name));
+			XMLNode* n = new XMLNode(X_(chan_count_state_node_name));
 			n->set_property("type", *t);
 			n->set_property("count", count);
 			node->add_child_nocopy(*n);
@@ -70,5 +77,5 @@ const ChanCount ChanCount::ZERO     = ChanCount();
 } // namespace ARDOUR
 
 std::ostream& operator<<(std::ostream& o, const ARDOUR::ChanCount& c) {
-	return o << "AUDIO=" << c.n_audio() << ":MIDI=" << c.n_midi();
+	return o << c.to_string();
 }

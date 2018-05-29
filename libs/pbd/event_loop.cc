@@ -22,7 +22,7 @@
 #include <pthread.h>
 
 #include "pbd/compose.h"
-#include "pbd/debug.h"
+#include "pbd/dev_tools.h"
 #include "pbd/event_loop.h"
 #include "pbd/error.h"
 #include "pbd/stacktrace.h"
@@ -31,6 +31,16 @@
 
 using namespace PBD;
 using namespace std;
+
+namespace PBD {
+
+A_DEFINE_CLASS_AS_MEMBERS (EventLoop, "PBD::EventLoop");
+A_DEFINE_CLASS_AS_MEMBERS (EventLoop::BaseRequestObject, "PBD::EventLoop::BaseRequestObject");
+A_DEFINE_CLASS_AS_MEMBERS (EventLoop::InvalidationRecord, "PBD::EventLoop::InvalidationRecord");
+
+namespace LOG {
+A_DEFINE_LOG_CATEGORY (EventLoop, "PBD::EventLoop");
+}
 
 static void do_not_delete_the_loop_pointer (void*) { }
 
@@ -99,7 +109,7 @@ EventLoop::invalidate_request (void* data)
 	 */
 
 	if (ir->event_loop) {
-		DEBUG_TRACE (PBD::DEBUG::AbstractUI, string_compose ("%1: EventLoop::invalidate_request %2\n", ir->event_loop, ir));
+		A_LOG_DATA2 (LOG::EventLoop, ir->event_loop, ir);
 		Glib::Threads::Mutex::Lock lm (ir->event_loop->slot_invalidation_mutex());
 		ir->invalidate ();
 		ir->event_loop->trash.push_back(ir);
@@ -111,6 +121,8 @@ EventLoop::invalidate_request (void* data)
 vector<EventLoop::ThreadBufferMapping>
 EventLoop::get_request_buffers_for_target_thread (const std::string& target_thread)
 {
+	A_LOG_CALL (LOG::EventLoop);
+
 	vector<ThreadBufferMapping> ret;
 	Glib::Threads::RWLock::WriterLock lm (thread_buffer_requests_lock);
 
@@ -122,7 +134,8 @@ EventLoop::get_request_buffers_for_target_thread (const std::string& target_thre
 		}
 	}
 
-	DEBUG_TRACE (PBD::DEBUG::EventLoop, string_compose ("for thread \"%1\", found %2 request buffers\n", target_thread, ret.size()));
+	A_LOG_MSG (LOG::EventLoop,
+	           A_FMT ("Found {} request buffers for thread: {}", ret.size (), target_thread));
 
 	return ret;
 }
@@ -145,6 +158,8 @@ EventLoop::register_request_buffer_factory (const string& target_thread_name,
 void
 EventLoop::pre_register (const string& emitting_thread_name, uint32_t num_requests)
 {
+	A_LOG_CALL2 (LOG::EventLoop, emitting_thread_name, num_requests);
+
 	/* Threads that need to emit signals "towards" other threads, but with
 	   RT safe behavior may be created before the receiving threads
 	   exist. This makes it impossible for them to use the
@@ -224,8 +239,12 @@ EventLoop::pre_register (const string& emitting_thread_name, uint32_t num_reques
 		 */
 
 		thread_buffer_requests[key] = mapping;
-		DEBUG_TRACE (PBD::DEBUG::EventLoop, string_compose ("pre-registered request buffer for \"%1\" to send to \"%2\", buffer @ %3 (key was %4)\n",
-		                                                    emitting_thread_name, trs->name, mapping.request_buffer, key));
+
+		A_LOG_MSG (
+		    LOG::EventLoop,
+		    A_FMT ("pre-registered request buffer for thread: {} to send to thread: {}, buffer @ "
+		           "{} (key was {})",
+		           emitting_thread_name, trs->name, mapping.request_buffer, key));
 	}
 }
 
@@ -241,3 +260,5 @@ EventLoop::remove_request_buffer_from_map (void* ptr)
 		}
 	}
 }
+
+} // namespace PBD

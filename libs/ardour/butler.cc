@@ -33,6 +33,7 @@
 #include "ardour/disk_io.h"
 #include "ardour/disk_reader.h"
 #include "ardour/io.h"
+#include "ardour/logging.h"
 #include "ardour/session.h"
 #include "ardour/track.h"
 #include "ardour/auditioner.h"
@@ -42,6 +43,8 @@
 using namespace PBD;
 
 namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS(ARDOUR::Butler);
 
 Butler::Butler(Session& s)
 	: SessionHandleRef (s)
@@ -146,9 +149,10 @@ Butler::start_thread()
 void
 Butler::terminate_thread ()
 {
+	A_CLASS_CALL ();
+
 	if (have_thread) {
 		void* status;
-                DEBUG_TRACE (DEBUG::Butler, string_compose ("%1: ask butler to quit @ %2\n", DEBUG_THREAD_SELF, g_get_monotonic_time()));
 		queue_request (Request::Quit);
 		pthread_join (thread, &status);
 	}
@@ -171,10 +175,10 @@ Butler::thread_work ()
 	RouteList::iterator i;
 
 	while (true) {
-		DEBUG_TRACE (DEBUG::Butler, string_compose ("%1 butler main loop, disk work outstanding ? %2 @ %3\n", DEBUG_THREAD_SELF, disk_work_outstanding, g_get_monotonic_time()));
+		A_CLASS_MSG (A_FMT ("Butler main loop, disk work outstanding ? {}", disk_work_outstanding));
 
-		if(!disk_work_outstanding) {
-			DEBUG_TRACE (DEBUG::Butler, string_compose ("%1 butler waits for requests @ %2\n", DEBUG_THREAD_SELF, g_get_monotonic_time()));
+		if (!disk_work_outstanding) {
+			A_CLASS_MSG ("Butler waits for requests");
 
 			char msg;
 			/* empty the pipe of all current requests */
@@ -183,18 +187,18 @@ Butler::thread_work ()
 				switch (req) {
 
 					case Request::Run:
-						DEBUG_TRACE (DEBUG::Butler, string_compose ("%1: butler asked to run @ %2\n", DEBUG_THREAD_SELF, g_get_monotonic_time()));
-						should_run = true;
+					  A_CLASS_MSG ("Butler asked to run");
+					  should_run = true;
 						break;
 
 					case Request::Pause:
-						DEBUG_TRACE (DEBUG::Butler, string_compose ("%1: butler asked to pause @ %2\n", DEBUG_THREAD_SELF, g_get_monotonic_time()));
-						should_run = false;
+					  A_CLASS_MSG ("Butler asked to pause");
+					  should_run = false;
 						break;
 
 					case Request::Quit:
-						DEBUG_TRACE (DEBUG::Butler, string_compose ("%1: butler asked to quit @ %2\n", DEBUG_THREAD_SELF, g_get_monotonic_time()));
-						return 0;
+					  A_CLASS_MSG ("Butler asked to quit");
+					  return 0;
 						abort(); /*NOTREACHED*/
 						break;
 
@@ -206,19 +210,18 @@ Butler::thread_work ()
 
 
 	  restart:
-		DEBUG_TRACE (DEBUG::Butler, "at restart for disk work\n");
+		A_CLASS_MSG ("At restart for disk work");
 		disk_work_outstanding = false;
 
 		if (transport_work_requested()) {
-			DEBUG_TRACE (DEBUG::Butler, string_compose ("do transport work @ %1\n", g_get_monotonic_time()));
+			A_CLASS_DURATION ("Do transport work");
 			_session.butler_transport_work ();
-			DEBUG_TRACE (DEBUG::Butler, string_compose ("\ttransport work complete @ %1, twr = %2\n", g_get_monotonic_time(), transport_work_requested()));
 		}
 
 		sampleoffset_t audition_seek;
 		if (should_run && _session.is_auditioning() && (audition_seek = _session.the_auditioner()->seek_sample()) >= 0) {
 			boost::shared_ptr<Track> tr = boost::dynamic_pointer_cast<Track> (_session.the_auditioner());
-			DEBUG_TRACE (DEBUG::Butler, "seek the auditioner\n");
+			A_CLASS_DURATION ("Seek the auditioner");
 			tr->seek(audition_seek);
 			tr->do_refill ();
 			_session.the_auditioner()->seek_response(audition_seek);
@@ -243,17 +246,20 @@ Butler::thread_work ()
 
 			if (io && !io->active()) {
 				/* don't read inactive tracks */
-				// DEBUG_TRACE (DEBUG::Butler, string_compose ("butler skips inactive track %1\n", tr->name()));
+				A_CLASS_MSG (A_FMT ("Butler skips inactive track {}", tr->name ()));
 				continue;
 			}
-			// DEBUG_TRACE (DEBUG::Butler, string_compose ("butler refills %1, playback load = %2\n", tr->name(), tr->playback_buffer_load()));
+
+			A_CLASS_DURATION (A_FMT ("Butler refills {}, playback load = {}", tr->name (),
+			                         tr->playback_buffer_load ()));
+
 			switch (tr->do_refill ()) {
 			case 0:
-				//DEBUG_TRACE (DEBUG::Butler, string_compose ("\ttrack refill done %1\n", tr->name()));
+				A_CLASS_MSG (A_FMT ("Track refill done {}", tr->name ()));
 				break;
 
 			case 1:
-				DEBUG_TRACE (DEBUG::Butler, string_compose ("\ttrack refill unfinished %1\n", tr->name()));
+				A_CLASS_MSG (A_FMT ("Track refill unfinished {}", tr->name ()));
 				disk_work_outstanding = true;
 				break;
 
@@ -271,7 +277,7 @@ Butler::thread_work ()
 		}
 
 		if (!err && transport_work_requested()) {
-			DEBUG_TRACE (DEBUG::Butler, "transport work requested during refill, back to restart\n");
+			A_CLASS_MSG ("transport work requested during refill, back to restart");
 			goto restart;
 		}
 
@@ -281,12 +287,12 @@ Butler::thread_work ()
 			/* stop the transport and try to catch as much possible
 			   captured state as we can.
 			*/
-			DEBUG_TRACE (DEBUG::Butler, "error occurred during recording - stop transport\n");
+			A_CLASS_MSG ("error occurred during recording - stop transport");
 			_session.request_stop ();
 		}
 
 		if (!err && transport_work_requested()) {
-			DEBUG_TRACE (DEBUG::Butler, "transport work requested during flush, back to restart\n");
+			A_CLASS_MSG ("transport work requested during flush, back to restart");
 			goto restart;
 		}
 
@@ -298,16 +304,18 @@ Butler::thread_work ()
 			Glib::Threads::Mutex::Lock lm (request_lock);
 
 			if (should_run && (disk_work_outstanding || transport_work_requested())) {
-                                DEBUG_TRACE (DEBUG::Butler, string_compose ("at end, should run %1 disk work %2 transport work %3 ... goto restart\n",
-                                                                            should_run, disk_work_outstanding, transport_work_requested()));
+				A_CLASS_MSG (A_FMT ("at end, should run {} disk work {} transport "
+				                    "work {} ... goto restart",
+				                    should_run, disk_work_outstanding, transport_work_requested ()));
 				goto restart;
 			}
 
-                        DEBUG_TRACE (DEBUG::Butler, string_compose ("%1: butler signals pause @ %2\n", DEBUG_THREAD_SELF, g_get_monotonic_time()));
+			A_CLASS_MSG ("Butler signals pause @ %2");
+
 			paused.signal();
 		}
 
-		DEBUG_TRACE (DEBUG::Butler, "butler emptying pool trash\n");
+		A_CLASS_MSG ("Butler emptying pool trash");
 		empty_pool_trash ();
 	}
 
@@ -334,15 +342,17 @@ Butler::flush_tracks_to_disk_normal (boost::shared_ptr<RouteList> rl, uint32_t& 
 
 		int ret;
 
-		// DEBUG_TRACE (DEBUG::Butler, string_compose ("butler flushes track %1 capture load %2\n", tr->name(), tr->capture_buffer_load()));
+		A_CLASS_MSG (
+		    A_FMT ("Butler flushes track {} capture load {}", tr->name (), tr->capture_buffer_load ()));
+
 		ret = tr->do_flush (ButlerContext, false);
 		switch (ret) {
 		case 0:
-			//DEBUG_TRACE (DEBUG::Butler, string_compose ("\tflush complete for %1\n", tr->name()));
+			A_CLASS_MSG (A_FMT ("flush complete for {}", tr->name ()));
 			break;
 
 		case 1:
-			//DEBUG_TRACE (DEBUG::Butler, string_compose ("\tflush not finished for %1\n", tr->name()));
+			A_CLASS_MSG (A_FMT ("flush not finished for {}", tr->name ()));
 			disk_work_outstanding = true;
 			break;
 
@@ -362,6 +372,8 @@ Butler::flush_tracks_to_disk_normal (boost::shared_ptr<RouteList> rl, uint32_t& 
 bool
 Butler::flush_tracks_to_disk_after_locate (boost::shared_ptr<RouteList> rl, uint32_t& errors)
 {
+	A_CLASS_CALL ();
+
 	bool disk_work_outstanding = false;
 
 	/* almost the same as the "normal" version except that we do not test
@@ -383,15 +395,17 @@ Butler::flush_tracks_to_disk_after_locate (boost::shared_ptr<RouteList> rl, uint
 
 		int ret;
 
-		DEBUG_TRACE (DEBUG::Butler, string_compose ("butler flushes track %1 capture load %2\n", tr->name(), tr->capture_buffer_load()));
+		A_CLASS_MSG (
+		    A_FMT ("Butler flushes track {} capture load {}", tr->name (), tr->capture_buffer_load ()));
+
 		ret = tr->do_flush (ButlerContext, true);
 		switch (ret) {
 		case 0:
-			DEBUG_TRACE (DEBUG::Butler, string_compose ("\tflush complete for %1\n", tr->name()));
+			A_CLASS_MSG (A_FMT ("flush complete for {}", tr->name ()));
 			break;
 
 		case 1:
-			DEBUG_TRACE (DEBUG::Butler, string_compose ("\tflush not finished for %1\n", tr->name()));
+			A_CLASS_MSG (A_FMT ("flush not finished for {}", tr->name ()));
 			disk_work_outstanding = true;
 			break;
 
@@ -438,15 +452,15 @@ Butler::queue_request (Request::Type r)
 void
 Butler::summon ()
 {
-	DEBUG_TRACE (DEBUG::Butler, string_compose ("%1: summon butler to run @ %2\n", DEBUG_THREAD_SELF, g_get_monotonic_time()));
+	A_CLASS_CALL ();
 	queue_request (Request::Run);
 }
 
 void
 Butler::stop ()
 {
+	A_CLASS_CALL ();
 	Glib::Threads::Mutex::Lock lm (request_lock);
-	DEBUG_TRACE (DEBUG::Butler, string_compose ("%1: asking butler to stop @ %2\n", DEBUG_THREAD_SELF, g_get_monotonic_time()));
 	queue_request (Request::Pause);
 	paused.wait(request_lock);
 }
@@ -454,8 +468,8 @@ Butler::stop ()
 void
 Butler::wait_until_finished ()
 {
+	A_CLASS_CALL ();
 	Glib::Threads::Mutex::Lock lm (request_lock);
-	DEBUG_TRACE (DEBUG::Butler, string_compose ("%1: waiting for butler to finish @ %2\n", DEBUG_THREAD_SELF, g_get_monotonic_time()));
 	queue_request (Request::Pause);
 	paused.wait(request_lock);
 }

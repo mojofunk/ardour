@@ -42,14 +42,8 @@ def build(bld):
                   includes     = [ '../../ardour' ],
                   target       = '../../LV2/%s/a-fluidsynth' % bundle,
                   install_path = '${LV2DIR}/%s' % bundle,
-                  uselib       = ['LIBFLUIDSYNTH'],
-                  use          = ['LV2_1_0_0']
+                  use          = ['LV2_1_0_0', 'GLIB', 'FLUIDSYNTH']
                   )
-
-        if bld.is_defined('USE_EXTERNAL_LIBS'):
-            obj.uselib.extend(['LIBFLUIDSYNTH'])
-        else:
-            obj.use.extend(['libfluidsynth_includes', 'libfluidsynth'])
 
         obj.env.cshlib_PATTERN = module_pat
         obj.env.cxxshlib_PATTERN = module_pat

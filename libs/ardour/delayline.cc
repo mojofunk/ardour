@@ -26,12 +26,15 @@
 #include "ardour/buffer_set.h"
 #include "ardour/debug.h"
 #include "ardour/delayline.h"
+#include "ardour/logging.h"
 #include "ardour/midi_buffer.h"
 #include "ardour/runtime_functions.h"
 
 using namespace std;
 using namespace PBD;
 using namespace ARDOUR;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::DelayLine);
 
 DelayLine::DelayLine (Session& s, const std::string& name)
     : Processor (s, string_compose ("latcomp-%1-%2", name, this))
@@ -59,6 +62,8 @@ DelayLine::set_name (const string& name)
 void
 DelayLine::run (BufferSet& bufs, samplepos_t /* start_sample */, samplepos_t /* end_sample */, double /* speed */, pframes_t n_samples, bool)
 {
+	A_CLASS_CALL1 (n_samples);
+
 #ifndef NDEBUG
 	Glib::Threads::Mutex::Lock lm (_set_delay_mutex, Glib::Threads::TRY_LOCK);
 	assert (lm.locked ());

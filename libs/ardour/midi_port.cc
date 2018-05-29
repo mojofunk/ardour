@@ -35,6 +35,8 @@ using namespace PBD;
 
 #define port_engine AudioEngine::instance()->port_engine()
 
+A_DEFINE_CLASS_MEMBERS (ARDOUR::MidiPort);
+
 MidiPort::MidiPort (const std::string& name, PortFlags flags)
 	: Port (name, DataType::MIDI, flags)
 	, _has_been_mixed_down (false)
@@ -59,6 +61,8 @@ MidiPort::~MidiPort()
 void
 MidiPort::cycle_start (pframes_t nframes)
 {
+	A_CLASS_CALL1 (nframes);
+
 	samplepos_t now = AudioEngine::instance()->sample_time_at_cycle_start();
 
 	Port::cycle_start (nframes);
@@ -110,6 +114,8 @@ MidiPort::get_buffer (pframes_t nframes)
 MidiBuffer &
 MidiPort::get_midi_buffer (pframes_t nframes)
 {
+	A_CLASS_CALL1 (nframes);
+
 	if (_has_been_mixed_down) {
 		return *_buffer;
 	}
@@ -203,6 +209,8 @@ MidiPort::cycle_split ()
 void
 MidiPort::resolve_notes (void* port_buffer, MidiBuffer::TimeType when)
 {
+	A_CLASS_CALL1 (when);
+
 	for (uint8_t channel = 0; channel <= 0xF; channel++) {
 
 		uint8_t ev[3] = { ((uint8_t) (MIDI_CMD_CONTROL | channel)), MIDI_CTL_SUSTAIN, 0 };

@@ -24,6 +24,7 @@
 #include <time.h>
 #include <glibmm/threads.h>
 #include <boost/enable_shared_from_this.hpp>
+#include "pbd/dev_tools.h"
 #include "pbd/stateful.h"
 #include "pbd/xml++.h"
 #include "evoral/Sequence.hpp"
@@ -251,6 +252,9 @@ class LIBARDOUR_API MidiSource : virtual public Source, public boost::enable_sha
 	 */
 	typedef std::map<Evoral::Parameter, AutoState> AutomationStateMap;
 	AutomationStateMap  _automation_state;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::MidiSource);
 };
 
 }

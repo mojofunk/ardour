@@ -100,6 +100,9 @@ class LIBARDOUR_API ControlProtocolManager : public PBD::Stateful, public ARDOUR
 	ControlProtocolInfo* cpi_by_name (std::string);
 	ControlProtocol* instantiate (ControlProtocolInfo&);
 	int teardown (ControlProtocolInfo&, bool lock_required);
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::ControlProtocolManager);
 };
 
 } // namespace

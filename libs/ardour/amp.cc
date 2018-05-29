@@ -26,6 +26,7 @@
 #include "ardour/audio_buffer.h"
 #include "ardour/buffer_set.h"
 #include "ardour/gain_control.h"
+#include "ardour/logging.h"
 #include "ardour/midi_buffer.h"
 #include "ardour/rc_configuration.h"
 #include "ardour/session.h"
@@ -34,6 +35,8 @@
 
 using namespace ARDOUR;
 using namespace PBD;
+
+A_DEFINE_CLASS_MEMBERS(ARDOUR::Amp);
 
 #define GAIN_COEFF_DELTA (1e-5)
 
@@ -77,6 +80,8 @@ scale_midi_velocity(Evoral::Event<MidiBuffer::TimeType>& ev, float factor)
 void
 Amp::run (BufferSet& bufs, samplepos_t /*start_sample*/, samplepos_t /*end_sample*/, double /*speed*/, pframes_t nframes, bool)
 {
+	A_CLASS_CALL1 (nframes);
+
 	if (!_active && !_pending_active) {
 		/* disregard potentially prepared gain-automation. */
 		_apply_gain_automation = false;
@@ -174,6 +179,8 @@ Amp::run (BufferSet& bufs, samplepos_t /*start_sample*/, samplepos_t /*end_sampl
 gain_t
 Amp::apply_gain (BufferSet& bufs, samplecnt_t sample_rate, samplecnt_t nframes, gain_t initial, gain_t target, bool midi_amp)
 {
+	A_CLASS_STATIC_CALL5 (sample_rate, nframes, initial, target, midi_amp);
+
 	/** Apply a (potentially) declicked gain to the buffers of @a bufs */
 	gain_t rv = target;
 
@@ -240,6 +247,8 @@ Amp::apply_gain (BufferSet& bufs, samplecnt_t sample_rate, samplecnt_t nframes, 
 void
 Amp::declick (BufferSet& bufs, samplecnt_t nframes, int dir)
 {
+	A_CLASS_STATIC_CALL2 (nframes, dir);
+
 	if (nframes == 0 || bufs.count().n_total() == 0) {
 		return;
 	}
@@ -282,6 +291,8 @@ Amp::declick (BufferSet& bufs, samplecnt_t nframes, int dir)
 gain_t
 Amp::apply_gain (AudioBuffer& buf, samplecnt_t sample_rate, samplecnt_t nframes, gain_t initial, gain_t target, sampleoffset_t offset)
 {
+	A_CLASS_STATIC_CALL4 (sample_rate, nframes, initial, target);
+
 	/* Apply a (potentially) declicked gain to the contents of @a buf
 	 * -- used by MonitorProcessor::run()
 	 */
@@ -312,6 +323,8 @@ Amp::apply_gain (AudioBuffer& buf, samplecnt_t sample_rate, samplecnt_t nframes,
 void
 Amp::apply_simple_gain (BufferSet& bufs, samplecnt_t nframes, gain_t target, bool midi_amp)
 {
+	A_CLASS_STATIC_CALL3 (nframes, target, midi_amp);
+
 	if (fabsf (target) < GAIN_COEFF_SMALL) {
 
 		if (midi_amp) {

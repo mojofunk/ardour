@@ -25,6 +25,7 @@
 #include "ardour/audioengine.h"
 #include "ardour/delivery.h"
 #include "ardour/io.h"
+#include "ardour/logging.h"
 #include "ardour/mtdm.h"
 #include "ardour/port_insert.h"
 #include "ardour/session.h"
@@ -35,6 +36,8 @@
 using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::PortInsert);
 
 string
 PortInsert::name_and_id_new_insert (Session& s, uint32_t& bitslot)
@@ -109,6 +112,8 @@ PortInsert::latency() const
 void
 PortInsert::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_sample, double speed, pframes_t nframes, bool)
 {
+	A_CLASS_CALL4 (start_sample, end_sample, speed, nframes);
+
 	if (_output->n_ports().n_total() == 0) {
 		return;
 	}

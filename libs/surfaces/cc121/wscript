@@ -24,10 +24,9 @@ def build(bld):
     obj.defines      = [ 'PACKAGE="ardour_cc121"' ]
     obj.defines     += [ 'ARDOURSURFACE_DLL_EXPORTS' ]
     obj.includes     = [ '.', './cc121']
-    obj.name         = 'libardour_cc121'
+    obj.name         = 'ARDOUR_CC121'
     obj.target       = 'ardour_cc121'
-    obj.uselib       = 'GTKMM GTK GDK XML'
-    obj.use          = 'libardour libardour_cp libgtkmm2ext libpbd'
+    obj.use          = 'ARDOUR_CP GTKMM2EXT'
     obj.install_path = os.path.join(bld.env['LIBDIR'], 'surfaces')
 
 def shutdown():

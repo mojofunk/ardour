@@ -30,10 +30,13 @@
 
 #include "pbd/i18n.h"
 
-using namespace ARDOUR;
 using namespace Glib::Threads;
 using namespace PBD;
 using std::string;
+
+namespace ARDOUR {
+
+A_DEFINE_CLASS_MEMBERS (ARDOUR::VCAManager);
 
 string VCAManager::xml_node_name (X_("VCAManager"));
 
@@ -51,6 +54,8 @@ VCAManager::~VCAManager ()
 void
 VCAManager::clear ()
 {
+	A_CLASS_CALL ();
+
 	bool send = false;
 	{
 		Mutex::Lock lm (lock);
@@ -81,6 +86,8 @@ VCAManager::vcas () const
 VCAList
 VCAManager::create_vca (uint32_t howmany, std::string const & name_template)
 {
+	A_CLASS_CALL1 (howmany);
+
 	VCAList vcal;
 
 	uint32_t n_stripables = _session.nstripables ();
@@ -119,6 +126,8 @@ VCAManager::create_vca (uint32_t howmany, std::string const & name_template)
 void
 VCAManager::remove_vca (boost::shared_ptr<VCA> vca)
 {
+	A_CLASS_CALL1 (vca->full_name());
+
 	{
 		Mutex::Lock lm (lock);
 		_vcas.remove (vca);
@@ -233,3 +242,5 @@ VCAManager::clear_all_solo_state ()
 		(*i)->clear_all_solo_state ();
 	}
 }
+
+} // namespace ARDOUR

@@ -32,6 +32,8 @@ using namespace Gtk;
 using namespace Gtkmm2ext;
 using namespace PBD;
 
+A_DEFINE_CLASS_MEMBERS (Gtkmm2ext::WindowProxy);
+
 WindowProxy::WindowProxy (const std::string& name)
 	: _name (name)
 	, _window (0)
@@ -82,6 +84,8 @@ WindowProxy::~WindowProxy ()
 int
 WindowProxy::set_state (const XMLNode& node, int /* version */)
 {
+	A_CLASS_CALL1 (_name);
+
 	XMLNodeList children = node.children ();
 	XMLNode const * child;
 	XMLNodeList::const_iterator i = children.begin ();
@@ -108,6 +112,8 @@ WindowProxy::set_state (const XMLNode& node, int /* version */)
 		child->get_property (X_("y-size"), _height);
 	}
 
+	A_CLASS_DATA2 (_name, _visible);
+
 	if (_window) {
 		setup ();
 	}
@@ -130,10 +136,15 @@ WindowProxy::action_name() const
 void
 WindowProxy::toggle()
 {
+	A_CLASS_CALL1 (_name);
+
 	if (!_window) {
 		(void) get (true);
 		setup ();
 		assert (_window);
+
+		A_CLASS_MSG (A_FMT ("Show window: {}", _name));
+
 		/* XXX this is a hack - the window object should really
 		   ensure its components are all visible. sigh.
 		*/
@@ -141,13 +152,13 @@ WindowProxy::toggle()
 		/* we'd like to just call this and nothing else */
 		_window->present ();
 	} else {
-		if (_window->is_mapped()) {
+		if (_window->get_mapped()) {
 			save_pos_and_size();
 		}
 
 		vistracker->cycle_visibility ();
 
-		if (_window->is_mapped()) {
+		if (_window->get_mapped()) {
 			if (_width != -1 && _height != -1) {
 				_window->set_default_size (_width, _height);
 			}
@@ -167,6 +178,8 @@ WindowProxy::xml_node_name()
 XMLNode&
 WindowProxy::get_state ()
 {
+	A_CLASS_CALL1 (_name);
+
 	XMLNode* node = new XMLNode (xml_node_name());
 
 	node->set_property (X_("name"), _name);
@@ -204,12 +217,16 @@ WindowProxy::get_state ()
 	node->set_property (X_("x-size"), w);
 	node->set_property (X_("y-size"), h);
 
+	A_CLASS_DATA2 (_name, _visible);
+
 	return *node;
 }
 
 void
 WindowProxy::drop_window ()
 {
+	A_CLASS_CALL1 (_name);
+
 	if (_window) {
 		delete_connection.disconnect ();
 		configure_connection.disconnect ();
@@ -226,6 +243,7 @@ WindowProxy::drop_window ()
 void
 WindowProxy::use_window (Gtk::Window& win)
 {
+	A_CLASS_CALL1 (_name);
 	drop_window ();
 	_window = &win;
 	setup ();
@@ -234,6 +252,7 @@ WindowProxy::use_window (Gtk::Window& win)
 void
 WindowProxy::setup ()
 {
+	A_CLASS_CALL1 (_name);
 	assert (_window);
 
 	vistracker = new Gtkmm2ext::VisibilityTracker (*_window);
@@ -269,7 +288,7 @@ WindowProxy::configure_handler (GdkEventConfigure* ev)
 
 	   the difference is generally down to window manager framing.
 	*/
-	if (!visible() || !_window->is_mapped()) {
+	if (!visible() || !_window->get_mapped()) {
 		return false;
 	}
 	save_pos_and_size ();
@@ -280,6 +299,7 @@ WindowProxy::configure_handler (GdkEventConfigure* ev)
 bool
 WindowProxy::visible() const
 {
+	A_CLASS_CALL1 (_name);
 	if (vistracker) {
 		/* update with current state */
 		_visible = vistracker->partially_visible();
@@ -290,6 +310,7 @@ WindowProxy::visible() const
 bool
 WindowProxy::fully_visible () const
 {
+	A_CLASS_CALL1 (_name);
 	if (!vistracker) {
 		/* no vistracker .. no window .. cannot be fully visible */
 		return false;
@@ -300,6 +321,7 @@ WindowProxy::fully_visible () const
 void
 WindowProxy::show ()
 {
+	A_CLASS_CALL1 (_name);
 	get (true);
 	assert (_window);
 	_window->show ();
@@ -308,6 +330,7 @@ WindowProxy::show ()
 void
 WindowProxy::maybe_show ()
 {
+	A_CLASS_CALL1 (_name);
 	if (_visible) {
 		show ();
 	}
@@ -316,6 +339,7 @@ WindowProxy::maybe_show ()
 void
 WindowProxy::show_all ()
 {
+	A_CLASS_CALL1 (_name);
 	get (true);
 	assert (_window);
 	_window->show_all ();
@@ -324,6 +348,7 @@ WindowProxy::show_all ()
 void
 WindowProxy::present ()
 {
+	A_CLASS_CALL1 (_name);
 	get (true);
 	assert (_window);
 
@@ -337,6 +362,7 @@ WindowProxy::present ()
 void
 WindowProxy::hide ()
 {
+	A_CLASS_CALL1 (_name);
 	if (_window) {
 		save_pos_and_size();
 		_window->hide ();
@@ -346,6 +372,7 @@ WindowProxy::hide ()
 bool
 WindowProxy::delete_event_handler (GdkEventAny* /*ev*/)
 {
+	A_CLASS_CALL1 (_name);
 	if (_action) {
 		_action->activate ();
 	} else {
@@ -358,6 +385,7 @@ WindowProxy::delete_event_handler (GdkEventAny* /*ev*/)
 void
 WindowProxy::save_pos_and_size ()
 {
+	A_CLASS_CALL1 (_name);
 	if (_window) {
 		_window->get_position (_x_off, _y_off);
 		_window->get_size (_width, _height);
@@ -367,6 +395,8 @@ WindowProxy::save_pos_and_size ()
 void
 WindowProxy::set_pos_and_size ()
 {
+	A_CLASS_CALL1 (_name);
+
 	if (!_window) {
 		return;
 	}
@@ -388,6 +418,8 @@ WindowProxy::set_pos_and_size ()
 void
 WindowProxy::set_pos ()
 {
+	A_CLASS_CALL1 (_name);
+
 	if (!_window) {
 		return;
 	}

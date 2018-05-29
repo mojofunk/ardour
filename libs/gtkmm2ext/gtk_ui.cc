@@ -53,6 +53,8 @@ using namespace Glib;
 using namespace PBD;
 using std::map;
 
+A_DEFINE_CLASS_MEMBERS (Gtkmm2ext::UI);
+
 UI*   UI::theGtkUI = 0;
 
 BaseUI::RequestType Gtkmm2ext::NullMessage = BaseUI::new_request_type();
@@ -67,13 +69,13 @@ BaseUI::RequestType Gtkmm2ext::AddTimeout = BaseUI::new_request_type();
 
 template class AbstractUI<Gtkmm2ext::UIRequest>;
 
-UI::UI (string application_name, string thread_name, int *argc, char ***argv)
+UI::UI (string application_name, string thread_name)
 	: AbstractUI<UIRequest> (thread_name)
 	, _receiver (*this)
 	, global_bindings (0)
 	, errors (0)
 {
-	theMain = new Main (argc, argv);
+	A_CLASS_CALL ();
 
 	pthread_set_name ("gui");
 
@@ -130,6 +132,8 @@ UI::UI (string application_name, string thread_name, int *argc, char ***argv)
 
 UI::~UI ()
 {
+	A_CLASS_CALL ();
+
 	_receiver.hangup ();
 	delete (errors);
 }
@@ -143,6 +147,8 @@ UI::caller_is_ui_thread ()
 int
 UI::load_rcfile (string path, bool themechange)
 {
+	A_CLASS_CALL2 (path, themechange);
+
 	/* Yes, pointers to Glib::RefPtr.  If these are not kept around,
 	 * a segfault somewhere deep in the wonderfully robust glib will result.
 	 * This does not occur if wiget.get_style is used instead of rc.get_style below,
@@ -267,6 +273,8 @@ UI::load_rcfile (string path, bool themechange)
 void
 UI::run (Receiver &old_receiver)
 {
+	A_CLASS_CALL ();
+
 	_receiver.listen_to (error);
 	_receiver.listen_to (info);
 	_receiver.listen_to (warning);
@@ -281,7 +289,7 @@ UI::run (Receiver &old_receiver)
 	}
 
 	_active = true;
-	theMain->run ();
+	Main::run ();
 	_active = false;
 
 	return;
@@ -296,6 +304,8 @@ UI::running ()
 void
 UI::quit ()
 {
+	A_CLASS_CALL ();
+
 	UIRequest *req = get_request (Quit);
 
 	if (req == 0) {
@@ -314,6 +324,8 @@ static bool idle_quit ()
 void
 UI::do_quit ()
 {
+	A_CLASS_CALL ();
+
 	if (getenv ("ARDOUR_RUNNING_UNDER_VALGRIND")) {
 		Main::quit ();
 	} else {
@@ -324,6 +336,8 @@ UI::do_quit ()
 void
 UI::touch_display (Touchable *display)
 {
+	A_CLASS_CALL ();
+
 	UIRequest *req = get_request (TouchDisplay);
 
 	if (req == 0) {
@@ -338,18 +352,24 @@ UI::touch_display (Touchable *display)
 void
 UI::set_tip (Widget &w, const gchar *tip)
 {
+	A_CLASS_CALL ();
+
 	set_tip(&w, tip, "");
 }
 
 void
 UI::set_tip (Widget &w, const std::string& tip)
 {
+	A_CLASS_CALL ();
+
 	set_tip(&w, tip.c_str(), "");
 }
 
 void
 UI::set_tip (Widget *w, const gchar *tip, const gchar *hlp)
 {
+	A_CLASS_CALL ();
+
 	UIRequest *req = get_request (SetTip);
 
 	std::string msg(tip);
@@ -403,6 +423,8 @@ UI::set_tip (Widget *w, const gchar *tip, const gchar *hlp)
 void
 UI::set_state (Widget *w, StateType state)
 {
+	A_CLASS_CALL ();
+
 	UIRequest *req = get_request (StateChange);
 
 	if (req == 0) {
@@ -418,6 +440,8 @@ UI::set_state (Widget *w, StateType state)
 void
 UI::idle_add (int (*func)(void *), void *arg)
 {
+	A_CLASS_CALL ();
+
 	UIRequest *req = get_request (AddIdle);
 
 	if (req == 0) {
@@ -439,19 +463,21 @@ UI::idle_add (int (*func)(void *), void *arg)
 PBD::EventLoop::InvalidationRecord*
 __invalidator (sigc::trackable& trackable, const char* file, int line)
 {
-        PBD::EventLoop::InvalidationRecord* ir = new PBD::EventLoop::InvalidationRecord;
+	PBD::EventLoop::InvalidationRecord* ir = new PBD::EventLoop::InvalidationRecord;
 
-        ir->file = file;
-        ir->line = line;
+	ir->file = file;
+	ir->line = line;
 
-        trackable.add_destroy_notify_callback (ir, PBD::EventLoop::invalidate_request);
+	trackable.add_destroy_notify_callback (ir, PBD::EventLoop::invalidate_request);
 
-        return ir;
+	return ir;
 }
 
 void
 UI::do_request (UIRequest* req)
 {
+	A_CLASS_CALL1 (req->type);
+
 	if (req->type == ErrorMessage) {
 
 		process_error_message (req->chn, req->msg);
@@ -518,6 +544,8 @@ UI::dump_errors (std::ostream& ostr)
 void
 UI::receive (Transmitter::Channel chn, const char *str)
 {
+	A_CLASS_CALL2 (chn, str);
+
 	{
 		Glib::Threads::Mutex::Lock lm (error_lock);
 		switch (chn) {
@@ -558,6 +586,8 @@ UI::receive (Transmitter::Channel chn, const char *str)
 void
 UI::process_error_message (Transmitter::Channel chn, const char *str)
 {
+	A_CLASS_CALL2 (chn, str);
+
 	RefPtr<Style> style;
 	RefPtr<TextBuffer::Tag> ptag;
 	RefPtr<TextBuffer::Tag> mtag;
@@ -684,7 +714,7 @@ UI::handle_fatal (const char *message)
 	win.show_all ();
 	win.set_modal (true);
 
-	theMain->run ();
+	Main::run ();
 
 	_exit (1);
 }
@@ -692,6 +722,8 @@ UI::handle_fatal (const char *message)
 void
 UI::popup_error (const string& text)
 {
+	A_CLASS_CALL1 (text);
+
 	if (!caller_is_ui_thread()) {
 		error << "non-UI threads can't use UI::popup_error"
 		      << endmsg;
@@ -708,6 +740,8 @@ UI::popup_error (const string& text)
 void
 UI::flush_pending (float timeout)
 {
+	A_CLASS_CALL1 (timeout);
+
 	if (!caller_is_ui_thread()) {
 		error << "non-UI threads cannot call UI::flush_pending()"
 		      << endmsg;
@@ -730,6 +764,8 @@ UI::flush_pending (float timeout)
 bool
 UI::just_hide_it (GdkEventAny* /*ev*/, Window *win)
 {
+	A_CLASS_STATIC_CALL ();
+
 	win->hide ();
 	return true;
 }

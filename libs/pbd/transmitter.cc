@@ -22,11 +22,20 @@
 #include <signal.h>
 #include <string>
 
+#include "pbd/dev_tools.h"
 #include "pbd/transmitter.h"
 #include "pbd/error.h"
 
 using std::string;
 using std::ios;
+
+namespace PBD
+{
+namespace LOG
+{
+A_DEFINE_LOG_CATEGORY (Transmitter, "PBD::Transmitter");
+}
+}
 
 Transmitter::Transmitter (Channel c)
 {
@@ -70,6 +79,9 @@ Transmitter::deliver ()
 	/* send the SigC++ signal */
 
 	foo = str();
+
+	A_LOG_DATA1 (PBD::LOG::Transmitter, foo);
+
 	(*send) (channel, foo.c_str());
 
 	/* XXX when or how can we delete this ? */

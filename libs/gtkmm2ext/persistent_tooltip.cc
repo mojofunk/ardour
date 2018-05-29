@@ -125,7 +125,7 @@ PersistentTooltip::show ()
 	}
 
 	if (!_window) {
-		_window = new Window (WINDOW_POPUP);
+		_window = new Gtk::Window (WINDOW_POPUP);
 		_window->set_name (X_("ContrastingPopup"));
 		_window->set_position (WIN_POS_MOUSE);
 		_window->set_decorated (false);
@@ -146,7 +146,7 @@ PersistentTooltip::show ()
 
 	set_tip (_tip);
 
-	if (!_window->is_visible ()) {
+	if (!_window->get_visible ()) {
 		int rx, ry;
 		int sw = gdk_screen_width ();
 

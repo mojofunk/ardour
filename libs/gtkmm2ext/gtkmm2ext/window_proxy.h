@@ -25,6 +25,7 @@
 #include <glibmm/refptr.h>
 #include <sigc++/trackable.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/statefuldestructible.h"
 
 #include "gtkmm2ext/visibility.h"
@@ -112,6 +113,9 @@ class LIBGTKMM2EXT_API WindowProxy : public PBD::StatefulDestructible, public vi
 	void unmap_handler ();
 	virtual void setup ();
 	void toggle ();
+
+private:
+	A_DECLARE_CLASS_MEMBERS (Gtkmm2ext::WindowProxy);
 };
 
 }

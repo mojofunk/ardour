@@ -29,6 +29,7 @@
 #include <glibmm/threads.h>
 
 #include "pbd/command.h"
+#include "pbd/dev_tools.h"
 
 #include "ardour/automatable_sequence.h"
 #include "ardour/libardour_visibility.h"
@@ -153,6 +154,8 @@ public:
 
 		XMLNode &marshal_note(const NotePtr note);
 		NotePtr unmarshal_note(XMLNode *xml_note);
+
+		A_DECLARE_CLASS_MEMBERS (ARDOUR::MidiModel::NoteDiffCommand);
 	};
 
 	/* Currently this class only supports changes of sys-ex time, but could be expanded */
@@ -190,6 +193,8 @@ public:
 
 		XMLNode & marshal_change (const Change &);
 		Change unmarshal_change (XMLNode *);
+
+		A_DECLARE_CLASS_MEMBERS (ARDOUR::MidiModel::SysExDiffCommand);
 	};
 
 	class LIBARDOUR_API PatchChangeDiffCommand : public DiffCommand {
@@ -235,7 +240,7 @@ public:
 				int        new_bank;
 			};
 
-		    Change() : patch_id (-1) {}
+			Change() : patch_id (-1) {}
 		};
 
 		typedef std::list<Change> ChangeList;
@@ -249,6 +254,8 @@ public:
 
 		XMLNode & marshal_patch_change (constPatchChangePtr);
 		PatchChangePtr unmarshal_patch_change (XMLNode *);
+
+		A_DECLARE_CLASS_MEMBERS (ARDOUR::MidiModel::PatchChangeDiffCommand);
 	};
 
 	MidiModel::NoteDiffCommand* new_note_diff_command (const std::string& name = "midi edit");
@@ -326,6 +333,8 @@ private:
 	// We cannot use a boost::shared_ptr here to avoid a retain cycle
 	boost::weak_ptr<MidiSource> _midi_source;
 	InsertMergePolicy _insert_merge_policy;
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::MidiModel);
 };
 
 } /* namespace ARDOUR */

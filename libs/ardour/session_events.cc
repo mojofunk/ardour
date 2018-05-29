@@ -26,6 +26,7 @@
 #include "pbd/pthread_utils.h"
 
 #include "ardour/debug.h"
+#include "ardour/logging.h"
 #include "ardour/session_event.h"
 
 #include "pbd/i18n.h"
@@ -69,7 +70,8 @@ SessionEvent::SessionEvent (Type t, Action a, samplepos_t when, samplepos_t wher
 	, third_yes_or_no (yn3)
 	, event_loop (0)
 {
-	DEBUG_TRACE (DEBUG::SessionEvents, string_compose ("NEW SESSION EVENT, type = %1 action = %2\n", enum_2_string (type), enum_2_string (action)));
+	A_LOG_MSG (LOG::SessionEvents, A_FMT ("NEW SESSION EVENT, type = {} action = {}",
+	                                      enum_2_string (type), enum_2_string (action)));
 }
 
 void *
@@ -77,8 +79,12 @@ SessionEvent::operator new (size_t)
 {
 	CrossThreadPool* p = pool->per_thread_pool ();
 	SessionEvent* ev = static_cast<SessionEvent*> (p->alloc ());
-	DEBUG_TRACE (DEBUG::SessionEvents, string_compose ("%1 Allocating SessionEvent from %2 ev @ %3 pool size %4 free %5 used %6\n", pthread_name(), p->name(), ev,
-	                                                   p->total(), p->available(), p->used()));
+
+	A_LOG_MSG (LOG::SessionEvents,
+	           A_FMT ("{} Allocating SessionEvent from {} ev @ {} pool size {} free "
+	                  "{} used {}",
+	                  pthread_name (), p->name (), (void*)ev, p->total (), p->available (),
+	                  p->used ()));
 
 	ev->own_pool = p;
 	return ev;
@@ -90,20 +96,26 @@ SessionEvent::operator delete (void *ptr, size_t /*size*/)
 	Pool* p = pool->per_thread_pool (false);
 	SessionEvent* ev = static_cast<SessionEvent*> (ptr);
 
-	DEBUG_TRACE (DEBUG::SessionEvents, string_compose (
-		             "%1 Deleting SessionEvent @ %2 type %3 action %4 ev thread pool = %5 ev pool = %6 size %7 free %8 used %9\n",
-		             pthread_name(), ev, enum_2_string (ev->type), enum_2_string (ev->action), p->name(), ev->own_pool->name(), ev->own_pool->total(), ev->own_pool->available(), ev->own_pool->used()
-		             ));
+	A_LOG_MSG (LOG::SessionEvents,
+	           A_FMT ("{} Deleting SessionEvent @ {} type {} action {} ev thread "
+	                  "pool = {} ev pool = {} size {} free {} used {}",
+	                  pthread_name (), (void*)ev, enum_2_string (ev->type),
+	                  enum_2_string (ev->action), p->name (), ev->own_pool->name (),
+	                  ev->own_pool->total (), ev->own_pool->available (), ev->own_pool->used ()));
 
 	if (p && p == ev->own_pool) {
 		p->release (ptr);
 	} else {
 		assert(ev->own_pool);
 		ev->own_pool->push (ev);
-		DEBUG_TRACE (DEBUG::SessionEvents, string_compose ("%1 was wrong thread for this pool, pushed event onto pending list, will be deleted on next alloc from %2 pool size %3 free %4 used %5 pending %6\n",
-		                                                   pthread_name(), ev->own_pool->name(),
-		                                                   ev->own_pool->total(), ev->own_pool->available(), ev->own_pool->used(),
-		                                                   ev->own_pool->pending_size()));
+
+		A_LOG_MSG (LOG::SessionEvents,
+		           A_FMT ("{} was wrong thread for this pool, pushed event onto pending "
+		                  "list, will be deleted on next alloc from {} pool size {} "
+		                  "free {} used {} pending {}",
+		                  pthread_name (), ev->own_pool->name (), ev->own_pool->total (),
+		                  ev->own_pool->available (), ev->own_pool->used (),
+		                  ev->own_pool->pending_size ()));
 	}
 }
 

@@ -129,6 +129,8 @@ class LIBARDOUR_API Source : public SessionObject
 
   private:
 	void fix_writable_flags ();
+
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::Source);
 };
 
 }

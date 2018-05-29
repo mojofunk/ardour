@@ -41,6 +41,7 @@
 #include "ardour/disk_reader.h"
 #include "ardour/disk_writer.h"
 #include "ardour/event_type_map.h"
+#include "ardour/logging.h"
 #include "ardour/meter.h"
 #include "ardour/midi_playlist.h"
 #include "ardour/midi_port.h"
@@ -332,6 +333,8 @@ MidiTrack::update_controls (BufferSet const& bufs)
 int
 MidiTrack::no_roll_unlocked (pframes_t nframes, samplepos_t start_sample, samplepos_t end_sample, bool state_changing)
 {
+	A_LOG_CLASS_CALL4 (LOG::ProcessThreads, name(), nframes, start_sample, end_sample);
+
 	int ret = Track::no_roll_unlocked (nframes, start_sample, end_sample, state_changing);
 
 	if (ret == 0 && _step_editing) {

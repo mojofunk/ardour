@@ -23,7 +23,6 @@
 #include "widgets/scroomer.h"
 
 using namespace std;
-using namespace Gdk;
 using namespace Gtk;
 using namespace ArdourWidgets;
 

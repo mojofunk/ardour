@@ -134,6 +134,9 @@ private:
 	// enginer / thread connection
 	PBD::ScopedConnectionList engine_connections;
 	void engine_stopped ();
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::Graph);
 };
 
 } // namespace

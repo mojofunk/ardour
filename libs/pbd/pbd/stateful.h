@@ -24,6 +24,7 @@
 #include <list>
 #include <cassert>
 
+#include "pbd/dev_tools.h"
 #include "pbd/libpbd_visibility.h"
 #include "pbd/id.h"
 #include "pbd/xml++.h"
@@ -140,6 +141,8 @@ class LIBPBD_API Stateful {
 	gint     _stateful_frozen;
 
 	static void set_regenerate_xml_and_string_ids_in_this_thread (bool yn);
+
+	A_DECLARE_CLASS_MEMBERS (PBD::Stateful);
 };
 
 } // namespace PBD

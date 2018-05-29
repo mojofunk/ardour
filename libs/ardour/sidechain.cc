@@ -25,6 +25,7 @@
 #include "ardour/buffer.h"
 #include "ardour/buffer_set.h"
 #include "ardour/io.h"
+#include "ardour/logging.h"
 #include "ardour/session.h"
 #include "ardour/sidechain.h"
 
@@ -33,6 +34,7 @@
 using namespace ARDOUR;
 using namespace PBD;
 
+A_DEFINE_CLASS_MEMBERS (ARDOUR::SideChain);
 
 SideChain::SideChain (Session& s, const std::string& name)
 	: IOProcessor (s, true, false, name)
@@ -63,6 +65,8 @@ SideChain::set_state (const XMLNode& node, int version)
 void
 SideChain::run (BufferSet& bufs, samplepos_t start_sample, samplepos_t end_sample, double /*speed*/, pframes_t nframes, bool)
 {
+	A_CLASS_CALL3 (start_sample, end_sample, nframes);
+
 	if (_input->n_ports () == ChanCount::ZERO) {
 		// inplace pass-through
 		return;

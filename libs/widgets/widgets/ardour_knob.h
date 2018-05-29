@@ -24,6 +24,7 @@
 
 #include <gtkmm/action.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/signals.h"
 
 #include "gtkmm2ext/activatable.h"
@@ -129,6 +130,8 @@ public:
 
 	std::string _tooltip_prefix;
 	KnobPersistentTooltip _tooltip;
+
+	A_DECLARE_CLASS_MEMBERS (ArdourKnob);
 };
 
 } /* namespace */

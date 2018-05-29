@@ -75,8 +75,8 @@ void Kmeterdsp::process (float const *p, int n)
         z2 += 4 * _omega * (z1 - z2); // Update second filter.
     }
 
-    if (isnan(z1)) z1 = 0;
-    if (isnan(z2)) z2 = 0;
+    if (std::isnan(z1)) z1 = 0;
+    if (std::isnan(z2)) z2 = 0;
     // Save filter state. The added constants avoid denormals.
     _z1 = z1 + 1e-20f;
     _z2 = z2 + 1e-20f;

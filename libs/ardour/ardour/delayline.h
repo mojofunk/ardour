@@ -23,6 +23,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 
+#include "pbd/dev_tools.h"
+
 #include "ardour/types.h"
 #include "ardour/processor.h"
 
@@ -77,6 +79,9 @@ private:
 #ifndef NDEBUG
 	Glib::Threads::Mutex _set_delay_mutex;
 #endif
+
+private:
+	A_DECLARE_CLASS_MEMBERS (ARDOUR::DelayLine);
 };
 
 } // namespace ARDOUR

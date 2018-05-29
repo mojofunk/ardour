@@ -25,6 +25,7 @@
 
 #include <glibmm/threads.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/libpbd_visibility.h"
 #include "pbd/ringbuffer.h"
 
@@ -54,6 +55,8 @@ class LIBPBD_API Pool
 #ifndef NDEBUG
 	unsigned long max_usage;
 #endif
+
+	A_DECLARE_CLASS_MEMBERS (Pool);
 };
 
 class LIBPBD_API SingleAllocMultiReleasePool : public Pool
@@ -65,8 +68,10 @@ class LIBPBD_API SingleAllocMultiReleasePool : public Pool
 	virtual void *alloc ();
 	virtual void release (void *);
 
-  private:
-        Glib::Threads::Mutex m_lock;
+private:
+	Glib::Threads::Mutex m_lock;
+
+	A_DECLARE_CLASS_MEMBERS (SingleAllocMultiReleasePool);
 };
 
 
@@ -79,8 +84,10 @@ class LIBPBD_API MultiAllocSingleReleasePool : public Pool
 	virtual void *alloc ();
 	virtual void release (void *);
 
-  private:
-        Glib::Threads::Mutex m_lock;
+private:
+	Glib::Threads::Mutex m_lock;
+
+	A_DECLARE_CLASS_MEMBERS (MultiAllocSingleReleasePool);
 };
 
 class LIBPBD_API PerThreadPool;
@@ -118,6 +125,8 @@ class LIBPBD_API CrossThreadPool : public Pool
   private:
 	PBD::RingBuffer<void*> pending;
 	PerThreadPool* _parent;
+
+	A_DECLARE_CLASS_MEMBERS (CrossThreadPool);
 };
 
 /** A class to manage per-thread pools of memory.  One object of this class is instantiated,
@@ -143,6 +152,8 @@ private:
 	/** mutex to protect either changes to the _trash variable, or writes to the RingBuffer */
 	Glib::Threads::Mutex _trash_mutex;
 	PBD::RingBuffer<CrossThreadPool*>* _trash;
+
+	A_DECLARE_CLASS_MEMBERS (PerThreadPool);
 };
 
 #endif // __qm_pool_h__

@@ -20,10 +20,8 @@
 #include "timers.h"
 
 #include "pbd/timer.h"
-#include "pbd/debug.h"
-#include "pbd/compose.h"
 
-#include "debug.h"
+#include "logging.h"
 
 namespace {
 
@@ -35,20 +33,9 @@ public:
 	{ }
 
 	virtual bool on_elapsed () {
-		DEBUG_TIMING_ADD_ELAPSED(PBD::DEBUG::GUITiming, timing_interval_data);
-		DEBUG_TIMING_START(PBD::DEBUG::GUITiming, timing_exec_data);
-
-		bool ret_val = PBD::StandardTimer::on_elapsed ();
-
-		DEBUG_TIMING_ADD_ELAPSED(PBD::DEBUG::GUITiming, timing_exec_data);
-		DEBUG_TIMING_START(PBD::DEBUG::GUITiming, timing_interval_data);
-		return ret_val;
+		A_LOG_CALL (LOG::GUITiming);
+		return PBD::StandardTimer::on_elapsed ();
 	}
-
-#ifndef NDEBUG
-	PBD::TimingData timing_interval_data;
-	PBD::TimingData timing_exec_data;
-#endif
 };
 
 class BlinkTimer : public PBD::BlinkTimer
@@ -59,22 +46,10 @@ public:
 	{ }
 
 	virtual bool on_elapsed () {
-		DEBUG_TIMING_ADD_ELAPSED(PBD::DEBUG::GUITiming, timing_interval_data);
-		DEBUG_TIMING_START(PBD::DEBUG::GUITiming, timing_exec_data);
-
-		bool ret_val = PBD::BlinkTimer::on_elapsed ();
-
-		DEBUG_TIMING_ADD_ELAPSED(PBD::DEBUG::GUITiming, timing_exec_data);
-		DEBUG_TIMING_START(PBD::DEBUG::GUITiming, timing_interval_data);
-		return ret_val;
+		A_LOG_CALL (LOG::GUITiming);
+		return PBD::BlinkTimer::on_elapsed ();
 	}
-
-#ifndef NDEBUG
-	PBD::TimingData timing_interval_data;
-	PBD::TimingData timing_exec_data;
-#endif
 };
-
 
 class UITimers
 {
@@ -89,9 +64,6 @@ public:
 		, fps(40)
 		, _suspend_counter(0)
 	{
-#ifndef NDEBUG
-		second.connect (sigc::mem_fun (*this, &UITimers::on_second_timer));
-#endif
 	}
 
 	BlinkTimer      blink;
@@ -101,62 +73,6 @@ public:
 	StandardTimer   fps;
 
 	gint            _suspend_counter;
-
-#ifndef NDEBUG
-	std::vector<uint64_t> rapid_eps_count;
-	std::vector<uint64_t> super_rapid_eps_count;
-	std::vector<uint64_t> fps_eps_count;
-
-private:
-
-	void debug_rapid_timer () {
-		DEBUG_TRACE(PBD::DEBUG::GUITiming, string_compose ("Rapid Connections: %1\n", rapid.connection_count ()));
-
-		rapid_eps_count.push_back (rapid.timing_exec_data.size());
-
-		DEBUG_TRACE(PBD::DEBUG::GUITiming, string_compose ("Rapid Exec Totals: %1", PBD::timing_summary (rapid_eps_count)));
-
-		DEBUG_TRACE(PBD::DEBUG::GUITiming, string_compose ("Rapid Interval: %1", rapid.timing_interval_data.summary()));
-		DEBUG_TRACE(PBD::DEBUG::GUITiming, string_compose ("Rapid Exec: %1", rapid.timing_exec_data.summary()));
-		DEBUG_TIMING_RESET(PBD::DEBUG::GUITiming, rapid.timing_interval_data);
-		DEBUG_TIMING_RESET(PBD::DEBUG::GUITiming, rapid.timing_exec_data);
-	}
-
-	void debug_super_rapid_timer () {
-		// we don't use this timer on windows so don't display empty data for it
-#ifndef PLATFORM_WINDOWS
-
-		DEBUG_TRACE(PBD::DEBUG::GUITiming, string_compose ("Super Rapid Connections: %1\n", super_rapid.connection_count ()));
-
-		super_rapid_eps_count.push_back (super_rapid.timing_exec_data.size());
-
-		DEBUG_TRACE(PBD::DEBUG::GUITiming, string_compose ("Super Rapid Exec Totals: %1", PBD::timing_summary (super_rapid_eps_count)));
-		DEBUG_TRACE(PBD::DEBUG::GUITiming, string_compose ("Super Rapid Interval: %1", super_rapid.timing_interval_data.summary()));
-		DEBUG_TRACE(PBD::DEBUG::GUITiming, string_compose ("Super Rapid Exec: %1", super_rapid.timing_exec_data.summary()));
-		DEBUG_TIMING_RESET(PBD::DEBUG::GUITiming, super_rapid.timing_interval_data);
-		DEBUG_TIMING_RESET(PBD::DEBUG::GUITiming, super_rapid.timing_exec_data);
-#endif
-	}
-
-	void debug_fps_timer () {
-		DEBUG_TRACE(PBD::DEBUG::GUITiming, string_compose ("FPS Connections: %1\n", fps.connection_count ()));
-
-		fps_eps_count.push_back (fps.timing_exec_data.size());
-
-		DEBUG_TRACE(PBD::DEBUG::GUITiming, string_compose ("FPS Exec Totals: %1", PBD::timing_summary (fps_eps_count)));
-
-		DEBUG_TRACE(PBD::DEBUG::GUITiming, string_compose ("FPS Interval: %1", fps.timing_interval_data.summary()));
-		DEBUG_TRACE(PBD::DEBUG::GUITiming, string_compose ("FPS Exec: %1", fps.timing_exec_data.summary()));
-		DEBUG_TIMING_RESET(PBD::DEBUG::GUITiming, fps.timing_interval_data);
-		DEBUG_TIMING_RESET(PBD::DEBUG::GUITiming, fps.timing_exec_data);
-	}
-
-	void on_second_timer () {
-		debug_rapid_timer ();
-		debug_super_rapid_timer ();
-		debug_fps_timer ();
-	}
-#endif
 };
 
 UITimers&

@@ -43,6 +43,7 @@
 #include "enums_convert.h"
 #include "gui_thread.h"
 #include "keyboard.h"
+#include "logging.h"
 #include "ui_config.h"
 #include "utils.h"
 
@@ -56,6 +57,8 @@ using namespace Gtk;
 using namespace std;
 
 using Gtkmm2ext::Keyboard;
+
+A_DEFINE_CLASS_AS_MEMBERS (AudioClock, "GUI::AudioClock");
 
 sigc::signal<void> AudioClock::ModeChanged;
 vector<AudioClock*> AudioClock::clocks;
@@ -133,6 +136,8 @@ AudioClock::~AudioClock ()
 void
 AudioClock::set_widget_name (const string& str)
 {
+	A_CLASS_CALL1 (str);
+
 	if (str.empty()) {
 		set_name ("clock");
 	} else {
@@ -148,6 +153,8 @@ AudioClock::set_widget_name (const string& str)
 void
 AudioClock::on_realize ()
 {
+	A_CLASS_CALL1 (_name);
+
 	Gtk::Requisition req;
 
 	CairoWidget::on_realize ();
@@ -165,6 +172,8 @@ AudioClock::on_realize ()
 void
 AudioClock::set_font (Pango::FontDescription font)
 {
+	A_CLASS_CALL1 (_name);
+
 	Glib::RefPtr<Gtk::Style> style = get_style ();
 	Pango::AttrFontDesc* font_attr;
 
@@ -200,6 +209,8 @@ AudioClock::set_active_state (Gtkmm2ext::ActiveState s)
 void
 AudioClock::set_colors ()
 {
+	A_CLASS_CALL1 (_name);
+
 	int r, g, b, a;
 
 	uint32_t bg_color;
@@ -280,7 +291,10 @@ AudioClock::set_scale (double x, double y)
 void
 AudioClock::render (Cairo::RefPtr<Cairo::Context> const& ctx, cairo_rectangle_t*)
 {
+	A_CLASS_CALL1 (_name);
+
 	cairo_t* cr = ctx->cobj();
+
 	/* main layout: rounded rect, plus the text */
 
 	if (_need_bg) {
@@ -353,6 +367,8 @@ AudioClock::render (Cairo::RefPtr<Cairo::Context> const& ctx, cairo_rectangle_t*
 void
 AudioClock::set_clock_dimensions (Gtk::Requisition& req)
 {
+	A_CLASS_CALL1 (_name);
+
 	Glib::RefPtr<Pango::Layout> tmp;
 	Glib::RefPtr<Gtk::Style> style = get_style ();
 	Pango::FontDescription font;
@@ -381,6 +397,8 @@ AudioClock::set_clock_dimensions (Gtk::Requisition& req)
 void
 AudioClock::on_size_request (Gtk::Requisition* req)
 {
+	A_CLASS_CALL1 (_name);
+
 	/* even for non fixed width clocks, the size we *ask* for never changes,
 	   even though the size we receive might. so once we've computed it,
 	   just return it.

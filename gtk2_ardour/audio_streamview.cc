@@ -51,6 +51,8 @@
 
 #include "pbd/i18n.h"
 
+A_DEFINE_CLASS_AS_MEMBERS (AudioStreamView, "GUI::AudioStreamView");
+
 using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
@@ -59,6 +61,8 @@ using namespace Editing;
 AudioStreamView::AudioStreamView (AudioTimeAxisView& tv)
 	: StreamView (tv)
 {
+	A_CLASS_CALL1 (_trackview.name());
+
 	color_handler ();
 	_amplitude_above_axis = 1.0;
 }
@@ -66,6 +70,8 @@ AudioStreamView::AudioStreamView (AudioTimeAxisView& tv)
 int
 AudioStreamView::set_amplitude_above_axis (gdouble app)
 {
+	A_CLASS_CALL1 (_trackview.name());
+
 	RegionViewList::iterator i;
 
 	if (app < 1.0) {
@@ -86,6 +92,8 @@ AudioStreamView::set_amplitude_above_axis (gdouble app)
 RegionView*
 AudioStreamView::create_region_view (boost::shared_ptr<Region> r, bool wait_for_waves, bool recording)
 {
+	A_CLASS_CALL3 (_trackview.name(), wait_for_waves, recording);
+
 	AudioRegionView *region_view = 0;
 	boost::shared_ptr<AudioRegion> region = boost::dynamic_pointer_cast<AudioRegion> (r);
 
@@ -137,6 +145,8 @@ AudioStreamView::create_region_view (boost::shared_ptr<Region> r, bool wait_for_
 RegionView*
 AudioStreamView::add_region_view_internal (boost::shared_ptr<Region> r, bool wait_for_waves, bool recording)
 {
+	A_CLASS_CALL3 (_trackview.name(), wait_for_waves, recording);
+
 	RegionView *region_view = create_region_view (r, wait_for_waves, recording);
 
 	if (region_view == 0) {
@@ -157,6 +167,8 @@ AudioStreamView::add_region_view_internal (boost::shared_ptr<Region> r, bool wai
 void
 AudioStreamView::redisplay_track ()
 {
+	A_CLASS_CALL1 (_trackview.name());
+
 	list<RegionView *>::iterator i;
 
 	// Flag region views as invalid and disable drawing
@@ -179,6 +191,8 @@ AudioStreamView::redisplay_track ()
 void
 AudioStreamView::setup_rec_box ()
 {
+	A_CLASS_CALL1 (_trackview.name());
+
 	//cerr << _trackview.name() << " streamview SRB region_views.size() = " << region_views.size() << endl;
 
 	if (!_trackview.session()->transport_stopped()) {
@@ -291,6 +305,8 @@ AudioStreamView::setup_rec_box ()
 void
 AudioStreamView::rec_peak_range_ready (samplepos_t start, samplecnt_t cnt, boost::weak_ptr<Source> weak_src)
 {
+	A_CLASS_CALL1 (_trackview.name());
+
 	ENSURE_GUI_THREAD (*this, &AudioStreamView::rec_peak_range_ready, start, cnt, weak_src)
 
 	boost::shared_ptr<Source> src (weak_src.lock());
@@ -316,6 +332,8 @@ AudioStreamView::rec_peak_range_ready (samplepos_t start, samplecnt_t cnt, boost
 void
 AudioStreamView::update_rec_regions (samplepos_t start, samplecnt_t cnt)
 {
+	A_CLASS_CALL1 (_trackview.name());
+
 	if (!UIConfiguration::instance().get_show_waveforms_while_recording ()) {
 		return;
 	}

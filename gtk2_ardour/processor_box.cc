@@ -1716,6 +1716,8 @@ static std::list<Gtk::TargetEntry> drag_targets_noplugin()
 	return tmp;
 }
 
+A_DEFINE_CLASS_AS_MEMBERS (ProcessorBox, "GUI::ProcessorBox");
+
 ProcessorBox::ProcessorBox (ARDOUR::Session* sess, boost::function<PluginSelector*()> get_plugin_selector,
 			    ProcessorSelection& psel, MixerStrip* parent, bool owner_is_mixer)
 	: _parent_strip (parent)
@@ -2176,6 +2178,8 @@ ProcessorBox::leave_notify (GdkEventCrossing* ev)
 bool
 ProcessorBox::processor_operation (ProcessorOperation op)
 {
+	A_CLASS_CALL ();
+
 	ProcSelection targets;
 
 	get_selected_processors (targets);
@@ -2215,6 +2219,8 @@ ProcessorBox::processor_operation (ProcessorOperation op)
 		break;
 
 	case ProcessorsPaste:
+		A_CLASS_DATA2 (targets.empty(), _placement);
+
 		// some processors are not selectable (e.g fader, meter), target is empty.
 		if (targets.empty() && _placement >= 0) {
 			assert (_route);
@@ -3067,6 +3073,8 @@ ProcessorBox::cut_processors (const ProcSelection& to_be_removed)
 void
 ProcessorBox::copy_processors (const ProcSelection& to_be_copied)
 {
+	A_CLASS_CALL ();
+
 	if (to_be_copied.empty()) {
 		return;
 	}
@@ -3197,6 +3205,8 @@ ProcessorBox::rename_processor (boost::shared_ptr<Processor> processor)
 void
 ProcessorBox::paste_processors ()
 {
+	A_CLASS_CALL ();
+
 	if (_p_selection.processors.empty()) {
 		return;
 	}
@@ -3207,6 +3217,7 @@ ProcessorBox::paste_processors ()
 void
 ProcessorBox::paste_processors (boost::shared_ptr<Processor> before)
 {
+	A_CLASS_CALL ();
 
 	if (_p_selection.processors.empty()) {
 		return;
@@ -3216,8 +3227,10 @@ ProcessorBox::paste_processors (boost::shared_ptr<Processor> before)
 }
 
 void
-ProcessorBox::paste_processor_state (const XMLNodeList& nlist, boost::shared_ptr<Processor> p)
+ProcessorBox::paste_processor_state (const XMLNodeList& nlist, boost::shared_ptr<Processor> proc)
 {
+	A_CLASS_CALL ();
+
 	XMLNodeConstIterator niter;
 	list<boost::shared_ptr<Processor> > copies;
 
@@ -3344,7 +3357,7 @@ ProcessorBox::paste_processor_state (const XMLNodeList& nlist, boost::shared_ptr
 		return;
 	}
 
-	if (_route->add_processors (copies, p)) {
+	if (_route->add_processors (copies, proc)) {
 
 		string msg = _(
 			"Copying the set of processors on the clipboard failed,\n\

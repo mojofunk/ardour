@@ -18,6 +18,7 @@
 
 #include <gtkmm/window.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/xml++.h"
 
 #include "ardour/session_handle.h"
@@ -38,6 +39,10 @@ using std::string;
 using namespace WM;
 using namespace PBD;
 
+namespace LOG {
+A_DEFINE_LOG_CATEGORY (WindowManager, "GUI::WindowManager");
+}
+
 Manager* Manager::_instance = 0;
 
 Manager&
@@ -52,15 +57,19 @@ Manager::instance ()
 Manager::Manager ()
 	: current_transient_parent (0)
 {
+	A_LOG_CALL (LOG::WindowManager);
 }
 
 Manager::~Manager ()
 {
+	A_LOG_CALL (LOG::WindowManager);
 }
 
 void
 Manager::register_window (ProxyBase* info)
 {
+	A_LOG_CALL2 (LOG::WindowManager, info->action_name(), info->menu_name());
+
 	_windows.push_back (info);
 
 	if (!info->menu_name().empty()) {
@@ -82,7 +91,11 @@ Manager::register_window (ProxyBase* info)
 void
 Manager::window_proxy_was_mapped (ProxyBase* proxy)
 {
-	Glib::RefPtr<Gtk::Action> act = ARDOUR_UI::instance()->global_actions.find_action (string_compose ("%1/%2", window_actions->get_name(), proxy->action_name()));
+	A_LOG_CALL (LOG::WindowManager);
+
+	const std::string action_path = string_compose ("%1/%2", window_actions->get_name(), proxy->action_name());
+
+	Glib::RefPtr<Gtk::Action> act = ARDOUR_UI::instance()->global_actions.find_action (action_path);
 	if (!act) {
 		return;
 	}
@@ -90,6 +103,8 @@ Manager::window_proxy_was_mapped (ProxyBase* proxy)
 	if (!tact) {
 		return;
 	}
+
+	A_LOG_MSG (LOG::WindowManager, A_FMT ("Setting action: {} active", action_path));
 
 	tact->set_active (true);
 }
@@ -97,7 +112,11 @@ Manager::window_proxy_was_mapped (ProxyBase* proxy)
 void
 Manager::window_proxy_was_unmapped (ProxyBase* proxy)
 {
-	Glib::RefPtr<Gtk::Action> act = ARDOUR_UI::instance()->global_actions.find_action (string_compose ("%1/%2", window_actions->get_name(), proxy->action_name()));
+	A_LOG_CALL (LOG::WindowManager);
+
+	const std::string action_path = string_compose ("%1/%2", window_actions->get_name(), proxy->action_name());
+
+	Glib::RefPtr<Gtk::Action> act = ARDOUR_UI::instance()->global_actions.find_action (action_path);
 	if (!act) {
 		return;
 	}
@@ -106,12 +125,16 @@ Manager::window_proxy_was_unmapped (ProxyBase* proxy)
 		return;
 	}
 
+	A_LOG_MSG (LOG::WindowManager, A_FMT ("Setting action: {} inactive", action_path));
+
 	tact->set_active (false);
 }
 
 void
 Manager::remove (const ProxyBase* info)
 {
+	A_LOG_CALL1 (LOG::WindowManager, info->action_name());
+
 	for (Windows::iterator i = _windows.begin(); i != _windows.end(); ++i) {
 		if ((*i) == info) {
 			_windows.erase (i);
@@ -123,7 +146,11 @@ Manager::remove (const ProxyBase* info)
 void
 Manager::toggle_window (ProxyBase* proxy)
 {
-	Glib::RefPtr<Gtk::Action> act = ARDOUR_UI::instance()->global_actions.find_action (string_compose ("%1/%2", window_actions->get_name(), proxy->action_name()));
+	A_LOG_CALL (LOG::WindowManager);
+
+	const std::string action_path = string_compose ("%1/%2", window_actions->get_name(), proxy->action_name());
+
+	Glib::RefPtr<Gtk::Action> act = ARDOUR_UI::instance()->global_actions.find_action (action_path);
 	if (!act) {
 		return;
 	}
@@ -133,8 +160,10 @@ Manager::toggle_window (ProxyBase* proxy)
 	}
 
 	if (tact->get_active()) {
+		A_LOG_MSG (LOG::WindowManager, A_FMT ("present window proxy: {}", action_path));
 		proxy->present ();
 	} else {
+		A_LOG_MSG (LOG::WindowManager, A_FMT ("hide window proxy: {}", action_path));
 		proxy->hide ();
 	}
 }
@@ -142,10 +171,15 @@ Manager::toggle_window (ProxyBase* proxy)
 void
 Manager::show_visible() const
 {
+	A_LOG_CALL (LOG::WindowManager);
+
 	for (Windows::const_iterator i = _windows.begin(); i != _windows.end(); ++i) {
 		if ((*i)->visible()) {
+
 			Gtk::Window* win = (*i)->get (true);
 			if (!win) {
+				A_LOG_MSG (LOG::WindowManager, "Invalid WindowProxy in list");
+
 				/* the window may be a plugin GUI for a plugin which
 				 * is disabled or longer present.
 				 */
@@ -165,8 +199,11 @@ Manager::show_visible() const
 				(*i)->drop_window ();
 				continue;
 			}
+			A_LOG_MSG (LOG::WindowManager, A_FMT ("Showing window: {}", (*i)->name ()));
 			(*i)->show_all ();
 			(*i)->present ();
+		} else {
+			A_LOG_MSG (LOG::WindowManager, A_FMT ("Window {} not visible", (*i)->name ()));
 		}
 	}
 }

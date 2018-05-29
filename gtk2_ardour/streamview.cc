@@ -53,6 +53,8 @@ using namespace ARDOUR_UI_UTILS;
 using namespace PBD;
 using namespace Editing;
 
+A_DEFINE_CLASS_AS_MEMBERS (StreamView, "GUI::StreamView");
+
 StreamView::StreamView (RouteTimeAxisView& tv, ArdourCanvas::Container* canvas_group)
 	: _trackview (tv)
 	, _canvas_group (canvas_group ? canvas_group : new ArdourCanvas::Container (_trackview.canvas_display()))
@@ -112,6 +114,8 @@ StreamView::set_position (gdouble x, gdouble y)
 int
 StreamView::set_height (double h)
 {
+	A_CLASS_CALL1 (h);
+
 	/* limit the values to something sane-ish */
 
 	if (h < 10.0 || h > 1000.0) {
@@ -132,6 +136,8 @@ StreamView::set_height (double h)
 int
 StreamView::set_samples_per_pixel (double fpp)
 {
+	A_CLASS_CALL1 (fpp);
+
 	RegionViewList::iterator i;
 
 	if (fpp < 1.0) {
@@ -166,6 +172,8 @@ StreamView::set_samples_per_pixel (double fpp)
 void
 StreamView::add_region_view (boost::weak_ptr<Region> wr)
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<Region> r (wr.lock());
 	if (!r) {
 		return;
@@ -181,6 +189,8 @@ StreamView::add_region_view (boost::weak_ptr<Region> wr)
 void
 StreamView::remove_region_view (boost::weak_ptr<Region> weak_r)
 {
+	A_CLASS_CALL ();
+
 	ENSURE_GUI_THREAD (*this, &StreamView::remove_region_view, weak_r)
 
 	boost::shared_ptr<Region> r (weak_r.lock());
@@ -204,6 +214,8 @@ StreamView::remove_region_view (boost::weak_ptr<Region> weak_r)
 void
 StreamView::undisplay_track ()
 {
+	A_CLASS_CALL ();
+
 	for (RegionViewList::iterator i = region_views.begin(); i != region_views.end() ; ) {
 		RegionViewList::iterator next = i;
 		++next;
@@ -217,6 +229,8 @@ StreamView::undisplay_track ()
 void
 StreamView::display_track (boost::shared_ptr<Track> tr)
 {
+	A_CLASS_CALL ();
+
 	playlist_switched_connection.disconnect();
 	playlist_switched (tr);
 	tr->PlaylistChanged.connect (playlist_switched_connection, invalidator (*this), boost::bind (&StreamView::playlist_switched, this, boost::weak_ptr<Track> (tr)), gui_context());
@@ -225,6 +239,8 @@ StreamView::display_track (boost::shared_ptr<Track> tr)
 void
 StreamView::layer_regions()
 {
+	A_CLASS_CALL ();
+
 	// In one traversal of the region view list:
 	// - Build a list of region views sorted by layer
 	// - Remove invalid views from the actual region view list
@@ -282,6 +298,8 @@ StreamView::layer_regions()
 void
 StreamView::playlist_layered (boost::weak_ptr<Track> wtr)
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<Track> tr (wtr.lock());
 
 	if (!tr) {
@@ -306,6 +324,8 @@ StreamView::playlist_layered (boost::weak_ptr<Track> wtr)
 void
 StreamView::playlist_switched (boost::weak_ptr<Track> wtr)
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<Track> tr (wtr.lock());
 
 	if (!tr) {
@@ -338,6 +358,8 @@ StreamView::playlist_switched (boost::weak_ptr<Track> wtr)
 void
 StreamView::diskstream_changed ()
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<Track> t;
 
 	if ((t = _trackview.track()) != 0) {
@@ -411,6 +433,8 @@ StreamView::transport_looped()
 void
 StreamView::create_rec_box(samplepos_t sample_pos, double width)
 {
+	A_CLASS_CALL2 (sample_pos, width);
+
 	const double   xstart     = _trackview.editor().sample_to_pixel(sample_pos);
 	const double   xend       = xstart + width;
 	const uint32_t fill_color = UIConfiguration::instance().color_mod("recording rect", "recording_rect");

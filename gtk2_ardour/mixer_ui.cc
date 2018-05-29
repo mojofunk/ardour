@@ -56,6 +56,7 @@
 #include "widgets/tearoff.h"
 
 #include "keyboard.h"
+#include "logging.h"
 #include "mixer_ui.h"
 #include "mixer_strip.h"
 #include "monitor_section.h"
@@ -1199,6 +1200,8 @@ Mixer_UI::stop_updating ()
 void
 Mixer_UI::fast_update_strips ()
 {
+	A_LOG_CALL (LOG::GUITiming);
+
 	if (_content.is_mapped () && _session) {
 		for (list<MixerStrip *>::iterator i = strips.begin(); i != strips.end(); ++i) {
 			(*i)->fast_update ();

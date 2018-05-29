@@ -26,6 +26,8 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "pbd/dev_tools.h"
+
 #include "ardour/types.h"
 #include "ardour/automatable.h"
 #include "ardour/automation_list.h"
@@ -213,6 +215,8 @@ protected:
 
 private:
 	int set_state_2X (const XMLNode &, int);
+
+	A_DECLARE_CLASS_MEMBERS (AutomationTimeAxisView);
 };
 
 #endif /* __ardour_gtk_automation_time_axis_h__ */

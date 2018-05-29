@@ -26,6 +26,7 @@
 
 #include <sigc++/signal.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/signals.h"
 
 #include "time_selection.h"
@@ -234,6 +235,9 @@ private:
 	bool     manage_libardour_selection;
 
 	TrackViewList add_grouped_tracks (TrackViewList const & t);
+
+private:
+	A_DECLARE_CLASS_MEMBERS (Selection);
 };
 
 bool operator==(const Selection& a, const Selection& b);

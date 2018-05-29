@@ -30,6 +30,7 @@
 #include "utils.h"
 #include "meter_patterns.h"
 #include "ui_config.h"
+#include "logging.h"
 
 #include "pbd/i18n.h"
 
@@ -295,6 +296,8 @@ static void set_fg_color(Gtk::Widget&, MeterType type, Gdk::Color * c) {
 static cairo_pattern_t*
 meter_render_ticks (Gtk::Widget& w, MeterType type, vector<ARDOUR::DataType> types)
 {
+	A_LOG_CALL (LOG::Render);
+
 	Glib::RefPtr<Gdk::Window> win (w.get_window());
 
 	bool background;
@@ -606,6 +609,8 @@ meter_render_ticks (Gtk::Widget& w, MeterType type, vector<ARDOUR::DataType> typ
 static cairo_pattern_t*
 meter_render_metrics (Gtk::Widget& w, MeterType type, vector<DataType> types)
 {
+	A_LOG_CALL (LOG::Render);
+
 	Glib::RefPtr<Gdk::Window> win (w.get_window());
 
 	bool tickleft, tickright;
@@ -1040,6 +1045,8 @@ meter_render_metrics (Gtk::Widget& w, MeterType type, vector<DataType> types)
 gint
 ArdourMeter::meter_expose_ticks (GdkEventExpose *ev, MeterType type, std::vector<ARDOUR::DataType> types, Gtk::DrawingArea *mta)
 {
+	A_LOG_CALL (LOG::Render);
+
 	Glib::RefPtr<Gdk::Window> win (mta->get_window());
 	cairo_t* cr;
 
@@ -1078,6 +1085,8 @@ ArdourMeter::meter_expose_ticks (GdkEventExpose *ev, MeterType type, std::vector
 gint
 ArdourMeter::meter_expose_metrics (GdkEventExpose *ev, MeterType type, std::vector<ARDOUR::DataType> types, Gtk::DrawingArea *mma)
 {
+	A_LOG_CALL (LOG::Render);
+
 	Glib::RefPtr<Gdk::Window> win (mma->get_window());
 	cairo_t* cr;
 

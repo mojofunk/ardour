@@ -129,6 +129,7 @@ gtk2_ardour_sources = [
         'led.cc',
         'level_meter.cc',
         'location_ui.cc',
+        'logging.cc',
         'lua_script_manager.cc',
         'luadialog.cc',
         'luainstance.cc',
@@ -285,6 +286,38 @@ gtk2_ardour_sources = [
         'video_tool_paths.cc'
 ]
 
+gtk2_ardour_amalgamated_sources = [
+        'gtk_ardour_canvas.cc',
+        'gtk_ardour_core.cc',
+        'gtk_ardour_dialogs.cc',
+        'gtk_ardour_dialogs2.cc',
+        'gtk_ardour_editor.cc',
+        'gtk_ardour_editor2.cc',
+        'gtk_ardour_editor_core.cc',
+        'gtk_ardour_export.cc',
+        'gtk_ardour_fft.cc',
+        'gtk_ardour_io.cc',
+        'gtk_ardour_lua.cc',
+        'gtk_ardour_meterbridge.cc',
+        'gtk_ardour_midi.cc',
+        'gtk_ardour_misc.cc',
+        'gtk_ardour_mixer.cc',
+        'gtk_ardour_options.cc',
+        'gtk_ardour_panners.cc',
+        'gtk_ardour_plugins.cc',
+        'gtk_ardour_port_matrix.cc',
+        'gtk_ardour_region_view.cc',
+        'gtk_ardour_route_ui.cc',
+        'gtk_ardour_streamview.cc',
+        'gtk_ardour_time_axis.cc',
+        'gtk_ardour_ui.cc',
+        'gtk_ardour_widgets.cc',
+        'gtk_ardour_windows.cc',
+        'gtk_ardour_video.cc',
+        'gtk_pianokeyboard.c',
+        'main.cc'
+]
+
 def enoify (major, minor):
     # Code names based on
     # https://en.wikipedia.org/wiki/Brian_Eno_discography
@@ -363,7 +396,6 @@ def options(opt):
     autowaf.set_options(opt)
 
 def configure(conf):
-    conf.load('misc')
     conf.load('compiler_cxx')
     autowaf.configure(conf)
 
@@ -386,6 +418,8 @@ def configure(conf):
     autowaf.check_pkg(conf, 'pangoft2', uselib_store='PANGOFT2', atleast_version='1.36.8', mandatory=False)
     autowaf.check_pkg(conf, 'fontconfig', uselib_store='FONTCONFIG')
 
+    if Options.options.dev_tools:
+        autowaf.check_pkg(conf, 'adtmm-2', uselib_store='ADTMM2', mandatory=True)
 
     if sys.platform == 'darwin':
         retval = conf.run_c_code (code='#include <AppKit/NSWindow.h>\n\
@@ -412,9 +446,6 @@ def configure(conf):
     conf.write_config_header('gtk2ardour-version.h')
     conf.env['define_key'] = bak;
 
-    # Boost headers
-    autowaf.check_header(conf, 'cxx', 'boost/shared_ptr.hpp')
-    autowaf.check_header(conf, 'cxx', 'boost/weak_ptr.hpp')
 
 # Add a waf `feature' to allow compilation of things using winegcc
 from waflib.TaskGen import feature
@@ -487,26 +518,43 @@ def build(bld):
     VERSION = "%s.%s" % (bld.env['MAJOR'], bld.env['MINOR'])
     I18N_PACKAGE = 'gtk2_ardour' + bld.env['MAJOR']
 
+    sources = gtk2_ardour_sources
+
+    if bld.env['AMALGAMATE']:
+        sources = gtk2_ardour_amalgamated_sources
+
+    uselibs = ['ARDOUR_CP',
+               'WAVEVIEW',
+               'WIDGETS',
+               'PT_FORMAT',
+               'UUID',
+               'FLAC',
+               'FONTCONFIG',
+               'PANGOFT2',
+               'GTHREAD',
+               'OGG',
+               'CURL',
+               'DL',
+               'FFTW3F',
+               'LO',
+               'X11',
+               'SUIL',
+               'LILV',
+               'AUDIOUNITS',
+               'OSX',
+               'APPLE_UTILITY',
+               'ADTMM2']
+
+
     # Tool to dump lua-bindings (of gtk2ardour + libs)
     if re.search ("linux", sys.platform) != None and bld.env['LUABINDINGDOC']:
         obj = bld (features = 'cxx c cxxprogram')
         obj.install_path = None
-        obj.source    = list(gtk2_ardour_sources)
+        obj.source    = list(sources)
         obj.target    = 'luadoc'
         obj.includes  = ['.', '../libs']
         obj.ldflags   = ['-no-undefined']
-        obj.use       = [
-                'libpbd',
-                'libardour',
-                'libardour_cp',
-                'libtemporal',
-                'libmidipp',
-                'libgtkmm2ext',
-                'libcanvas',
-                'libwaveview',
-                'libwidgets',
-                'libptformat',
-                ]
+        obj.use       = uselibs
         obj.defines = [
                 'NOMAIN',
                 'PACKAGE="' + I18N_PACKAGE + '"',
@@ -515,16 +563,13 @@ def build(bld):
                 'LOCALEDIR="' + os.path.normpath(bld.env['LOCALEDIR']) + '"',
                 ]
         obj.linkflags = ''
-        obj.uselib    = 'UUID FLAC FONTCONFIG GLIBMM GTHREAD GTK OGG CURL DL GTKMM CANVAS FFTW3F LO TAGLIB XML '
         obj.source += [ 'luadoc.cc', 'bundle_env_linux.cc' ]
-        if bld.is_defined('HAVE_SUIL'):
+        if bld.is_defined('HAVE_LILV') and bld.is_defined('HAVE_SUIL'):
             obj.source += [ 'lv2_plugin_ui.cc' ]
-            obj.use += [ 'SUIL' ]
         if bld.is_defined('LXVST_SUPPORT'):
             obj.source += [ 'vst_plugin_ui.cc' ]
             obj.source += [ 'linux_vst_gui_support.cc', 'lxvst_plugin_ui.cc' ]
             obj.defines += [ 'LXVST_SUPPORT' ]
-            obj.use += [ 'X11' ]
 
 #    # Tool to test libcanvas
 #    if re.search ("linux", sys.platform) != None and bld.env['CANVASTESTUI']:
@@ -535,16 +580,7 @@ def build(bld):
 #        obj.target    = 'canvas_test'
 #        obj.includes  = ['.', '../libs']
 #        obj.ldflags   = ['-no-undefined']
-#        obj.use       = [
-#                'libpbd',
-#                'libardour',
-#                'libardour_cp',
-#                'libtemporal',
-#                'libmidipp',
-#                'libgtkmm2ext',
-#                'libcanvas',
-#                'libptformat',
-#                ]
+#        obj.use       = uselibs
 #        obj.defines = [
 #                'NOMAIN',
 #                'PACKAGE="' + I18N_PACKAGE + '"',
@@ -553,7 +589,6 @@ def build(bld):
 #                'LOCALEDIR="' + os.path.normpath(bld.env['LOCALEDIR']) + '"',
 #                ]
 #        obj.linkflags = ''
-#        obj.uselib    = 'UUID FLAC FONTCONFIG GLIBMM GTHREAD GTK OGG CURL DL GTKMM CANVAS FFTW3F LO TAGLIB XML '
 #        # obj.source += [ 'canvas_test.cc', ]
 #        obj.source += [ 'toolbar_test.cc', 'enums.cc']
 
@@ -567,19 +602,7 @@ def build(bld):
         #
         # XXX do we really need to explicitly link to all of these for the wine executable?
         #
-        obj.use          = [ 'libpbd',
-                             'libmidipp',
-                             'libardour',
-                             'libardour_cp',
-                             'libtemporal',
-                             'libmidipp',
-                             'libgtk2_ardour',
-                             'libgtkmm2ext',
-                             'libcanvas',
-                             'libwaveview',
-                             'libwidgets',
-                             'libptformat',
-                             ]
+        obj.use          = uselibs
         obj.target = 'ardour-' + str (bld.env['VERSION']) + '-vst.exe.so'
         obj.includes  = [ '../libs/fst', '.' ]
         obj.linkflags = ['-mwindows', '-Wl,--export-dynamic']
@@ -591,9 +614,9 @@ def build(bld):
         # now the shared library containing the GTK GUI for ardour
         obj = bld (features = 'cxx c cxxshlib')
         # operate on copy to avoid adding sources twice
-        obj.source    = list(gtk2_ardour_sources)
+        obj.source    = list(sources)
         obj.includes  = [ '../libs/fst', '.' ]
-        obj.name      = 'libgtk2_ardour'
+        obj.name      = 'GTK2_ARDOUR'
         obj.target    = 'gtk2_ardour'
         obj.cflags  = [ '-fPIC' ]
 
@@ -604,10 +627,10 @@ def build(bld):
         else:
             obj = bld (features = 'cxx c cxxprogram')
         # operate on copy to avoid adding sources twice
-        obj.source    = list(gtk2_ardour_sources)
+        obj.source    = list(sources)
         obj.target = 'ardour-' + str (bld.env['VERSION'])
         obj.includes = ['.']
-        obj.ldflags = ['-no-undefined']
+        obj.ldflags = ['-Wl,--no-undefined']
 
         if bld.is_defined('WINDOWS_VST_SUPPORT'):
         # Windows VST support mingw
@@ -616,17 +639,7 @@ def build(bld):
     # at this point, "obj" refers to either the normal native executable
     # OR the shared library built for use with wine on linux.
 
-    obj.use      = [ 'libpbd',
-                     'libardour',
-                     'libardour_cp',
-                     'libtemporal',
-                     'libmidipp',
-                     'libgtkmm2ext',
-                     'libcanvas',
-                     'libwaveview',
-                     'libwidgets',
-                     'libptformat',
-                     ]
+    obj.use      = uselibs
 
     obj.defines = [
         'PACKAGE="' + I18N_PACKAGE + '"',
@@ -636,10 +649,8 @@ def build(bld):
         ]
     obj.install_path = bld.env['DLLDIR']
     obj.linkflags    = ''
-    obj.uselib       = 'UUID FLAC FONTCONFIG GLIBMM GTHREAD GTK OGG CURL DL GTKMM CANVAS FFTW3F LO TAGLIB XML '
 
     if sys.platform == 'darwin':
-        obj.uselib += ' AUDIOUNITS OSX '
         obj.use    += ' libappleutility'
         obj.source += [ 'cocoacarbon.mm', 'bundle_env_cocoa.cc' ]
     elif bld.env['build_target'] == 'mingw':
@@ -650,15 +661,11 @@ def build(bld):
 
     obj.includes += ['../libs']
 
-    obj.use += 'libptformat'
-
     if bld.env['build_target'] == 'mingw':
         obj.linkflags += ' -mwindows'
-        obj.use += [ 'PANGOFT2' ]
 
-    if bld.is_defined('HAVE_SUIL'):
+    if bld.is_defined('HAVE_LILV') and bld.is_defined('HAVE_SUIL'):
         obj.source += [ 'lv2_plugin_ui.cc' ]
-        obj.use += [ 'SUIL' ]
 
     if bld.is_defined('HAVE_FFTW35F') and bld.env['build_target'] != 'mingw':
         bld.env['LIB_FFTW3F'] += ['fftw3f_threads']
@@ -669,13 +676,10 @@ def build(bld):
     if bld.is_defined('WINDOWS_VST_SUPPORT'):
         obj.source += [ 'windows_vst_plugin_ui.cc' ]
         obj.defines += [ 'WINDOWS_VST_SUPPORT' ]
-        if bld.env['build_target'] != 'mingw':
-            obj.use += [ 'X11' ]
 
     if bld.is_defined('LXVST_SUPPORT'):
         obj.source += [ 'linux_vst_gui_support.cc', 'lxvst_plugin_ui.cc' ]
         obj.defines += [ 'LXVST_SUPPORT' ]
-        obj.use += [ 'X11' ]
 
     if bld.is_defined('MACVST_SUPPORT'):
         obj.source += [ 'mac_vst_plugin_ui.mm' ]
@@ -689,7 +693,6 @@ def build(bld):
 
     if bld.is_defined('HAVE_COREAUDIO'):
         TaskGen.task_gen.mappings['.mm'] = TaskGen.task_gen.mappings['.cc']
-        obj.use += ' libappleutility '
 
     if bld.is_defined('AUDIOUNIT_SUPPORT'):
         obj.source += [ 'au_pluginui.mm' ]
@@ -834,14 +837,9 @@ def build(bld):
     # always build all versions of the menu definitions
     # so that we can try them out with different program builds.
     for program in [ 'ardour', 'trx' ]:
-        obj = bld(features = 'command-output')
-        obj.command = 'cpp'
-        obj.command_is_external = True
-        obj.no_inputs = True
-        obj.argv = menus_argv
-        obj.dep_vars = ['PTFORMAT', 'GTKOSX', 'WINDOWS']
-        obj.stdin = program + '.menus.in'
-        obj.stdout = program + '.menus'
+        obj = bld(rule = 'cpp %s ${SRC} -o ${TGT}' % ' '.join(menus_argv))
+        obj.source = program + '.menus.in'
+        obj.target = program + '.menus'
         bld.install_files (bld.env['CONFDIR'], program + '.menus')
 
     # Freedesktop

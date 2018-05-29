@@ -17,6 +17,9 @@
 
 */
 
+#ifndef __gtk_ardour_monitor_section_h__
+#define __gtk_ardour_monitor_section_h__
+
 #include <gtkmm/box.h>
 #include <gtkmm/eventbox.h>
 #include <gtkmm/sizegroup.h>
@@ -209,3 +212,5 @@ private:
 	bool enter_handler (GdkEventCrossing*);
 	bool leave_handler (GdkEventCrossing*);
 };
+
+#endif // __gtk_ardour_monitor_section_h__

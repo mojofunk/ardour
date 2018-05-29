@@ -22,6 +22,12 @@
 #include <iostream>
 #include <cstdlib>
 
+#ifdef WITH_DEV_TOOLS
+#include "adtmm.hpp"
+#endif
+
+#include "pbd/library_options.h"
+
 #include "ardour/debug.h"
 #include "ardour/session.h"
 
@@ -82,12 +88,22 @@ print_help (const char *execname)
 		<< _("  -E, --save <file>           Load the specified session, save it to <file> and then quit\n")
 		<< _("  -h, --help                  Print this message\n")
 		<< _("  -k, --keybindings <file>    Name of key bindings to load\n")
+#ifdef WITH_DEV_TOOLS
+		<< _("  -l, --log-file              Set log output file\n")
+		<< _("  -L, --log-categories        Set enabled log categories. Use \"-L list\" to see available options.\n")
+#endif
 		<< _("  -m, --menus file            Use \"file\" to define menus\n")
 		<< _("  -n, --no-splash             Do not show splash screen\n")
 		<< _("  -N, --new session-name      Create a new session from the command line\n")
 		<< _("  -O, --no-hw-optimizations   Disable h/w specific optimizations\n")
 		<< _("  -P, --no-connect-ports      Do not connect any ports at startup\n")
+#ifdef WITH_DEV_TOOLS
+		<< _("  -R, --log-record-types      Set enabled log record types (all, message, call, data, allocation)\n")
+#endif
 		<< _("  -S, --sync                  Draw the GUI synchronously\n")
+#ifdef WITH_DEV_TOOLS
+		<< _("  -t, --log-enable-trace      Set stack tracing enabled by default for logging\n")
+#endif
 		<< _("  -T, --template <name>       Use given template for new session\n")
 		<< _("  -U, --uuid <uuid>           Set (jack) backend UUID\n")
 		<< _("  -v, --version               Print version and exit\n")
@@ -105,7 +121,7 @@ print_help (const char *execname)
 int
 ARDOUR_COMMAND_LINE::parse_opts (int argc, char *argv[])
 {
-	const char *optstring = "aAbBc:C:dD:hHk:E:m:N:nOp:PST:U:vV";
+	const char *optstring = "aAbBc:C:dD:hHk:l:L:E:m:N:nOp:PR:StT:U:vV";
 	const char *execname = strrchr (argv[0], '/');
 
 	if (execname == 0) {
@@ -123,16 +139,20 @@ ARDOUR_COMMAND_LINE::parse_opts (int argc, char *argv[])
 		{ "bypass-plugins", 0, 0, 'B' },
 		{ "disable-plugins", 0, 0, 'd' },
 		{ "debug", 1, 0, 'D' },
+		{ "log-file", 1, 0, 'l' },
+		{ "log-categories", 1, 0, 'L' },
 		{ "no-splash", 0, 0, 'n' },
 		{ "menus", 1, 0, 'm' },
 		{ "name", 1, 0, 'c' },
 		{ "novst", 0, 0, 'V' },
 		{ "new", 1, 0, 'N' },
 		{ "no-hw-optimizations", 0, 0, 'O' },
+		{ "log-record-types", 1, 0, 'R' },
 		{ "sync", 0, 0, 'S' },
 		{ "curvetest", 1, 0, 'C' },
 		{ "save", 1, 0, 'E' },
 		{ "uuid", 1, 0, 'U' },
+		{ "log-enable-trace", 0, 0, 't' },
 		{ "template", 1, 0, 'T' },
 		{ "no-connect-ports", 0, 0, 'P' },
 		{ 0, 0, 0, 0 }
@@ -191,6 +211,16 @@ ARDOUR_COMMAND_LINE::parse_opts (int argc, char *argv[])
 			}
 			break;
 
+#ifdef WITH_DEV_TOOLS
+		case 'l':
+			adtmm::LibraryOptions::set_log_file_path(optarg);
+			break;
+
+		case 'L':
+			adtmm::LibraryOptions::set_log_categories_string(optarg);
+			break;
+#endif
+
 		case 'm':
 			menus_file = optarg;
 			break;
@@ -204,9 +234,22 @@ ARDOUR_COMMAND_LINE::parse_opts (int argc, char *argv[])
 			finder_invoked_ardour = true;
 			break;
 
+#ifdef WITH_DEV_TOOLS
+		case 'R':
+			adtmm::LibraryOptions::set_record_types_string(optarg);
+			break;
+#endif
+
 		case 'S':
 		//	; just pass this through to gtk it will figure it out
 			break;
+
+#ifdef WITH_DEV_TOOLS
+		case 't':
+			adtmm::LibraryOptions::set_trace_enabled();
+			break;
+#endif
+
 		case 'T':
 			load_template = optarg;
 			break;

@@ -81,6 +81,8 @@ private:
 	std::map<boost::shared_ptr<ARDOUR::Source>, bool> rec_data_ready_map;
 
 	bool outline_region;
+
+	A_DECLARE_CLASS_MEMBERS (AudioStreamView);
 };
 
 #endif /* __ardour_audio_streamview_h__ */

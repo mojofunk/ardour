@@ -43,6 +43,7 @@
 
 #include "ardour_ui.h"
 #include "gui_thread.h"
+#include "logging.h"
 #include "mixer_ui.h"
 #include "monitor_section.h"
 #include "public_editor.h"
@@ -1180,6 +1181,8 @@ MonitorSection::map_state ()
 void
 MonitorSection::do_blink (bool onoff)
 {
+	A_LOG_CALL1 (LOG::GUITiming, onoff);
+
 	if (!UIConfiguration::instance().get_blink_alert_indicators ()) {
 		onoff = true;
 	}
@@ -1191,6 +1194,8 @@ MonitorSection::do_blink (bool onoff)
 void
 MonitorSection::audition_blink (bool onoff)
 {
+	A_LOG_CALL1 (LOG::GUITiming, onoff);
+
 	if (_session == 0) {
 		return;
 	}
@@ -1205,6 +1210,8 @@ MonitorSection::audition_blink (bool onoff)
 void
 MonitorSection::solo_blink (bool onoff)
 {
+	A_LOG_CALL1 (LOG::GUITiming, onoff);
+
 	if (_session == 0) {
 		return;
 	}

@@ -65,6 +65,7 @@
 #include "gui_thread.h"
 #include "keyboard.h"
 #include "latency_gui.h"
+#include "logging.h"
 #include "mixer_strip.h"
 #include "patch_change_widget.h"
 #include "plugin_pin_dialog.h"
@@ -85,6 +86,8 @@ using namespace ARDOUR_UI_UTILS;
 using namespace ArdourWidgets;
 using namespace PBD;
 using namespace std;
+
+A_DEFINE_CLASS_AS_MEMBERS(RouteUI, "GUI::RouteUI");
 
 uint32_t RouteUI::_max_invert_buttons = 3;
 PBD::Signal1<void, boost::shared_ptr<Route> > RouteUI::BusSendDisplayChanged;
@@ -1360,6 +1363,8 @@ RouteUI::session_rec_enable_changed ()
 void
 RouteUI::blink_rec_display (bool blinkOn)
 {
+	A_LOG_CALL1 (LOG::GUITiming, blinkOn);
+
 	if (!rec_enable_button || !_route) {
 		return;
 	}

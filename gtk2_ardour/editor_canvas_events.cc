@@ -46,6 +46,7 @@
 #include "automation_line.h"
 #include "control_point.h"
 #include "editor_drag.h"
+#include "logging.h"
 #include "midi_time_axis.h"
 #include "editor_regions.h"
 #include "ui_config.h"
@@ -64,6 +65,8 @@ using Gtkmm2ext::Keyboard;
 bool
 Editor::track_canvas_scroll (GdkEventScroll* ev)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	int direction = ev->direction;
 
 	/* this event arrives without transformation by the canvas, so we have
@@ -152,6 +155,8 @@ Editor::track_canvas_scroll (GdkEventScroll* ev)
 bool
 Editor::canvas_scroll_event (GdkEventScroll *event, bool from_canvas)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	if (from_canvas) {
 		boost::optional<ArdourCanvas::Rect> rulers = _time_markers_group->bounding_box();
 		if (rulers && rulers->contains (Duple (event->x, event->y))) {
@@ -166,6 +171,8 @@ Editor::canvas_scroll_event (GdkEventScroll *event, bool from_canvas)
 bool
 Editor::track_canvas_button_press_event (GdkEventButton *event)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	_track_canvas->grab_focus();
 	if (!Keyboard::is_context_menu_event (event)) {
 		begin_reversible_selection_op (X_("Clear Selection Click (track canvas)"));
@@ -178,6 +185,8 @@ Editor::track_canvas_button_press_event (GdkEventButton *event)
 bool
 Editor::track_canvas_button_release_event (GdkEventButton *event)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	if (!Keyboard::is_context_menu_event (event)) {
 		if (_drags->active ()) {
 			_drags->end_grab ((GdkEvent*) event);
@@ -189,6 +198,8 @@ Editor::track_canvas_button_release_event (GdkEventButton *event)
 bool
 Editor::track_canvas_motion_notify_event (GdkEventMotion */*event*/)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	int x, y;
 	/* keep those motion events coming */
 	_track_canvas->get_pointer (x, y);
@@ -198,6 +209,8 @@ Editor::track_canvas_motion_notify_event (GdkEventMotion */*event*/)
 bool
 Editor::typed_event (ArdourCanvas::Item* item, GdkEvent *event, ItemType type)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	if (!session () || session()->loading () || session()->deletion_in_progress ()) {
 		return false;
 	}
@@ -242,6 +255,8 @@ Editor::typed_event (ArdourCanvas::Item* item, GdkEvent *event, ItemType type)
 bool
 Editor::canvas_region_view_event (GdkEvent *event, ArdourCanvas::Item* item, RegionView *rv)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	bool ret = false;
 
 	if (!rv->sensitive ()) {
@@ -289,6 +304,8 @@ Editor::canvas_region_view_event (GdkEvent *event, ArdourCanvas::Item* item, Reg
 bool
 Editor::canvas_wave_view_event (GdkEvent *event, ArdourCanvas::Item* item, RegionView* rv)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	/* we only care about enter events here, required for mouse/cursor
 	 * tracking. there is a non-linear (non-child/non-parent) relationship
 	 * between various components of a regionview and so when we leave one
@@ -325,6 +342,8 @@ Editor::canvas_wave_view_event (GdkEvent *event, ArdourCanvas::Item* item, Regio
 bool
 Editor::canvas_stream_view_event (GdkEvent *event, ArdourCanvas::Item* item, RouteTimeAxisView *tv)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	bool ret = FALSE;
 
 	switch (event->type) {
@@ -368,6 +387,8 @@ Editor::canvas_stream_view_event (GdkEvent *event, ArdourCanvas::Item* item, Rou
 bool
 Editor::canvas_automation_track_event (GdkEvent *event, ArdourCanvas::Item* item, AutomationTimeAxisView *atv)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	bool ret = false;
 
 	switch (event->type) {

@@ -33,10 +33,13 @@
 
 #include <curl/curl.h>
 
+#include "pbd/pbd.h"
+
 #include "pbd/error.h"
 #include "pbd/file_utils.h"
 #include "pbd/textreceiver.h"
 #include "pbd/failed_constructor.h"
+#include "pbd/logging.h"
 #include "pbd/pathexpand.h"
 #include "pbd/pthread_utils.h"
 #ifdef BOOST_SP_ENABLE_DEBUG_HOOKS
@@ -54,6 +57,10 @@
 
 #include <gtkmm2ext/application.h>
 #include <gtkmm2ext/utils.h>
+
+#ifdef WITH_DEV_TOOLS
+#include "adtmm.hpp"
+#endif
 
 #include "ardour_ui.h"
 #include "ui_config.h"
@@ -249,7 +256,6 @@ static void console_madness_end () {}
 static void command_line_parse_error (int *argc, char** argv[]) {
 	// Since we don't ordinarily have access to stdout and stderr with
 	// an MSVC app, let the user know we encountered a parsing error.
-	Gtk::Main app(argc, argv); // Calls 'gtk_init()'
 
 	Gtk::MessageDialog dlgReportParseError (string_compose (_("\n   %1 could not understand your command line      "), PROGRAM_NAME),
 			false, MESSAGE_ERROR, BUTTONS_CLOSE, true);
@@ -288,6 +294,19 @@ int nomain (int argc, char *argv[])
 int main (int argc, char *argv[])
 #endif
 {
+#ifdef ENABLE_NLS
+	/* initialize C locale to user preference */
+	if (ARDOUR::translations_are_enabled ()) {
+		setlocale (LC_ALL, "");
+	}
+#endif
+
+	int opts_error = parse_opts (argc, argv);
+
+	if (!PBD::init ()) {
+		return 1;
+	}
+
 	ARDOUR::check_for_old_configuration_files();
 
 	/* global init is not thread safe.*/
@@ -299,23 +318,16 @@ int main (int argc, char *argv[])
 
 	load_custom_fonts(); /* needs to happen before any gtk and pango init calls */
 
-	if (!Glib::thread_supported()) {
-		Glib::thread_init();
-	}
-
 #ifdef LXVST_SUPPORT
 	XInitThreads ();
 #endif
 
-#ifdef HAVE_FFTW35F
-	fftwf_make_planner_thread_safe ();
+#ifdef WITH_DEV_TOOLS
+	adtmm::Application::set_source_search_paths (ARDOUR::ardour_data_search_path ());
 #endif
 
-#ifdef ENABLE_NLS
-	/* initialize C locale to user preference */
-	if (ARDOUR::translations_are_enabled ()) {
-		setlocale (LC_ALL, "");
-	}
+#ifdef HAVE_FFTW35F
+	fftwf_make_planner_thread_safe ();
 #endif
 
 	console_madness_begin();
@@ -353,7 +365,9 @@ int main (int argc, char *argv[])
 	}
 #endif
 
-	if (parse_opts (argc, argv)) {
+	Gtk::Main main(argc, argv);
+
+	if (opts_error) {
 		command_line_parse_error (&argc, &argv);
 		exit (1);
 	}
@@ -385,7 +399,6 @@ int main (int argc, char *argv[])
 
 	if (!ARDOUR::init (ARDOUR_COMMAND_LINE::use_vst, ARDOUR_COMMAND_LINE::try_hw_optimization, localedir.c_str())) {
 		error << string_compose (_("could not initialize %1."), PROGRAM_NAME) << endmsg;
-		Gtk::Main main (argc, argv);
 		Gtk::MessageDialog msg (string_compose (_("Could not initialize %1 (likely due to corrupt config files).\n"
 		                                          "Run %1 from a commandline for more information."), PROGRAM_NAME),
 		                        false, Gtk::MESSAGE_ERROR , Gtk::BUTTONS_OK, true);
@@ -404,6 +417,11 @@ int main (int argc, char *argv[])
 #endif
 
 	DEBUG_TRACE (DEBUG::Locale, string_compose ("main() locale '%1'\n", setlocale (LC_NUMERIC, NULL)));
+
+#ifdef WITH_DEV_TOOLS
+	adtmm::Application app;
+	adtmm::Application::get_developer_window()->present();
+#endif
 
 	if (UIConfiguration::instance().pre_gui_init ()) {
 		error << _("Could not complete pre-GUI initialization") << endmsg;

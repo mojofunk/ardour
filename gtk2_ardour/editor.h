@@ -1134,7 +1134,7 @@ private:
 
 		Type       pending;
 		samplepos_t time_origin;
-	        samplecnt_t samples_per_pixel;
+		samplecnt_t samples_per_pixel;
 		double     y_origin;
 
 		int idle_handler_id;

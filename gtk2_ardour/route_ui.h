@@ -351,6 +351,8 @@ private:
 	static boost::weak_ptr<ARDOUR::Route> _showing_sends_to;
 
 	static uint32_t _max_invert_buttons;
+
+	A_DECLARE_CLASS_MEMBERS (RouteUI);
 };
 
 #endif /* __ardour_route_ui__ */

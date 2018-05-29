@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#ifndef __gtk_ardour_cimg_area_h__
+#define __gtk_ardour_cimg_area_h__
+
 #include <cairo/cairo.h>
 #include <gtkmm/notebook.h>
 #include <gtkmm/togglebutton.h>
@@ -229,3 +232,5 @@ private:
 	int _audition_num;
 	int _page_num;
 };
+
+#endif // __gtk_ardour_cimg_area_h__

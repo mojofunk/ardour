@@ -86,6 +86,7 @@
 #include "interthread_progress_window.h"
 #include "item_counts.h"
 #include "keyboard.h"
+#include "logging.h"
 #include "midi_region_view.h"
 #include "mixer_ui.h"
 #include "mixer_strip.h"
@@ -127,6 +128,8 @@ using Gtkmm2ext::Keyboard;
 void
 Editor::undo (uint32_t n)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, n);
+
 	if (_session && _session->actively_recording()) {
 		/* no undo allowed while recording. Session will check also,
 		   but we don't even want to get to that.
@@ -151,6 +154,8 @@ Editor::undo (uint32_t n)
 void
 Editor::redo (uint32_t n)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, n);
+
 	if (_session && _session->actively_recording()) {
 		/* no redo allowed while recording. Session will check also,
 		   but we don't even want to get to that.
@@ -175,6 +180,8 @@ Editor::redo (uint32_t n)
 void
 Editor::split_regions_at (MusicSample where, RegionSelection& regions)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	bool frozen = false;
 
 	RegionSelection pre_selected_regions = selection->regions;
@@ -312,6 +319,8 @@ Editor::split_regions_at (MusicSample where, RegionSelection& regions)
 void
 Editor::move_range_selection_start_or_end_to_region_boundary (bool move_end, bool next)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	if (selection->time.start() == selection->time.end_sample()) {
 		return;
 	}
@@ -374,6 +383,8 @@ Editor::nudge_backward_release (GdkEventButton* ev)
 void
 Editor::nudge_forward (bool next, bool force_playhead)
 {
+	A_LOG_CLASS_CALL2 (LOG::Editor, next, force_playhead);
+
 	samplepos_t distance;
 	samplepos_t next_distance;
 
@@ -463,6 +474,8 @@ Editor::nudge_forward (bool next, bool force_playhead)
 void
 Editor::nudge_backward (bool next, bool force_playhead)
 {
+	A_LOG_CLASS_CALL2 (LOG::Editor, next, force_playhead);
+
 	samplepos_t distance;
 	samplepos_t next_distance;
 
@@ -587,6 +600,8 @@ Editor::nudge_forward_capture_offset ()
 void
 Editor::nudge_backward_capture_offset ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	RegionSelection rs = get_regions_from_selection_and_entered ();
 
 	if (!_session || rs.empty()) {
@@ -622,6 +637,8 @@ struct RegionSelectionPositionSorter {
 void
 Editor::sequence_regions ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	samplepos_t r_end;
 	samplepos_t r_end_prev;
 
@@ -693,6 +710,7 @@ Editor::move_to_end ()
 void
 Editor::build_region_boundary_cache ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
 
 	/* TODO:  maybe set a timer so we don't recalutate when lots of changes are coming in */
 	/* TODO:  maybe somehow defer this until session is fully loaded.  */
@@ -817,6 +835,8 @@ Editor::build_region_boundary_cache ()
 boost::shared_ptr<Region>
 Editor::find_next_region (samplepos_t sample, RegionPoint point, int32_t dir, TrackViewList& tracks, TimeAxisView **ontrack)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, sample);
+
 	TrackViewList::iterator i;
 	samplepos_t closest = max_samplepos;
 	boost::shared_ptr<Region> ret;
@@ -869,6 +889,8 @@ Editor::find_next_region (samplepos_t sample, RegionPoint point, int32_t dir, Tr
 samplepos_t
 Editor::find_next_region_boundary (samplepos_t pos, int32_t dir, const TrackViewList& tracks)
 {
+	A_LOG_CLASS_CALL2 (LOG::Editor, pos, dir);
+
 	samplecnt_t distance = max_samplepos;
 	samplepos_t current_nearest = -1;
 
@@ -900,6 +922,8 @@ Editor::find_next_region_boundary (samplepos_t pos, int32_t dir, const TrackView
 samplepos_t
 Editor::get_region_boundary (samplepos_t pos, int32_t dir, bool with_selection, bool only_onscreen)
 {
+	A_LOG_CLASS_CALL4 (LOG::Editor, pos, dir, with_selection, only_onscreen);
+
 	samplepos_t target;
 	TrackViewList tvl;
 
@@ -969,6 +993,8 @@ Editor::cursor_to_previous_region_boundary (bool with_selection)
 void
 Editor::cursor_to_region_point (EditorCursor* cursor, RegionPoint point, int32_t dir)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	boost::shared_ptr<Region> r;
 	samplepos_t pos = cursor->current_sample ();
 
@@ -1038,6 +1064,8 @@ Editor::cursor_to_previous_region_point (EditorCursor* cursor, RegionPoint point
 void
 Editor::cursor_to_selection_start (EditorCursor *cursor)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	samplepos_t pos = 0;
 
 	switch (mouse_mode) {
@@ -1096,6 +1124,8 @@ Editor::cursor_to_selection_end (EditorCursor *cursor)
 void
 Editor::selected_marker_to_region_boundary (bool with_selection, int32_t dir)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	samplepos_t target;
 	Location* loc;
 	bool ignored;
@@ -1148,6 +1178,8 @@ Editor::selected_marker_to_previous_region_boundary (bool with_selection)
 void
 Editor::selected_marker_to_region_point (RegionPoint point, int32_t dir)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	boost::shared_ptr<Region> r;
 	samplepos_t pos;
 	Location* loc;
@@ -1214,6 +1246,8 @@ Editor::selected_marker_to_previous_region_point (RegionPoint point)
 void
 Editor::selected_marker_to_selection_start ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	samplepos_t pos = 0;
 	Location* loc;
 	bool ignored;
@@ -1284,6 +1318,8 @@ Editor::selected_marker_to_selection_end ()
 void
 Editor::scroll_playhead (bool forward)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, forward);
+
 	samplepos_t pos = playhead_cursor->current_sample ();
 	samplecnt_t delta = (samplecnt_t) floor (current_page_samples() / 0.8);
 
@@ -1317,6 +1353,8 @@ Editor::scroll_playhead (bool forward)
 void
 Editor::cursor_align (bool playhead_to_edit)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, playhead_to_edit);
+
 	if (!_session) {
 		return;
 	}
@@ -1367,6 +1405,8 @@ Editor::scroll_backward (float pages)
 void
 Editor::scroll_forward (float pages)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, pages);
+
 	samplepos_t const one_page = (samplepos_t) rint (_visible_canvas_width * samples_per_pixel);
 	samplepos_t const cnt = (samplepos_t) floor (pages * one_page);
 
@@ -1383,6 +1423,8 @@ Editor::scroll_forward (float pages)
 void
 Editor::scroll_tracks_down ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	double vert_value = vertical_adjustment.get_value() + vertical_adjustment.get_page_size();
 	if (vert_value > vertical_adjustment.get_upper() - _visible_canvas_height) {
 		vert_value = vertical_adjustment.get_upper() - _visible_canvas_height;
@@ -1394,12 +1436,16 @@ Editor::scroll_tracks_down ()
 void
 Editor::scroll_tracks_up ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	vertical_adjustment.set_value (vertical_adjustment.get_value() - vertical_adjustment.get_page_size());
 }
 
 void
 Editor::scroll_tracks_down_line ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	double vert_value = vertical_adjustment.get_value() + 60;
 
 	if (vert_value > vertical_adjustment.get_upper() - _visible_canvas_height) {
@@ -1412,6 +1458,8 @@ Editor::scroll_tracks_down_line ()
 void
 Editor::scroll_tracks_up_line ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	reset_y_origin (vertical_adjustment.get_value() - 60);
 }
 
@@ -1434,6 +1482,8 @@ Editor::select_topmost_track ()
 bool
 Editor::scroll_down_one_track (bool skip_child_views)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, skip_child_views);
+
 	TrackViewList::reverse_iterator next = track_views.rend();
 	const double top_of_trackviews = vertical_adjustment.get_value();
 
@@ -1505,6 +1555,8 @@ Editor::scroll_down_one_track (bool skip_child_views)
 bool
 Editor::scroll_up_one_track (bool skip_child_views)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, skip_child_views);
+
 	TrackViewList::iterator prev = track_views.end();
 	double top_of_trackviews = vertical_adjustment.get_value ();
 
@@ -1596,6 +1648,8 @@ Editor::scroll_up_one_track (bool skip_child_views)
 void
 Editor::scroll_left_step ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	samplepos_t xdelta = (current_page_samples() / 8);
 
 	if (_leftmost_sample > xdelta) {
@@ -1609,6 +1663,8 @@ Editor::scroll_left_step ()
 void
 Editor::scroll_right_step ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	samplepos_t xdelta = (current_page_samples() / 8);
 
 	if (max_samplepos - xdelta > _leftmost_sample) {
@@ -1621,6 +1677,8 @@ Editor::scroll_right_step ()
 void
 Editor::scroll_left_half_page ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	samplepos_t xdelta = (current_page_samples() / 2);
 	if (_leftmost_sample > xdelta) {
 		reset_x_origin (_leftmost_sample - xdelta);
@@ -1632,6 +1690,8 @@ Editor::scroll_left_half_page ()
 void
 Editor::scroll_right_half_page ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	samplepos_t xdelta = (current_page_samples() / 2);
 	if (max_samplepos - xdelta > _leftmost_sample) {
 		reset_x_origin (_leftmost_sample + xdelta);
@@ -1645,6 +1705,8 @@ Editor::scroll_right_half_page ()
 void
 Editor::tav_zoom_step (bool coarser)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, coarser);
+
 	DisplaySuspender ds;
 
 	TrackViewList* ts;
@@ -1664,6 +1726,8 @@ Editor::tav_zoom_step (bool coarser)
 void
 Editor::tav_zoom_smooth (bool coarser, bool force_all)
 {
+	A_LOG_CLASS_CALL2 (LOG::Editor, coarser, force_all);
+
 	DisplaySuspender ds;
 
 	TrackViewList* ts;
@@ -1694,6 +1758,8 @@ Editor::tav_zoom_smooth (bool coarser, bool force_all)
 void
 Editor::temporal_zoom_step_mouse_focus_scale (bool zoom_out, double scale)
 {
+	A_LOG_CLASS_CALL2 (LOG::Editor, zoom_out, scale);
+
 	Editing::ZoomFocus temp_focus = zoom_focus;
 	zoom_focus = Editing::ZoomFocusMouse;
 	temporal_zoom_step_scale (zoom_out, scale);
@@ -1715,6 +1781,8 @@ Editor::temporal_zoom_step (bool zoom_out)
 void
 Editor::temporal_zoom_step_scale (bool zoom_out, double scale)
 {
+	A_LOG_CLASS_CALL2 (LOG::Editor, zoom_out, scale);
+
 	ENSURE_GUI_THREAD (*this, &Editor::temporal_zoom_step, zoom_out, scale)
 
 	samplecnt_t nspp = samples_per_pixel;
@@ -1744,6 +1812,8 @@ Editor::temporal_zoom_step_scale (bool zoom_out, double scale)
 void
 Editor::temporal_zoom (samplecnt_t fpp)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, fpp);
+
 	if (!_session) {
 		return;
 	}
@@ -1878,6 +1948,8 @@ Editor::temporal_zoom (samplecnt_t fpp)
 void
 Editor::calc_extra_zoom_edges(samplepos_t &start, samplepos_t &end)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	/* this func helps make sure we leave a little space
 	   at each end of the editor so that the zoom doesn't fit the region
 	   precisely to the screen.
@@ -1909,6 +1981,8 @@ Editor::calc_extra_zoom_edges(samplepos_t &start, samplepos_t &end)
 bool
 Editor::get_selection_extents (samplepos_t &start, samplepos_t &end) const
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	start = max_samplepos;
 	end = 0;
 	bool ret = true;
@@ -2001,6 +2075,8 @@ Editor::temporal_zoom_selection (Editing::ZoomAxis axes)
 void
 Editor::temporal_zoom_session ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	ENSURE_GUI_THREAD (*this, &Editor::temporal_zoom_session)
 
 	if (_session) {
@@ -2065,6 +2141,8 @@ Editor::temporal_zoom_extents ()
 void
 Editor::temporal_zoom_by_sample (samplepos_t start, samplepos_t end)
 {
+	A_LOG_CLASS_CALL2 (LOG::Editor, start, end);
+
 	if (!_session) return;
 
 	if ((start == 0 && end == 0) || end < start) {
@@ -2093,6 +2171,8 @@ Editor::temporal_zoom_by_sample (samplepos_t start, samplepos_t end)
 void
 Editor::temporal_zoom_to_sample (bool coarser, samplepos_t sample)
 {
+	A_LOG_CLASS_CALL2 (LOG::Editor, coarser, sample);
+
 	if (!_session) {
 		return;
 	}

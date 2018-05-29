@@ -26,6 +26,9 @@
 #include <vector>
 
 #include <sigc++/signal.h>
+
+#include "pbd/dev_tools.h"
+
 #include "ardour/audioregion.h"
 
 #include "canvas/fwd.h"
@@ -224,6 +227,8 @@ private:
 
 	bool trim_fade_in_drag_active;
 	bool trim_fade_out_drag_active;
+
+	A_DECLARE_CLASS_MEMBERS (AudioRegionView);
 };
 
 #endif /* __gtk_ardour_audio_region_view_h__ */

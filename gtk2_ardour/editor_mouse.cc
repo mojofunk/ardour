@@ -73,6 +73,7 @@
 #include "editor_cursors.h"
 #include "verbose_cursor.h"
 #include "note.h"
+#include "logging.h"
 
 #include "pbd/i18n.h"
 
@@ -86,6 +87,8 @@ using Gtkmm2ext::Keyboard;
 bool
 Editor::mouse_sample (samplepos_t& where, bool& in_track_canvas) const
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
         /* gdk_window_get_pointer() has X11's XQueryPointer semantics in that it only
 	   pays attentions to subwindows. this means that menu windows are ignored, and
 	   if the pointer is in a menu, the return window from the call will be the
@@ -134,6 +137,8 @@ Editor::mouse_sample (samplepos_t& where, bool& in_track_canvas) const
 samplepos_t
 Editor::window_event_sample (GdkEvent const * event, double* pcx, double* pcy) const
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	ArdourCanvas::Duple d;
 
 	if (!gdk_event_get_coords (event, &d.x, &d.y)) {
@@ -159,6 +164,8 @@ Editor::window_event_sample (GdkEvent const * event, double* pcx, double* pcy) c
 samplepos_t
 Editor::canvas_event_sample (GdkEvent const * event, double* pcx, double* pcy) const
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	double x;
 	double y;
 
@@ -168,6 +175,8 @@ Editor::canvas_event_sample (GdkEvent const * event, double* pcx, double* pcy) c
 		cerr << "!NO c COORDS for event type " << event->type << endl;
 		return 0;
 	}
+
+	A_LOG_CLASS_DATA2 (LOG::EditorCanvas, x, y);
 
 	if (pcx) {
 		*pcx = x;
@@ -262,6 +271,8 @@ get_mouse_mode_action(MouseMode m)
 void
 Editor::set_mouse_mode (MouseMode m, bool force)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	if (_drags->active ()) {
 		return;
 	}
@@ -288,6 +299,8 @@ Editor::set_mouse_mode (MouseMode m, bool force)
 void
 Editor::mouse_mode_toggled (MouseMode m)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	if (ARDOUR::Profile->get_mixbus()) {
 		if (m == MouseCut)  m = MouseObject;
 		if (m == MouseAudition)  m = MouseRange;
@@ -353,6 +366,8 @@ Editor::internal_editing() const
 void
 Editor::update_time_selection_display ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	switch (mouse_mode) {
 	case MouseRange:
 		selection->clear_objects ();
@@ -411,6 +426,8 @@ Editor::update_time_selection_display ()
 void
 Editor::step_mouse_mode (bool next)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	const int n_mouse_modes = (int)MouseContent + 1;
 	int       current       = (int)current_mouse_mode();
 	if (next) {
@@ -423,6 +440,7 @@ Editor::step_mouse_mode (bool next)
 void
 Editor::button_selection (ArdourCanvas::Item* item, GdkEvent* event, ItemType item_type)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
 
  	/* in object/audition/timefx/gain-automation mode,
 	   any button press sets the selection if the object
@@ -685,6 +703,8 @@ Editor::button_selection (ArdourCanvas::Item* item, GdkEvent* event, ItemType it
 bool
 Editor::button_press_handler_1 (ArdourCanvas::Item* item, GdkEvent* event, ItemType item_type)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	/* single mouse clicks on any of these item types operate
 	   independent of mouse mode, mostly because they are
 	   not on the main track canvas or because we want
@@ -1204,6 +1224,8 @@ Editor::button_press_handler_1 (ArdourCanvas::Item* item, GdkEvent* event, ItemT
 bool
 Editor::button_press_handler_2 (ArdourCanvas::Item* item, GdkEvent* event, ItemType item_type)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	Editing::MouseMode const eff = effective_mouse_mode ();
 	switch (eff) {
 	case MouseObject:
@@ -1267,6 +1289,8 @@ Editor::button_press_handler_2 (ArdourCanvas::Item* item, GdkEvent* event, ItemT
 bool
 Editor::button_press_handler (ArdourCanvas::Item* item, GdkEvent* event, ItemType item_type)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	if (event->type == GDK_2BUTTON_PRESS) {
 		_drags->mark_double_click ();
 		gdk_pointer_ungrab (GDK_CURRENT_TIME);
@@ -1357,6 +1381,8 @@ Editor::button_release_dispatch (GdkEventButton* ev)
 bool
 Editor::button_release_handler (ArdourCanvas::Item* item, GdkEvent* event, ItemType item_type)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	MusicSample where (canvas_event_sample (event), 0);
 	AutomationTimeAxisView* atv = 0;
 
@@ -1743,6 +1769,8 @@ Editor::button_release_handler (ArdourCanvas::Item* item, GdkEvent* event, ItemT
 bool
 Editor::enter_handler (ArdourCanvas::Item* item, GdkEvent* event, ItemType item_type)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	ControlPoint* cp;
 	ArdourMarker * marker;
 	MeterMarker* m_marker = 0;
@@ -1900,6 +1928,8 @@ Editor::enter_handler (ArdourCanvas::Item* item, GdkEvent* event, ItemType item_
 bool
 Editor::leave_handler (ArdourCanvas::Item* item, GdkEvent*, ItemType item_type)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	AutomationLine* al;
 	ArdourMarker *marker;
 	TempoMarker *t_marker;
@@ -1994,6 +2024,8 @@ Editor::leave_handler (ArdourCanvas::Item* item, GdkEvent*, ItemType item_type)
 void
 Editor::scrub (samplepos_t sample, double current_x)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	double delta;
 
 	if (scrubbing_direction == 0) {
@@ -2073,6 +2105,8 @@ Editor::scrub (samplepos_t sample, double current_x)
 bool
 Editor::motion_handler (ArdourCanvas::Item* /*item*/, GdkEvent* event, bool from_autoscroll)
 {
+	A_LOG_CLASS_CALL1 (LOG::EditorCanvas, from_autoscroll);
+
 	_last_motion_y = event->motion.y;
 
 	if (event->motion.is_hint) {

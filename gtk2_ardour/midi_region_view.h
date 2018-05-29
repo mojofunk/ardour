@@ -23,6 +23,7 @@
 #include <vector>
 #include <stdint.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/signals.h"
 
 #include "ardour/midi_model.h"
@@ -539,6 +540,9 @@ private:
 
 	double note_to_y (uint8_t note) const;
 	uint8_t y_to_note (double y) const;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (MidiRegionView);
 };
 
 

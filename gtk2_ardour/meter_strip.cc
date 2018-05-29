@@ -57,6 +57,8 @@ using namespace Gtkmm2ext;
 using namespace std;
 using namespace ArdourMeter;
 
+A_DEFINE_CLASS_AS_MEMBERS (MeterStrip, "GUI::MeterStrip");
+
 PBD::Signal1<void,MeterStrip*> MeterStrip::CatchDeletion;
 PBD::Signal0<void> MeterStrip::MetricChanged;
 PBD::Signal0<void> MeterStrip::ConfigurationChanged;

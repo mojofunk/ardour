@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#ifndef __gtk_ardour_script_selector_h__
+#define __gtk_ardour_script_selector_h__
+
 #include <gtkmm/button.h>
 #include <gtkmm/comboboxtext.h>
 #include <gtkmm/label.h>
@@ -79,3 +82,5 @@ private:
 	const std::vector<std::string> &_existing_names;
 	ARDOUR::LuaScriptParamList& _lsp;
 };
+
+#endif // __gtk_ardour_script_selector_h__

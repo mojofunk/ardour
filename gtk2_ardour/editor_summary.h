@@ -130,6 +130,8 @@ private:
 	PBD::ScopedConnectionList position_connection;
 	PBD::ScopedConnection route_ctrl_id_connection;
 	PBD::ScopedConnectionList region_property_connection;
+
+	A_DECLARE_CLASS_MEMBERS (EditorSummary);
 };
 
 #endif

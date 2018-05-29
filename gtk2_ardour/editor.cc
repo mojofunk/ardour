@@ -115,6 +115,7 @@
 #include "gui_object.h"
 #include "gui_thread.h"
 #include "keyboard.h"
+#include "logging.h"
 #include "luainstance.h"
 #include "marker.h"
 #include "midi_region_view.h"
@@ -449,6 +450,8 @@ Editor::Editor ()
 	, _main_menu_disabler (0)
 	, myactions (X_("editor"))
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	/* we are a singleton */
 
 	PublicEditor::_instance = this;
@@ -866,6 +869,8 @@ Editor::Editor ()
 
 Editor::~Editor()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	delete button_bindings;
 	delete _routes;
 	delete _route_groups;
@@ -920,6 +925,8 @@ Editor::get_smart_mode () const
 void
 Editor::catch_vanishing_regionview (RegionView *rv)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	/* note: the selection will take care of the vanishing
 	   audioregionview by itself.
 	*/
@@ -944,6 +951,8 @@ Editor::catch_vanishing_regionview (RegionView *rv)
 void
 Editor::set_entered_regionview (RegionView* rv)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	if (rv == entered_regionview) {
 		return;
 	}
@@ -969,6 +978,8 @@ Editor::set_entered_regionview (RegionView* rv)
 void
 Editor::set_entered_track (TimeAxisView* tav)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	if (entered_track) {
 		entered_track->exited ();
 	}
@@ -983,6 +994,8 @@ Editor::set_entered_track (TimeAxisView* tav)
 void
 Editor::instant_save ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	if (!constructed || !ARDOUR_UI::instance()->session_loaded || no_save_instant) {
 		return;
 	}
@@ -1033,6 +1046,8 @@ Editor::control_unselect ()
 void
 Editor::control_select (boost::shared_ptr<Stripable> s, Selection::Operation op)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	TimeAxisView* tav = time_axis_view_from_stripable (s);
 
 	if (tav) {
@@ -1069,6 +1084,8 @@ Editor::control_step_tracks_down ()
 void
 Editor::control_scroll (float fraction)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	ENSURE_GUI_THREAD (*this, &Editor::control_scroll, fraction)
 
 	if (!_session) {
@@ -1182,6 +1199,8 @@ Editor::start_lock_event_timing ()
 bool
 Editor::generic_event_handler (GdkEvent* ev)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	switch (ev->type) {
 	case GDK_BUTTON_PRESS:
 	case GDK_BUTTON_RELEASE:
@@ -1320,6 +1339,8 @@ Editor::update_title ()
 void
 Editor::set_session (Session *t)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	SessionHandlePtr::set_session (t);
 
 	if (!_session) {
@@ -2571,6 +2592,8 @@ Editor::set_state (const XMLNode& node, int version)
 XMLNode&
 Editor::get_state ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	XMLNode* node = new XMLNode (X_("Editor"));
 
 	node->set_property ("id", id().to_s ());
@@ -4304,6 +4327,8 @@ Editor::get_y_origin () const
 void
 Editor::reset_x_origin (samplepos_t sample)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, sample);
+
 	pending_visual_change.add (VisualChange::TimeOrigin);
 	pending_visual_change.time_origin = sample;
 	ensure_visual_change_idle_handler ();
@@ -4312,6 +4337,8 @@ Editor::reset_x_origin (samplepos_t sample)
 void
 Editor::reset_y_origin (double y)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, y);
+
 	pending_visual_change.add (VisualChange::YOrigin);
 	pending_visual_change.y_origin = y;
 	ensure_visual_change_idle_handler ();
@@ -4320,6 +4347,8 @@ Editor::reset_y_origin (double y)
 void
 Editor::reset_zoom (samplecnt_t spp)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, spp);
+
 	if (spp == samples_per_pixel) {
 		return;
 	}
@@ -4332,6 +4361,8 @@ Editor::reset_zoom (samplecnt_t spp)
 void
 Editor::reposition_and_zoom (samplepos_t sample, double fpu)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	reset_x_origin (sample);
 	reset_zoom (fpu);
 
@@ -4442,6 +4473,8 @@ Editor::use_visual_state (VisualState& vs)
 void
 Editor::set_samples_per_pixel (samplecnt_t spp)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, spp);
+
 	if (spp < 1) {
 		return;
 	}
@@ -4463,33 +4496,62 @@ Editor::set_samples_per_pixel (samplecnt_t spp)
 void
 Editor::on_samples_per_pixel_changed ()
 {
-	bool const showing_time_selection = selection->time.length() > 0;
+	A_LOG_CLASS_CALL (LOG::Editor);
 
-	if (showing_time_selection && selection->time.start () != selection->time.end_sample ()) {
-		for (TrackViewList::iterator i = selection->tracks.begin(); i != selection->tracks.end(); ++i) {
-			(*i)->reshow_selection (selection->time);
+	{
+		A_LOG_CLASS_DURATION (LOG::Editor, "Reshow Selection");
+		bool const showing_time_selection = selection->time.length () > 0;
+
+		if (showing_time_selection && selection->time.start () != selection->time.end_sample ()) {
+			for (TrackViewList::iterator i = selection->tracks.begin (); i != selection->tracks.end ();
+			     ++i) {
+				(*i)->reshow_selection (selection->time);
+			}
 		}
 	}
 
-	ZoomChanged (); /* EMIT_SIGNAL */
+	{
+		A_LOG_CLASS_DURATION (LOG::Editor, "Zoom changed");
+		ZoomChanged (); /* EMIT_SIGNAL */
+	}
 
 	ArdourCanvas::GtkCanvasViewport* c;
 
-	c = get_track_canvas();
-	if (c) {
-		c->canvas()->zoomed ();
+	{
+		A_LOG_CLASS_DURATION (LOG::Editor, "Canvas Zoomed");
+
+		c = get_track_canvas ();
+		if (c) {
+			c->canvas ()->zoomed ();
+		}
 	}
 
-	if (playhead_cursor) {
-		playhead_cursor->set_position (playhead_cursor->current_sample ());
+	{
+		A_LOG_CLASS_DURATION (LOG::Editor, "Set playhead cursor position");
+		if (playhead_cursor) {
+			playhead_cursor->set_position (playhead_cursor->current_sample ());
+		}
 	}
 
-	refresh_location_display();
-	_summary->set_overlays_dirty ();
+	{
+		A_LOG_CLASS_DURATION (LOG::Editor, "Refresh location display");
+		refresh_location_display ();
+	}
 
-	update_marker_labels ();
+	{
+		A_LOG_CLASS_DURATION (LOG::Editor, "Set overlays dirty");
+		_summary->set_overlays_dirty ();
+	}
 
-	instant_save ();
+	{
+		A_LOG_CLASS_DURATION (LOG::Editor, "Update marker labels");
+		update_marker_labels ();
+	}
+
+	{
+		A_LOG_CLASS_DURATION (LOG::Editor, "Instant save");
+		instant_save ();
+	}
 }
 
 samplepos_t
@@ -4508,7 +4570,11 @@ Editor::queue_visual_videotimeline_update ()
 void
 Editor::ensure_visual_change_idle_handler ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	if (pending_visual_change.idle_handler_id < 0) {
+		A_LOG_MSG (LOG::Editor, "Adding idle visual change");
+
 		/* see comment in add_to_idle_resize above. */
 		pending_visual_change.idle_handler_id = g_idle_add_full (G_PRIORITY_HIGH_IDLE + 10, _idle_visual_changer, this, NULL);
 		pending_visual_change.being_handled = false;
@@ -4534,9 +4600,12 @@ Editor::pre_render ()
 int
 Editor::idle_visual_changer ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	pending_visual_change.idle_handler_id = -1;
 
 	if (pending_visual_change.pending == 0) {
+		A_LOG_MSG (LOG::Editor, "No pending visual changes");
 		return 0;
 	}
 
@@ -4551,6 +4620,7 @@ Editor::idle_visual_changer ()
 	*/
 
 	if (visual_change_queued) {
+		A_LOG_MSG (LOG::Editor, "Visual change already queued");
 		return 0;
 	}
 
@@ -4572,6 +4642,8 @@ Editor::idle_visual_changer ()
 void
 Editor::visual_changer (const VisualChange& vc)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	/**
 	 * Changed first so the correct horizontal canvas position is calculated in
 	 * Editor::set_horizontal_position
@@ -4583,9 +4655,12 @@ Editor::visual_changer (const VisualChange& vc)
 	if (vc.pending & VisualChange::TimeOrigin) {
 		double new_time_origin = sample_to_pixel_unrounded (vc.time_origin);
 		set_horizontal_position (new_time_origin);
+
+		A_LOG_CLASS_DATA2 (LOG::Editor, new_time_origin, _leftmost_sample);
 	}
 
 	if (vc.pending & VisualChange::YOrigin) {
+		A_LOG_CLASS_DATA1 (LOG::Editor, vc.y_origin);
 		vertical_adjustment.set_value (vc.y_origin);
 	}
 
@@ -5061,6 +5136,8 @@ Editor::show_rhythm_ferret ()
 void
 Editor::first_idle ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	MessageDialog* dialog = 0;
 
 	if (track_views.size() > 1) {
@@ -5111,6 +5188,8 @@ Editor::_idle_resize (gpointer arg)
 void
 Editor::add_to_idle_resize (TimeAxisView* view, int32_t h)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	if (resize_idle_id < 0) {
 		/* https://developer.gnome.org/glib/stable/glib-The-Main-Event-Loop.html#G-PRIORITY-HIGH-IDLE:CAPS
 		 * GTK+ uses G_PRIORITY_HIGH_IDLE + 10 for resizing operations, and G_PRIORITY_HIGH_IDLE + 20 for redrawing operations.
@@ -5150,6 +5229,8 @@ Editor::add_to_idle_resize (TimeAxisView* view, int32_t h)
 bool
 Editor::idle_resize ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	_pending_resize_view->idle_resize (_pending_resize_view->current_height() + _pending_resize_amount);
 
 	if (dynamic_cast<AutomationTimeAxisView*> (_pending_resize_view) == 0 &&
@@ -5281,6 +5362,8 @@ Editor::resume_route_redisplay ()
 void
 Editor::add_vcas (VCAList& vlist)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	StripableList sl;
 
 	for (VCAList::iterator v = vlist.begin(); v != vlist.end(); ++v) {
@@ -5293,6 +5376,8 @@ Editor::add_vcas (VCAList& vlist)
 void
 Editor::add_routes (RouteList& rlist)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	StripableList sl;
 
 	for (RouteList::iterator r = rlist.begin(); r != rlist.end(); ++r) {
@@ -5305,6 +5390,8 @@ Editor::add_routes (RouteList& rlist)
 void
 Editor::add_stripables (StripableList& sl)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	list<TimeAxisView*> new_views;
 	boost::shared_ptr<VCA> v;
 	boost::shared_ptr<Route> r;
@@ -5375,6 +5462,8 @@ Editor::add_stripables (StripableList& sl)
 void
 Editor::timeaxisview_deleted (TimeAxisView *tv)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	if (tv == entered_track) {
 		entered_track = 0;
 	}

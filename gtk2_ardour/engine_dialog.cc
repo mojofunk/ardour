@@ -49,13 +49,13 @@
 #include "pbd/error.h"
 
 #include "opts.h"
-#include "debug.h"
 #include "ardour_ui.h"
 #include "engine_dialog.h"
 #include "gui_thread.h"
 #include "ui_config.h"
 #include "public_editor.h"
 #include "utils.h"
+#include "logging.h"
 #include "pbd/i18n.h"
 #include "splash.h"
 
@@ -67,7 +67,8 @@ using namespace Glib;
 using namespace ArdourWidgets;
 using namespace ARDOUR_UI_UTILS;
 
-#define DEBUG_ECONTROL(msg) DEBUG_TRACE (PBD::DEBUG::EngineControl, string_compose ("%1: %2\n", __LINE__, msg));
+A_DEFINE_CLASS_AS_MEMBERS (EngineControl::SignalBlocker, "GUI::EngineControl::SignalBlocker");
+A_DEFINE_CLASS_AS_MEMBERS (EngineControl, "GUI::EngineControl");
 
 static const unsigned int midi_tab = 2;
 static const unsigned int latency_tab = 1; /* zero-based, page zero is the main setup page */
@@ -109,6 +110,8 @@ EngineControl::EngineControl ()
 	, _have_control (true)
 	, block_signals(0)
 {
+	A_CLASS_CALL ();
+
 	using namespace Notebook_Helpers;
 	vector<string> backend_names;
 	Label* label;
@@ -362,7 +365,7 @@ void
 EngineControl::block_changed_signals ()
 {
 	if (block_signals++ == 0) {
-		DEBUG_ECONTROL ("Blocking changed signals");
+		A_CLASS_MSG ("Blocking changed signals");
 		backend_combo_connection.block ();
 		driver_combo_connection.block ();
 		sample_rate_combo_connection.block ();
@@ -383,7 +386,7 @@ void
 EngineControl::unblock_changed_signals ()
 {
 	if (--block_signals == 0) {
-		DEBUG_ECONTROL ("Unblocking changed signals");
+		A_CLASS_MSG ("Unblocking changed signals");
 		backend_combo_connection.unblock ();
 		driver_combo_connection.unblock ();
 		sample_rate_combo_connection.unblock ();
@@ -405,13 +408,13 @@ EngineControl::SignalBlocker::SignalBlocker (EngineControl& engine_control,
 	: ec (engine_control)
 	, m_reason (reason)
 {
-	DEBUG_ECONTROL (string_compose ("SignalBlocker: %1", m_reason));
+	A_CLASS_CALL1 (m_reason);
 	ec.block_changed_signals ();
 }
 
 EngineControl::SignalBlocker::~SignalBlocker ()
 {
-	DEBUG_ECONTROL (string_compose ("~SignalBlocker: %1", m_reason));
+	A_CLASS_CALL1 (m_reason);
 	ec.unblock_changed_signals ();
 }
 
@@ -770,6 +773,8 @@ EngineControl::setup_midi_tab_for_backend ()
 void
 EngineControl::update_sensitivity ()
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	if (!backend) {
 		start_stop_button.set_sensitive (false);
@@ -987,6 +992,8 @@ EngineControl::refresh_midi_display (std::string focus)
 void
 EngineControl::backend_changed ()
 {
+	A_CLASS_CALL ();
+
 	SignalBlocker blocker (*this, "backend_changed");
 	string backend_name = backend_combo.get_active_text();
 	boost::shared_ptr<ARDOUR::AudioBackend> backend;
@@ -997,7 +1004,7 @@ EngineControl::backend_changed ()
 		return;
 	}
 
-	DEBUG_ECONTROL (string_compose ("Backend name: %1", backend_name));
+	A_CLASS_DATA1 (backend_name);
 
 	_have_control = ARDOUR::AudioEngine::instance()->setup_required ();
 
@@ -1040,14 +1047,14 @@ EngineControl::backend_changed ()
 		// set driver & devices
 		State state = get_matching_state (backend_combo.get_active_text());
 		if (state) {
-			DEBUG_ECONTROL ("backend-changed(): found prior state for backend");
+			A_CLASS_MSG ("Found prior state for backend");
 			PBD::Unwinder<uint32_t> protect_ignore_changes (ignore_changes, ignore_changes + 1);
 			set_current_state (state);
 		} else {
-			DEBUG_ECONTROL ("backend-changed(): no prior state for backend");
+			A_CLASS_MSG ("No prior state for backend");
 		}
 	} else {
-		DEBUG_ECONTROL (string_compose ("backend-changed(): _have_control=%1 ignore_changes=%2", _have_control, ignore_changes));
+		A_CLASS_DATA2 (_have_control, ignore_changes);
 	}
 
 	if (!ignore_changes) {
@@ -1097,7 +1104,8 @@ EngineControl::print_channel_count (Gtk::SpinButton* sb)
 bool
 EngineControl::set_driver_popdown_strings ()
 {
-	DEBUG_ECONTROL ("set_driver_popdown_strings");
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	vector<string> drivers = backend->enumerate_drivers();
 
@@ -1108,7 +1116,7 @@ EngineControl::set_driver_popdown_strings ()
 
 	string current_driver = backend->driver_name ();
 
-	DEBUG_ECONTROL (string_compose ("backend->driver_name: %1", current_driver));
+	A_CLASS_MSG (A_FMT ("Current driver name: {}", current_driver));
 
 	if (std::find (drivers.begin (), drivers.end (), current_driver) ==
 	    drivers.end ()) {
@@ -1116,9 +1124,9 @@ EngineControl::set_driver_popdown_strings ()
 		current_driver = drivers.front ();
 	}
 
+	A_CLASS_MSG (A_FMT ("New driver name: {}", current_driver));
+
 	set_popdown_strings (driver_combo, drivers);
-	DEBUG_ECONTROL (
-	    string_compose ("driver_combo.set_active_text: %1", current_driver));
 	driver_combo.set_active_text (current_driver);
 	return true;
 }
@@ -1127,6 +1135,8 @@ std::string
 EngineControl::get_default_device(const string& current_device_name,
                                   const vector<string>& available_devices)
 {
+	A_CLASS_CALL ();
+
 	// If the current device is available, use it as default
 	if (std::find (available_devices.begin (),
 	               available_devices.end (),
@@ -1167,7 +1177,8 @@ EngineControl::get_default_device(const string& current_device_name,
 bool
 EngineControl::set_device_popdown_strings ()
 {
-	DEBUG_ECONTROL ("set_device_popdown_strings");
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	vector<ARDOUR::AudioBackend::DeviceStatus> all_devices = backend->enumerate_devices ();
 
@@ -1195,8 +1206,7 @@ EngineControl::set_device_popdown_strings ()
 	std::string default_device =
 	    get_default_device(backend->device_name(), available_devices);
 
-	DEBUG_ECONTROL (
-	    string_compose ("set device_combo active text: %1", default_device));
+	A_CLASS_MSG (A_FMT ("Set default device: {}", default_device));
 
 	device_combo.set_active_text(default_device);
 	return true;
@@ -1206,7 +1216,8 @@ EngineControl::set_device_popdown_strings ()
 bool
 EngineControl::set_input_device_popdown_strings ()
 {
-	DEBUG_ECONTROL ("set_input_device_popdown_strings");
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	vector<ARDOUR::AudioBackend::DeviceStatus> all_devices = backend->enumerate_input_devices ();
 
@@ -1225,8 +1236,8 @@ EngineControl::set_input_device_popdown_strings ()
 	std::string default_device =
 	    get_default_device(backend->input_device_name(), available_devices);
 
-	DEBUG_ECONTROL (
-	    string_compose ("set input_device_combo active text: %1", default_device));
+	A_CLASS_MSG (A_FMT ("Set default input device: {}", default_device));
+
 	input_device_combo.set_active_text(default_device);
 	return true;
 }
@@ -1235,7 +1246,8 @@ EngineControl::set_input_device_popdown_strings ()
 bool
 EngineControl::set_output_device_popdown_strings ()
 {
-	DEBUG_ECONTROL ("set_output_device_popdown_strings");
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	vector<ARDOUR::AudioBackend::DeviceStatus> all_devices = backend->enumerate_output_devices ();
 
@@ -1254,8 +1266,8 @@ EngineControl::set_output_device_popdown_strings ()
 	std::string default_device =
 	    get_default_device(backend->output_device_name(), available_devices);
 
-	DEBUG_ECONTROL (
-	    string_compose ("set output_device_combo active text: %1", default_device));
+	A_CLASS_MSG (A_FMT ("Set default output device: {}", default_device));
+
 	output_device_combo.set_active_text(default_device);
 	return true;
 }
@@ -1263,7 +1275,8 @@ EngineControl::set_output_device_popdown_strings ()
 void
 EngineControl::list_devices ()
 {
-	DEBUG_ECONTROL ("list_devices");
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	assert (backend);
 
@@ -1340,7 +1353,8 @@ EngineControl::get_default_sample_rates ()
 void
 EngineControl::set_samplerate_popdown_strings ()
 {
-	DEBUG_ECONTROL ("set_samplerate_popdown_strings");
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	string desired;
 	vector<float> sr;
@@ -1417,7 +1431,8 @@ EngineControl::get_default_buffer_sizes ()
 void
 EngineControl::set_buffersize_popdown_strings ()
 {
-	DEBUG_ECONTROL ("set_buffersize_popdown_strings");
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	vector<uint32_t> bs;
 	vector<string> s;
@@ -1468,7 +1483,8 @@ EngineControl::set_buffersize_popdown_strings ()
 void
 EngineControl::set_nperiods_popdown_strings ()
 {
-	DEBUG_ECONTROL ("set_nperiods_popdown_strings");
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	vector<uint32_t> np;
 	vector<string> s;
@@ -1555,7 +1571,7 @@ EngineControl::device_changed ()
 void
 EngineControl::input_device_changed ()
 {
-	DEBUG_ECONTROL ("input_device_changed");
+	A_CLASS_CALL ();
 
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	if (backend && backend->match_input_output_devices_or_none ()) {
@@ -1580,7 +1596,8 @@ EngineControl::input_device_changed ()
 void
 EngineControl::output_device_changed ()
 {
-	DEBUG_ECONTROL ("output_device_changed");
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	if (backend && backend->match_input_output_devices_or_none ()) {
 		const std::string& dev_none = ARDOUR::AudioBackend::get_standard_device_name (ARDOUR::AudioBackend::DeviceNone);
@@ -1610,7 +1627,8 @@ EngineControl::bufsize_as_string (uint32_t sz)
 void
 EngineControl::sample_rate_changed ()
 {
-	DEBUG_ECONTROL ("sample_rate_changed");
+	A_CLASS_CALL ();
+
 	/* reset the strings for buffer size to show the correct msec value
 	   (reflecting the new sample rate).
 	 */
@@ -1622,7 +1640,8 @@ EngineControl::sample_rate_changed ()
 void
 EngineControl::buffer_size_changed ()
 {
-	DEBUG_ECONTROL ("buffer_size_changed");
+	A_CLASS_CALL ();
+
 	if (ARDOUR::AudioEngine::instance()->running()) {
 		boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 		if (backend && backend->can_change_buffer_size_when_running ()) {
@@ -1635,14 +1654,16 @@ EngineControl::buffer_size_changed ()
 void
 EngineControl::nperiods_changed ()
 {
-	DEBUG_ECONTROL ("nperiods_changed");
+	A_CLASS_CALL ();
+
 	show_buffer_duration ();
 }
 
 void
 EngineControl::show_buffer_duration ()
 {
-	DEBUG_ECONTROL ("show_buffer_duration");
+	A_CLASS_CALL ();
+
 	/* buffer sizes  - convert from just samples to samples + msecs for
 	 * the displayed string
 	 */
@@ -1671,7 +1692,8 @@ EngineControl::show_buffer_duration ()
 void
 EngineControl::midi_option_changed ()
 {
-	DEBUG_ECONTROL ("midi_option_changed");
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	assert (backend);
 
@@ -1864,6 +1886,8 @@ EngineControl::store_state (State state)
 void
 EngineControl::maybe_display_saved_state ()
 {
+	A_CLASS_CALL ();
+
 	if (!_have_control || ARDOUR::AudioEngine::instance()->running ()) {
 		return;
 	}
@@ -1871,7 +1895,8 @@ EngineControl::maybe_display_saved_state ()
 	State state = get_saved_state_for_currently_displayed_backend_and_device ();
 
 	if (state) {
-		DEBUG_ECONTROL ("Restoring saved state");
+		A_CLASS_MSG ("Restoring saved state");
+
 		PBD::Unwinder<uint32_t> protect_ignore_changes (ignore_changes, ignore_changes + 1);
 
 		if (!_desired_sample_rate) {
@@ -1894,13 +1919,15 @@ EngineControl::maybe_display_saved_state ()
 			_midi_devices = state->midi_devices;
 		}
 	} else {
-		DEBUG_ECONTROL ("Unable to find saved state for backend and devices");
+		A_CLASS_MSG ("Unable to find saved state for backend and devices");
 	}
 }
 
 XMLNode&
 EngineControl::get_state ()
 {
+	A_CLASS_CALL ();
+
 	LocaleGuard lg;
 
 	XMLNode* root = new XMLNode ("AudioMIDISetup");
@@ -1954,6 +1981,8 @@ EngineControl::get_state ()
 void
 EngineControl::set_default_state ()
 {
+	A_CLASS_CALL ();
+
 	vector<string> backend_names;
 	vector<const ARDOUR::AudioBackendInfo*> backends = ARDOUR::AudioEngine::instance()->available_backends();
 
@@ -1970,6 +1999,8 @@ EngineControl::set_default_state ()
 bool
 EngineControl::set_state (const XMLNode& root)
 {
+	A_CLASS_CALL ();
+
 	XMLNodeList          clist, cclist;
 	XMLNodeConstIterator citer, cciter;
 	XMLNode const * child;
@@ -2114,13 +2145,13 @@ EngineControl::set_state (const XMLNode& root)
 bool
 EngineControl::set_current_state (const State& state)
 {
-	DEBUG_ECONTROL ("set_current_state");
+	A_CLASS_CALL ();
 
 	boost::shared_ptr<ARDOUR::AudioBackend> backend;
 
 	if (!(backend = ARDOUR::AudioEngine::instance ()->set_backend (
 	          state->backend, downcase (std::string(PROGRAM_NAME)), ""))) {
-		DEBUG_ECONTROL (string_compose ("Unable to set backend to %1", state->backend));
+		A_CLASS_MSG (A_FMT ("Unable to set backend to {}", state->backend));
 		// this shouldn't happen as the invalid backend names should have been
 		// removed from the list of states.
 		return false;
@@ -2139,7 +2170,7 @@ EngineControl::set_current_state (const State& state)
 
 	if (!state->driver.empty ()) {
 		if (!backend->requires_driver_selection ()) {
-			DEBUG_ECONTROL ("Backend should require driver selection");
+			A_CLASS_MSG ("Backend should require driver selection");
 			// A backend has changed from having driver selection to not having
 			// it or someone has been manually editing a config file and messed
 			// it up
@@ -2147,7 +2178,7 @@ EngineControl::set_current_state (const State& state)
 		}
 
 		if (backend->set_driver (state->driver) != 0) {
-			DEBUG_ECONTROL (string_compose ("Unable to set driver %1", state->driver));
+			A_CLASS_MSG (A_FMT ("Unable to set driver to: {}", state->driver));
 			// Driver names for a backend have changed and the name in the
 			// config file is now invalid or support for driver is no longer
 			// included in the backend
@@ -2159,8 +2190,7 @@ EngineControl::set_current_state (const State& state)
 
 	if (!state->device.empty ()) {
 		if (backend->set_device_name (state->device) != 0) {
-			DEBUG_ECONTROL (
-			    string_compose ("Unable to set device name %1", state->device));
+			A_CLASS_MSG (A_FMT ("Unable to set device name to: {}", state->device));
 			// device is no longer available on the system
 			return false;
 		}
@@ -2170,15 +2200,13 @@ EngineControl::set_current_state (const State& state)
 	} else {
 		// backend supports separate input/output devices
 		if (backend->set_input_device_name (state->input_device) != 0) {
-			DEBUG_ECONTROL (string_compose ("Unable to set input device name %1",
-			                                state->input_device));
+			A_CLASS_MSG (A_FMT ("Unable to set input device name to: {}", state->input_device));
 			// input device is no longer available on the system
 			return false;
 		}
 
 		if (backend->set_output_device_name (state->output_device) != 0) {
-			DEBUG_ECONTROL (string_compose ("Unable to set output device name %1",
-			                                state->input_device));
+			A_CLASS_MSG (A_FMT ("Unable to set output device name to: {}", state->output_device));
 			// output device is no longer available on the system
 			return false;
 		}
@@ -2214,7 +2242,8 @@ EngineControl::set_current_state (const State& state)
 int
 EngineControl::push_state_to_backend (bool start)
 {
-	DEBUG_ECONTROL ("push_state_to_backend");
+	A_CLASS_CALL1 (start);
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 	PBD::Unwinder<uint32_t> protect_ignore_device_changes (ignore_device_changes, ignore_device_changes + 1);
 
@@ -2502,6 +2531,8 @@ EngineControl::push_state_to_backend (bool start)
 void
 EngineControl::post_push ()
 {
+	A_CLASS_CALL ();
+
 	/* get a pointer to the current state object, creating one if
 	 * necessary
 	 */
@@ -2669,6 +2700,8 @@ EngineControl::control_app_button_clicked ()
 void
 EngineControl::start_stop_button_clicked ()
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 
 	if (!backend) {
@@ -2693,6 +2726,8 @@ EngineControl::start_stop_button_clicked ()
 void
 EngineControl::update_devices_button_clicked ()
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 
 	if (!backend) {
@@ -2707,6 +2742,8 @@ EngineControl::update_devices_button_clicked ()
 void
 EngineControl::use_buffered_io_button_clicked ()
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<ARDOUR::AudioBackend> backend = ARDOUR::AudioEngine::instance()->current_backend();
 
 	if (!backend) {
@@ -2750,6 +2787,8 @@ EngineControl::set_desired_sample_rate (uint32_t sr)
 void
 EngineControl::on_switch_page (GtkNotebookPage*, guint page_num)
 {
+	A_CLASS_CALL ();
+
 	if (page_num == 0) {
 		_measure_midi.reset();
 		update_sensitivity ();

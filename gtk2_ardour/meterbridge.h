@@ -154,6 +154,9 @@ private:
 
 	int _mm_left, _mm_right;
 	ARDOUR::MeterType _mt_left, _mt_right;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (Meterbridge);
 };
 
 #endif

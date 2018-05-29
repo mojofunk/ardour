@@ -23,6 +23,8 @@
 #include <sys/types.h>
 #include <gdk/gdkevents.h>
 
+#include "pbd/dev_tools.h"
+
 #include "ardour/automation_list.h"
 
 #include "selectable.h"
@@ -95,6 +97,7 @@ private:
 
 	virtual bool event_handler (GdkEvent*);
 
+	A_DECLARE_CLASS_MEMBERS (ControlPoint);
 };
 
 

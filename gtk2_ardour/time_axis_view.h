@@ -324,6 +324,8 @@ class TimeAxisView : public virtual AxisView
 	void compute_heights ();
 	bool maybe_set_cursor (int y);
 
+private:
+	A_DECLARE_CLASS_MEMBERS (TimeAxisView);
 }; /* class TimeAxisView */
 
 #endif /* __ardour_gtk_time_axis_h__ */

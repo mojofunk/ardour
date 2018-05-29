@@ -1,0 +1,7 @@
+#include "io_selector.cc"
+#include "port_insert_ui.cc"
+#include "plugin_display.cc"
+#include "processor_box.cc"
+#include "processor_selection.cc"
+#include "return_ui.cc"
+#include "send_ui.cc"

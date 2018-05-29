@@ -154,6 +154,7 @@ typedef uint64_t microseconds_t;
 #include "keyboard.h"
 #include "keyeditor.h"
 #include "location_ui.h"
+#include "logging.h"
 #include "lua_script_manager.h"
 #include "luawindow.h"
 #include "main_clock.h"
@@ -268,7 +269,7 @@ libxml_structured_error_func (void* /* parsing_context*/,
 
 
 ARDOUR_UI::ARDOUR_UI (int *argcp, char **argvp[], const char* localedir)
-	: Gtkmm2ext::UI (PROGRAM_NAME, X_("gui"), argcp, argvp)
+	: Gtkmm2ext::UI (PROGRAM_NAME, X_("gui"))
 	, session_loaded (false)
 	, session_load_in_progress (false)
 	, gui_object_state (new GUIObjectState)
@@ -1157,7 +1158,7 @@ ARDOUR_UI::starting ()
 			_initial_verbose_plugin_scan = true;
 			ArdourStartup s;
 			s.present ();
-			main().run();
+			Gtk::Main::run ();
 			s.hide ();
 			_initial_verbose_plugin_scan = false;
 			switch (s.response ()) {
@@ -1507,6 +1508,8 @@ ARDOUR_UI::ask_about_saving_session (const vector<string>& actions)
 void
 ARDOUR_UI::every_second ()
 {
+	A_LOG_CALL (LOG::GUITiming);
+
 	update_cpu_load ();
 	update_disk_space ();
 	update_timecode_format ();
@@ -1535,6 +1538,8 @@ ARDOUR_UI::every_point_one_seconds ()
 void
 ARDOUR_UI::every_point_zero_something_seconds ()
 {
+	A_LOG_CALL (LOG::GUITiming);
+
 	// august 2007: actual update frequency: 25Hz (40ms), not 100Hz
 
 	if (editor_meter && UIConfiguration::instance().get_show_editor_meter() && editor_meter_peak_display.is_mapped ()) {
@@ -2608,6 +2613,8 @@ ARDOUR_UI::blink_handler (bool blink_on)
 void
 ARDOUR_UI::update_clocks ()
 {
+	A_LOG_CALL (LOG::GUITiming);
+
 	if (!_session) return;
 
 	if (editor && !editor->dragging_playhead()) {

@@ -23,7 +23,6 @@
 
 #include "led.h"
 
-using namespace Gdk;
 using namespace Gtk;
 using namespace Glib;
 using namespace Gtkmm2ext;
@@ -53,7 +52,7 @@ LED::render (Cairo::RefPtr<Cairo::Context> const& ctx, cairo_rectangle_t*)
 
 	Widget* parent;
 	RefPtr<Style> style;
-	Color c;
+	Gdk::Color c;
 
 	parent = get_parent ();
 
@@ -144,7 +143,7 @@ void
 LED::set_colors_from_style ()
 {
 	RefPtr<Style> style = get_style();
-	Color c;
+	Gdk::Color c;
 
 	switch (_visual_state) {
 	case VisualState(0):

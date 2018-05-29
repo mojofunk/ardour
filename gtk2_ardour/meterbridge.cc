@@ -68,6 +68,8 @@ using namespace ArdourMeter;
 
 using PBD::atoi;
 
+A_DEFINE_CLASS_AS_MEMBERS (Meterbridge, "GUI::Meterbridge");
+
 Meterbridge* Meterbridge::_instance = 0;
 
 Meterbridge*

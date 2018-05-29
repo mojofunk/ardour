@@ -60,7 +60,7 @@ using namespace PBD;
 using namespace Gtk;
 using Gtkmm2ext::Keyboard;
 
-struct ColumnInfo {
+struct RouteColumnInfo {
 	int         index;
 	const char* label;
 	const char* tooltip;
@@ -96,7 +96,7 @@ EditorRouteGroups::EditorRouteGroups (Editor* e)
 	TreeViewColumn* col;
 	Gtk::Label* l;
 
-	ColumnInfo ci[] = {
+	RouteColumnInfo ci[] = {
 		{ 0,   _("Col"),            _("Group Tab Color") },
 		{ 1,   _("Name"),           _("Name of Group") },
 		{ 2,  S_("Visible|V"),      _("Group is visible?") },
@@ -177,11 +177,11 @@ EditorRouteGroups::EditorRouteGroups (Editor* e)
 
 	Widget* w;
 
-	w = manage (new Image (Stock::ADD, ICON_SIZE_BUTTON));
+	w = manage (new Gtk::Image (Stock::ADD, ICON_SIZE_BUTTON));
 	w->show();
 	add_button->add (*w);
 
-	w = manage (new Image (Stock::REMOVE, ICON_SIZE_BUTTON));
+	w = manage (new Gtk::Image (Stock::REMOVE, ICON_SIZE_BUTTON));
 	w->show();
 	remove_button->add (*w);
 

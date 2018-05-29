@@ -97,6 +97,8 @@ using namespace Editing;
 using namespace std;
 using std::list;
 
+A_DEFINE_CLASS_AS_MEMBERS (RouteTimeAxisView, "GUI::RouteTimeAxisView");
+
 RouteTimeAxisView::RouteTimeAxisView (PublicEditor& ed, Session* sess, ArdourCanvas::Canvas& canvas)
 	: RouteUI(sess)
 	, StripableTimeAxisView(ed, sess, canvas)
@@ -944,6 +946,8 @@ RouteTimeAxisView::show_selection (TimeSelection& ts)
 void
 RouteTimeAxisView::set_height (uint32_t h, TrackHeightMode m)
 {
+	A_CLASS_CALL2 (h, m);
+
 	int gmlen = h - 9;
 	bool height_changed = (height == 0) || (h != height);
 

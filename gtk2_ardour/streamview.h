@@ -186,6 +186,9 @@ protected:
 
 private:
 	void update_coverage_samples ();
+
+private:
+	A_DECLARE_CLASS_MEMBERS (StreamView);
 };
 
 #endif /* __ardour_streamview_h__ */

@@ -527,7 +527,8 @@ Editor::register_actions ()
 		mouse_cut_button.set_name ("mouse mode button");
 	}
 
-	myactions.register_action (editor_actions, "step-mouse-mode", _("Step Mouse Mode"), sigc::bind (sigc::mem_fun(*this, &Editor::step_mouse_mode), true));
+	myactions.register_action (editor_actions, "step-mouse-mode-next", _("Step Mouse Mode Next"), sigc::bind (sigc::mem_fun(*this, &Editor::step_mouse_mode), true));
+	myactions.register_action (editor_actions, "step-mouse-mode-previous", _("Step Mouse Mode Previous"), sigc::bind (sigc::mem_fun(*this, &Editor::step_mouse_mode), false));
 
 	RadioAction::Group edit_point_group;
 	myactions.register_radio_action (editor_actions, edit_point_group, X_("edit-at-playhead"), _("Playhead"), (sigc::bind (sigc::mem_fun(*this, &Editor::edit_point_chosen), Editing::EditAtPlayhead)));

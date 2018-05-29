@@ -47,6 +47,7 @@
 #include "tempo_dialog.h"
 #include "rgb_macros.h"
 #include "gui_thread.h"
+#include "logging.h"
 #include "time_axis_view.h"
 #include "grid_lines.h"
 #include "ui_config.h"
@@ -63,6 +64,8 @@ using namespace Editing;
 void
 Editor::remove_metric_marks ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	/* don't delete these while handling events, just punt till the GUI is idle */
 
 	for (Marks::iterator x = metric_marks.begin(); x != metric_marks.end(); ++x) {
@@ -83,6 +86,8 @@ struct CurveComparator {
 void
 Editor::draw_metric_marks (const Metrics& metrics)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	char buf[64];
 	TempoSection* prev_ts = 0;
 	double max_tempo = 0.0;
@@ -174,6 +179,8 @@ Editor::draw_metric_marks (const Metrics& metrics)
 void
 Editor::tempo_map_changed (const PropertyChange& /*ignored*/)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	if (!_session) {
 		return;
 	}
@@ -191,6 +198,8 @@ Editor::tempo_map_changed (const PropertyChange& /*ignored*/)
 void
 Editor::tempometric_position_changed (const PropertyChange& /*ignored*/)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	if (!_session) {
 		return;
 	}
@@ -280,6 +289,8 @@ Editor::tempometric_position_changed (const PropertyChange& /*ignored*/)
 void
 Editor::redisplay_grid (bool immediate_redraw)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	if (!_session) {
 		return;
 	}
@@ -297,6 +308,8 @@ Editor::redisplay_grid (bool immediate_redraw)
 void
 Editor::tempo_curve_selected (TempoSection* ts, bool yn)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, yn);
+
 	if (ts == 0) {
 		return;
 	}
@@ -317,6 +330,8 @@ Editor::tempo_curve_selected (TempoSection* ts, bool yn)
 void
 Editor::compute_current_bbt_points (std::vector<TempoMap::BBTPoint>& grid, samplepos_t leftmost, samplepos_t rightmost)
 {
+	A_LOG_CLASS_CALL2 (LOG::Editor, leftmost, rightmost);
+
 	if (!_session) {
 		return;
 	}
@@ -359,6 +374,8 @@ Editor::compute_current_bbt_points (std::vector<TempoMap::BBTPoint>& grid, sampl
 void
 Editor::hide_grid_lines ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	if (grid_lines) {
 		grid_lines->hide();
 	}
@@ -367,6 +384,8 @@ Editor::hide_grid_lines ()
 void
 Editor::maybe_draw_grid_lines ()
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	if ( _session == 0 ) {
 		return;
 	}
@@ -395,6 +414,8 @@ Editor::maybe_draw_grid_lines ()
 void
 Editor::mouse_add_new_tempo_event (samplepos_t sample)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, sample);
+
 	if (_session == 0) {
 		return;
 	}
@@ -420,6 +441,8 @@ Editor::mouse_add_new_tempo_event (samplepos_t sample)
 void
 Editor::mouse_add_new_meter_event (samplepos_t sample)
 {
+	A_LOG_CLASS_CALL1 (LOG::Editor, sample);
+
 	if (_session == 0) {
 		return;
 	}
@@ -462,6 +485,8 @@ Editor::mouse_add_new_meter_event (samplepos_t sample)
 void
 Editor::remove_tempo_marker (ArdourCanvas::Item* item)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	ArdourMarker* marker;
 	TempoMarker* tempo_marker;
 
@@ -483,6 +508,8 @@ Editor::remove_tempo_marker (ArdourCanvas::Item* item)
 void
 Editor::edit_meter_section (MeterSection* section)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	MeterDialog meter_dialog (_session->tempo_map(), *section, _("done"));
 
 	switch (meter_dialog.run()) {
@@ -516,6 +543,8 @@ Editor::edit_meter_section (MeterSection* section)
 void
 Editor::edit_tempo_section (TempoSection* section)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	TempoDialog tempo_dialog (_session->tempo_map(), *section, _("done"));
 
 	switch (tempo_dialog.run ()) {
@@ -565,6 +594,8 @@ Editor::edit_meter_marker (MeterMarker& mm)
 gint
 Editor::real_remove_tempo_marker (TempoSection *section)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	begin_reversible_command (_("remove tempo mark"));
 	XMLNode &before = _session->tempo_map().get_state();
 	_session->tempo_map().remove_tempo (*section, true);
@@ -578,6 +609,8 @@ Editor::real_remove_tempo_marker (TempoSection *section)
 void
 Editor::remove_meter_marker (ArdourCanvas::Item* item)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	ArdourMarker* marker;
 	MeterMarker* meter_marker;
 
@@ -599,6 +632,8 @@ Editor::remove_meter_marker (ArdourCanvas::Item* item)
 gint
 Editor::real_remove_meter_marker (MeterSection *section)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	begin_reversible_command (_("remove tempo mark"));
 	XMLNode &before = _session->tempo_map().get_state();
 	_session->tempo_map().remove_meter (*section, true);

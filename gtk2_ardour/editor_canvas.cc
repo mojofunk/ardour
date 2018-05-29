@@ -50,6 +50,7 @@
 #include "video_timeline.h"
 #include "keyboard.h"
 #include "editor_cursors.h"
+#include "logging.h"
 #include "mouse_cursors.h"
 #include "note_base.h"
 #include "ui_config.h"
@@ -69,6 +70,8 @@ using namespace Editing;
 void
 Editor::initialize_canvas ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	_track_canvas_viewport = new ArdourCanvas::GtkCanvasViewport (horizontal_adjustment, vertical_adjustment);
 	_track_canvas = _track_canvas_viewport->canvas ();
 
@@ -271,6 +274,8 @@ Editor::initialize_canvas ()
 void
 Editor::track_canvas_viewport_allocate (Gtk::Allocation alloc)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	_canvas_viewport_allocation = alloc;
 	track_canvas_viewport_size_allocated ();
 }
@@ -278,6 +283,8 @@ Editor::track_canvas_viewport_allocate (Gtk::Allocation alloc)
 void
 Editor::track_canvas_viewport_size_allocated ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	bool height_changed = _visible_canvas_height != _canvas_viewport_allocation.get_height();
 
 	_visible_canvas_width  = _canvas_viewport_allocation.get_width ();
@@ -313,6 +320,8 @@ Editor::track_canvas_viewport_size_allocated ()
 void
 Editor::reset_controls_layout_width ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	GtkRequisition req = { 0, 0 };
 	gint w;
 
@@ -335,6 +344,8 @@ Editor::reset_controls_layout_width ()
 void
 Editor::reset_controls_layout_height (int32_t h)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	/* ensure that the rect that represents the "bottom" of the canvas
 	 * (the drag-n-drop zone) is, in fact, at the bottom.
 	 */
@@ -358,6 +369,8 @@ Editor::reset_controls_layout_height (int32_t h)
 bool
 Editor::track_canvas_map_handler (GdkEventAny* /*ev*/)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	if (!_cursor_stack.empty()) {
 		set_canvas_cursor (get_canvas_cursor());
 	} else {
@@ -491,6 +504,8 @@ Editor::drop_paths (const RefPtr<Gdk::DragContext>& context,
 void
 Editor::maybe_autoscroll (bool allow_horiz, bool allow_vert, bool from_headers)
 {
+	A_LOG_CLASS_CALL (LOG::Editor);
+
 	Gtk::Window* toplevel = dynamic_cast<Gtk::Window*>(contents().get_toplevel());
 
 	if (!toplevel) {
@@ -640,6 +655,8 @@ Editor::session_gui_extents (bool use_extra) const
 bool
 Editor::autoscroll_canvas ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	int x, y;
 	Gdk::ModifierType mask;
 	sampleoffset_t dx = 0;
@@ -832,6 +849,8 @@ Editor::autoscroll_canvas ()
 void
 Editor::start_canvas_autoscroll (bool allow_horiz, bool allow_vert, const ArdourCanvas::Rect& boundary)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	if (!_session) {
 		return;
 	}
@@ -855,6 +874,8 @@ Editor::start_canvas_autoscroll (bool allow_horiz, bool allow_vert, const Ardour
 void
 Editor::stop_canvas_autoscroll ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	autoscroll_connection.disconnect ();
 	autoscroll_cnt = 0;
 }
@@ -873,6 +894,8 @@ Editor::get_enter_context(ItemType type)
 bool
 Editor::left_track_canvas (GdkEventCrossing* ev)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	const bool was_within = within_track_canvas;
 	DropDownKeys ();
 	within_track_canvas = false;
@@ -896,6 +919,8 @@ Editor::left_track_canvas (GdkEventCrossing* ev)
 bool
 Editor::entered_track_canvas (GdkEventCrossing* ev)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	const bool was_within = within_track_canvas;
 	within_track_canvas = true;
 	reset_canvas_action_sensitivity (true);
@@ -916,6 +941,8 @@ Editor::entered_track_canvas (GdkEventCrossing* ev)
 void
 Editor::ensure_time_axis_view_is_visible (TimeAxisView const & track, bool at_top)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	if (track.hidden()) {
 		return;
 	}
@@ -970,6 +997,8 @@ Editor::tie_vertical_scrolling ()
 void
 Editor::set_horizontal_position (double p)
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	horizontal_adjustment.set_value (p);
 
 	_leftmost_sample = (samplepos_t) floor (p * samples_per_pixel);
@@ -1105,6 +1134,8 @@ Editor::get_canvas_cursor () const
 void
 Editor::set_canvas_cursor (Gdk::Cursor* cursor)
 {
+	A_LOG_CLASS_CALL1 (LOG::EditorCanvas, cursor);
+
 	Glib::RefPtr<Gdk::Window> win = _track_canvas->get_window();
 
 	if (win && !_cursors->is_invalid (cursor)) {
@@ -1122,6 +1153,8 @@ Editor::set_canvas_cursor (Gdk::Cursor* cursor)
 size_t
 Editor::push_canvas_cursor (Gdk::Cursor* cursor)
 {
+	A_LOG_CLASS_CALL1 (LOG::EditorCanvas, cursor);
+
 	if (!_cursors->is_invalid (cursor)) {
 		_cursor_stack.push_back (cursor);
 		set_canvas_cursor (cursor);
@@ -1132,6 +1165,8 @@ Editor::push_canvas_cursor (Gdk::Cursor* cursor)
 void
 Editor::pop_canvas_cursor ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	while (true) {
 		if (_cursor_stack.size() <= 1) {
 			PBD::error << "attempt to pop default cursor" << endmsg;
@@ -1152,6 +1187,8 @@ Editor::pop_canvas_cursor ()
 Gdk::Cursor*
 Editor::which_trim_cursor (bool left) const
 {
+	A_LOG_CLASS_CALL1 (LOG::EditorCanvas, left);
+
 	if (!entered_regionview) {
 		return 0;
 	}
@@ -1177,6 +1214,8 @@ Editor::which_trim_cursor (bool left) const
 Gdk::Cursor*
 Editor::which_mode_cursor () const
 {
+	A_LOG_CLASS_CALL (LOG::EditorCanvas);
+
 	Gdk::Cursor* mode_cursor = MouseCursors::invalid_cursor ();
 
 	switch (mouse_mode) {
@@ -1261,6 +1300,8 @@ Editor::which_track_cursor () const
 Gdk::Cursor*
 Editor::which_canvas_cursor(ItemType type) const
 {
+	A_LOG_CLASS_CALL1 (LOG::EditorCanvas, enum_2_string(type));
+
 	Gdk::Cursor* cursor = which_mode_cursor ();
 
 	if (mouse_mode == MouseRange) {
@@ -1418,14 +1459,18 @@ Editor::which_canvas_cursor(ItemType type) const
 void
 Editor::choose_canvas_cursor_on_entry (ItemType type)
 {
+	A_LOG_CLASS_CALL1 (LOG::EditorCanvas, enum_2_string(type));
+
 	if (_drags->active()) {
 		return;
 	}
 
 	Gdk::Cursor* cursor = which_canvas_cursor(type);
 
+	A_LOG_CLASS_DATA1 (LOG::EditorCanvas, cursor);
+
 	if (!_cursors->is_invalid (cursor)) {
-		// Push a new enter context
+		A_LOG_CLASS_MSG (LOG::EditorCanvas, "Push a new enter context");
 		const EnterContext ctx = { type, CursorContext::create(*this, cursor) };
 		_enter_stack.push_back(ctx);
 	}

@@ -310,6 +310,9 @@ private:
 	void drop_instrument_ref ();
 	void reread_midnam ();
 	PBD::ScopedConnectionList midnam_connection;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (RouteTimeAxisView);
 };
 
 #endif /* __ardour_route_time_axis_h__ */

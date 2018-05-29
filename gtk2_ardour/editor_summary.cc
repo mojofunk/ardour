@@ -44,6 +44,8 @@ using namespace std;
 using namespace ARDOUR;
 using Gtkmm2ext::Keyboard;
 
+A_DEFINE_CLASS_AS_MEMBERS (EditorSummary, "GUI::EditorSummary");
+
 /** Construct an EditorSummary.
  *  @param e Editor to represent.
  */
@@ -643,6 +645,8 @@ EditorSummary::on_motion_notify_event (GdkEventMotion* ev)
 		double dx = mx - _last_mx;
 		double my = ev->y;
 		double dy = my - _last_my;
+
+		A_CLASS_DATA2 (ev->x, ev->y);
 
 		/* do zooming in windowed "steps" so it feels more reversible ? */
 		const int stepsize = 2;

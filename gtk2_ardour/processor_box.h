@@ -35,6 +35,7 @@
 #include "gtkmm2ext/dndvbox.h"
 #include "gtkmm2ext/persistent_tooltip.h"
 
+#include "pbd/dev_tools.h"
 #include "pbd/stateful.h"
 #include "pbd/signals.h"
 
@@ -620,6 +621,8 @@ private:
 
 	XMLNode* entry_gui_object_state (ProcessorEntry *);
 	PBD::ScopedConnection amp_config_connection;
+
+	A_DECLARE_CLASS_MEMBERS (ProcessorBox);
 };
 
 #endif /* __ardour_gtk_processor_box__ */

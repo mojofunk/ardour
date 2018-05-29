@@ -70,6 +70,8 @@ using namespace Gtk;
 using namespace Gtkmm2ext;
 using namespace Editing;
 
+A_DEFINE_CLASS_AS_MEMBERS (AutomationTimeAxisView, "GUI::AutomationTimeAxisView");
+
 Pango::FontDescription AutomationTimeAxisView::name_font;
 bool AutomationTimeAxisView::have_name_font = false;
 
@@ -358,6 +360,8 @@ AutomationTimeAxisView::set_automation_state (AutoState state)
 void
 AutomationTimeAxisView::automation_state_changed ()
 {
+	A_CLASS_CALL ();
+
 	AutoState state;
 
 	/* update button label */
@@ -452,6 +456,8 @@ AutomationTimeAxisView::automation_state_changed ()
 void
 AutomationTimeAxisView::interpolation_changed (AutomationList::InterpolationStyle s)
 {
+	A_CLASS_CALL ();
+
 	if (ignore_mode_request) {
 		return;
 	}
@@ -486,6 +492,8 @@ AutomationTimeAxisView::interpolation_changed (AutomationList::InterpolationStyl
 void
 AutomationTimeAxisView::set_interpolation (AutomationList::InterpolationStyle style)
 {
+	A_CLASS_CALL ();
+
 	/* Tell our view's list, if we have one, otherwise tell our own.
 	 * Everything else will be signalled back from that.
 	 */
@@ -501,6 +509,8 @@ AutomationTimeAxisView::set_interpolation (AutomationList::InterpolationStyle st
 void
 AutomationTimeAxisView::clear_clicked ()
 {
+	A_CLASS_CALL ();
+
 	assert (_line || _view);
 
 	_editor.begin_reversible_command (_("clear automation"));
@@ -520,6 +530,8 @@ AutomationTimeAxisView::clear_clicked ()
 void
 AutomationTimeAxisView::set_height (uint32_t h, TrackHeightMode m)
 {
+	A_CLASS_CALL1 (h);
+
 	bool const changed = (height != (uint32_t) h) || first_call_to_set_height;
 	uint32_t const normal = preset_height (HeightNormal);
 	bool const changed_between_small_and_normal = ( (height < normal && h >= normal) || (height >= normal || h < normal) );
@@ -564,6 +576,8 @@ AutomationTimeAxisView::set_height (uint32_t h, TrackHeightMode m)
 void
 AutomationTimeAxisView::set_samples_per_pixel (double fpp)
 {
+	A_CLASS_CALL1 (fpp);
+
 	TimeAxisView::set_samples_per_pixel (fpp);
 
 	if (_line) {
@@ -578,6 +592,8 @@ AutomationTimeAxisView::set_samples_per_pixel (double fpp)
 void
 AutomationTimeAxisView::hide_clicked ()
 {
+	A_CLASS_CALL ();
+
 	hide_button.set_sensitive(false);
 	set_marked_for_display (false);
 	StripableTimeAxisView* stv = dynamic_cast<StripableTimeAxisView*>(parent);
@@ -600,6 +616,8 @@ AutomationTimeAxisView::automation_state_off_string () const
 void
 AutomationTimeAxisView::build_display_menu ()
 {
+	A_CLASS_CALL ();
+
 	using namespace Menu_Helpers;
 
 	/* prepare it */
@@ -728,6 +746,8 @@ AutomationTimeAxisView::build_display_menu ()
 void
 AutomationTimeAxisView::add_automation_event (GdkEvent* event, samplepos_t sample, double y, bool with_guard_points)
 {
+	A_CLASS_CALL3 (sample, y, with_guard_points);
+
 	if (!_line) {
 		return;
 	}
@@ -778,6 +798,8 @@ AutomationTimeAxisView::add_automation_event (GdkEvent* event, samplepos_t sampl
 bool
 AutomationTimeAxisView::paste (samplepos_t pos, const Selection& selection, PasteContext& ctx, const int32_t divisions)
 {
+	A_CLASS_CALL ();
+
 	if (_line) {
 		return paste_one (pos, ctx.count, ctx.times, selection, ctx.counts, ctx.greedy);
 	} else if (_view) {
@@ -799,6 +821,8 @@ AutomationTimeAxisView::paste (samplepos_t pos, const Selection& selection, Past
 bool
 AutomationTimeAxisView::paste_one (samplepos_t pos, unsigned paste_count, float times, const Selection& selection, ItemCounts& counts, bool greedy)
 {
+	A_CLASS_CALL3 (pos, paste_count, times);
+
 	boost::shared_ptr<AutomationList> alist(_line->the_list());
 
 	if (_session->transport_rolling() && alist->automation_write()) {
@@ -843,6 +867,8 @@ AutomationTimeAxisView::paste_one (samplepos_t pos, unsigned paste_count, float 
 void
 AutomationTimeAxisView::get_selectables (samplepos_t start, samplepos_t end, double top, double bot, list<Selectable*>& results, bool /*within*/)
 {
+	A_CLASS_CALL4 (start, end, top, bot);
+
 	if (!_line && !_view) {
 		return;
 	}
@@ -888,6 +914,8 @@ AutomationTimeAxisView::get_selectables (samplepos_t start, samplepos_t end, dou
 void
 AutomationTimeAxisView::get_inverted_selectables (Selection& sel, list<Selectable*>& result)
 {
+	A_CLASS_CALL ();
+
 	if (_line) {
 		_line->get_inverted_selectables (sel, result);
 	}
@@ -896,6 +924,8 @@ AutomationTimeAxisView::get_inverted_selectables (Selection& sel, list<Selectabl
 void
 AutomationTimeAxisView::set_selected_points (PointSelection& points)
 {
+	A_CLASS_CALL ();
+
 	if (_line) {
 		_line->set_selected_points (points);
 	} else if (_view) {
@@ -906,6 +936,8 @@ AutomationTimeAxisView::set_selected_points (PointSelection& points)
 void
 AutomationTimeAxisView::clear_lines ()
 {
+	A_CLASS_CALL ();
+
 	_line.reset();
 	_list_connections.drop_connections ();
 }
@@ -913,6 +945,8 @@ AutomationTimeAxisView::clear_lines ()
 void
 AutomationTimeAxisView::add_line (boost::shared_ptr<AutomationLine> line)
 {
+	A_CLASS_CALL ();
+
 	if (_control && line) {
 		assert(line->the_list() == _control->list());
 
@@ -951,6 +985,8 @@ AutomationTimeAxisView::propagate_time_selection () const
 void
 AutomationTimeAxisView::entered()
 {
+	A_CLASS_CALL ();
+
 	if (_line) {
 		_line->track_entered();
 	}
@@ -959,6 +995,8 @@ AutomationTimeAxisView::entered()
 void
 AutomationTimeAxisView::exited ()
 {
+	A_CLASS_CALL ();
+
 	if (_line) {
 		_line->track_exited();
 	}
@@ -967,6 +1005,8 @@ AutomationTimeAxisView::exited ()
 void
 AutomationTimeAxisView::color_handler ()
 {
+	A_CLASS_CALL ();
+
 	if (_line) {
 		_line->set_colors();
 	}
@@ -1000,6 +1040,8 @@ AutomationTimeAxisView::set_state (const XMLNode&, int /*version*/)
 void
 AutomationTimeAxisView::what_has_visible_automation (const boost::shared_ptr<Automatable>& automatable, set<Evoral::Parameter>& visible)
 {
+	A_CLASS_STATIC_CALL ();
+
 	/* this keeps "knowledge" of how we store visibility information
 	   in XML private to this class.
 	*/
@@ -1037,6 +1079,8 @@ AutomationTimeAxisView::has_automation () const
 list<boost::shared_ptr<AutomationLine> >
 AutomationTimeAxisView::lines () const
 {
+	A_CLASS_CALL ();
+
 	list<boost::shared_ptr<AutomationLine> > lines;
 
 	if (_line) {
@@ -1051,6 +1095,8 @@ AutomationTimeAxisView::lines () const
 string
 AutomationTimeAxisView::state_id() const
 {
+	A_CLASS_CALL ();
+
 	if (_parameter && _stripable && _automatable == _stripable) {
 		const string parameter_str = PBD::to_string (_parameter.type()) + "/" +
 		                             PBD::to_string (_parameter.id()) + "/" +
@@ -1081,6 +1127,8 @@ AutomationTimeAxisView::parse_state_id (
 	bool & has_parameter,
 	Evoral::Parameter & parameter)
 {
+	A_CLASS_STATIC_CALL2 (state_id, route_id.to_s());
+
 	stringstream ss;
 	ss << state_id;
 
@@ -1117,6 +1165,8 @@ AutomationTimeAxisView::parse_state_id (
 void
 AutomationTimeAxisView::cut_copy_clear (Selection& selection, CutCopyOp op)
 {
+	A_CLASS_CALL ();
+
 	list<boost::shared_ptr<AutomationLine> > lines;
 	if (_line) {
 		lines.push_back (_line);
@@ -1132,6 +1182,8 @@ AutomationTimeAxisView::cut_copy_clear (Selection& selection, CutCopyOp op)
 void
 AutomationTimeAxisView::cut_copy_clear_one (AutomationLine& line, Selection& selection, CutCopyOp op)
 {
+	A_CLASS_CALL ();
+
 	boost::shared_ptr<Evoral::ControlList> what_we_got;
 	boost::shared_ptr<AutomationList> alist (line.the_list());
 

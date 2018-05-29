@@ -34,6 +34,7 @@
 #include <gtkmm/spinbutton.h>
 #include <gtkmm/table.h>
 
+#include "pbd/dev_tools.h"
 #include "pbd/signals.h"
 
 #include "widgets/ardour_button.h"
@@ -288,6 +289,9 @@ private:
 	private:
 		EngineControl& ec;
 		std::string m_reason;
+
+	private:
+		A_DECLARE_CLASS_MEMBERS (EngineControl::SignalBlocker);
 	};
 
 	uint32_t block_signals;
@@ -350,6 +354,9 @@ private:
 	void midi_latency_adjustment_changed(Gtk::Adjustment *, MidiDeviceSettings, bool);
 	void midi_device_enabled_toggled(ArdourWidgets::ArdourButton *, MidiDeviceSettings);
 	sigc::connection lm_back_button_signal;
+
+private:
+	A_DECLARE_CLASS_MEMBERS (EngineControl);
 };
 
 #endif /* __gtk2_ardour_engine_dialog_h__ */

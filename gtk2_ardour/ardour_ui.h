@@ -276,9 +276,6 @@ public:
 	void add_route ();
 	void add_route_dialog_response (int);
 
-	void add_routes_part_two ();
-	void add_routes_thread ();
-
 	void start_duplicate_routes ();
 
 	void add_video (Gtk::Window* float_window);
@@ -386,7 +383,6 @@ private:
 	Gtk::Notebook _tabs;
 	PublicEditor*  editor;
 	Mixer_UI*      mixer;
-	Gtk::Tooltips _tooltips;
 	NSM_Client*    nsm;
 	bool          _was_dirty;
 	bool          _mixer_on_top;

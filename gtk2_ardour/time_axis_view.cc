@@ -75,6 +75,8 @@ using Gtkmm2ext::Keyboard;
 
 #define TOP_LEVEL_WIDGET controls_ebox
 
+A_DEFINE_CLASS_AS_MEMBERS (TimeAxisView, "GUI::TimeAxisView");
+
 const double trim_handle_size = 6.0; /* pixels */
 uint32_t TimeAxisView::button_height = 0;
 uint32_t TimeAxisView::extra_height = 0;
@@ -261,6 +263,8 @@ TimeAxisView::~TimeAxisView()
 void
 TimeAxisView::hide ()
 {
+	A_CLASS_CALL ();
+
 	if (_hidden) {
 		return;
 	}
@@ -301,6 +305,8 @@ TimeAxisView::hide ()
 guint32
 TimeAxisView::show_at (double y, int& nth, VBox *parent)
 {
+	A_CLASS_CALL ();
+
 	if (control_parent) {
 		control_parent->reorder_child (TOP_LEVEL_WIDGET, nth);
 	} else {
@@ -350,6 +356,8 @@ TimeAxisView::show_at (double y, int& nth, VBox *parent)
 bool
 TimeAxisView::controls_ebox_scroll (GdkEventScroll* ev)
 {
+	A_CLASS_CALL ();
+
 	switch (ev->direction) {
 	case GDK_SCROLL_UP:
 		if (Keyboard::modifier_state_equals (ev->state, Keyboard::ScrollZoomVerticalModifier)) {
@@ -393,6 +401,8 @@ TimeAxisView::controls_ebox_scroll (GdkEventScroll* ev)
 bool
 TimeAxisView::controls_ebox_button_press (GdkEventButton* event)
 {
+	A_CLASS_CALL ();
+
 	if ((event->button == 1 && event->type == GDK_2BUTTON_PRESS) || Keyboard::is_edit_event (event)) {
 		/* see if it is inside the name label */
 		if (name_label.is_ancestor (controls_ebox)) {
@@ -421,6 +431,8 @@ TimeAxisView::controls_ebox_button_press (GdkEventButton* event)
 void
 TimeAxisView::idle_resize (int32_t h)
 {
+	A_CLASS_CALL ();
+
 	set_height (std::max(0, h));
 }
 
@@ -428,6 +440,8 @@ TimeAxisView::idle_resize (int32_t h)
 bool
 TimeAxisView::controls_ebox_motion (GdkEventMotion* ev)
 {
+	A_CLASS_CALL ();
+
 	if (_resize_drag_start >= 0) {
 
 		/* (ab)use the DragManager to do autoscrolling - basically we
@@ -455,6 +469,8 @@ TimeAxisView::controls_ebox_motion (GdkEventMotion* ev)
 bool
 TimeAxisView::controls_ebox_leave (GdkEventCrossing*)
 {
+	A_CLASS_CALL ();
+
 	if (_have_preresize_cursor) {
 		gdk_window_set_cursor (controls_ebox.get_window()->gobj(), _preresize_cursor);
 		_have_preresize_cursor = false;
@@ -493,6 +509,8 @@ TimeAxisView::maybe_set_cursor (int y)
 bool
 TimeAxisView::controls_ebox_button_release (GdkEventButton* ev)
 {
+	A_CLASS_CALL ();
+
 	if (_resize_drag_start >= 0) {
 		if (_have_preresize_cursor) {
 			gdk_window_set_cursor (controls_ebox.get_window()->gobj(), _preresize_cursor);
@@ -567,6 +585,8 @@ TimeAxisView::step_height (bool coarser)
 void
 TimeAxisView::set_height_enum (Height h, bool apply_to_selection)
 {
+	A_CLASS_CALL ();
+
 	if (apply_to_selection) {
 		_editor.get_selection().tracks.foreach_time_axis (boost::bind (&TimeAxisView::set_height_enum, _1, h, false));
 	} else {
@@ -577,6 +597,8 @@ TimeAxisView::set_height_enum (Height h, bool apply_to_selection)
 void
 TimeAxisView::set_height (uint32_t h, TrackHeightMode m)
 {
+	A_CLASS_CALL2 (h, m);
+
 	uint32_t lanes = 0;
 	if (m == TotalHeight) {
 		for (Children::iterator i = children.begin(); i != children.end(); ++i) {
@@ -751,6 +773,8 @@ TimeAxisView::popup_display_menu (guint32 when)
 void
 TimeAxisView::set_selected (bool yn)
 {
+	A_CLASS_CALL1 (yn);
+
 	if (yn == selected()) {
 		return;
 	}
@@ -816,6 +840,8 @@ TimeAxisView::hide_timestretch ()
 void
 TimeAxisView::show_selection (TimeSelection& ts)
 {
+	A_CLASS_CALL1 (yn);
+
 	double x1;
 	double x2;
 	double y2;
@@ -881,6 +907,8 @@ TimeAxisView::show_selection (TimeSelection& ts)
 void
 TimeAxisView::reshow_selection (TimeSelection& ts)
 {
+	A_CLASS_CALL ();
+
 	show_selection (ts);
 
 	for (Children::iterator i = children.begin(); i != children.end(); ++i) {
@@ -894,6 +922,8 @@ TimeAxisView::reshow_selection (TimeSelection& ts)
 void
 TimeAxisView::hide_selection ()
 {
+	A_CLASS_CALL ();
+
 	if (selection_group->visible ()) {
 		while (!used_selection_rects.empty()) {
 			free_selection_rects.push_front (used_selection_rects.front());
@@ -938,6 +968,8 @@ TimeAxisView::order_selection_trims (ArdourCanvas::Item *item, bool put_start_on
 SelectionRect *
 TimeAxisView::get_selection_rect (uint32_t id)
 {
+	A_CLASS_CALL ();
+
 	SelectionRect *rect;
 
 	/* check to see if we already have a visible rect for this particular selection ID */
@@ -1107,6 +1139,8 @@ TimeAxisView::set_parent (TimeAxisView& p)
 void
 TimeAxisView::reset_height ()
 {
+	A_CLASS_CALL1 (height);
+
 	set_height (height);
 
 	for (Children::iterator i = children.begin(); i != children.end(); ++i) {
@@ -1117,6 +1151,8 @@ TimeAxisView::reset_height ()
 void
 TimeAxisView::compute_heights ()
 {
+	A_CLASS_CALL ();
+
 	// TODO this function should be re-evaluated when font-scaling changes (!)
 	Gtk::Window window (Gtk::WINDOW_TOPLEVEL);
 	Gtk::Table one_row_table (1, 1);

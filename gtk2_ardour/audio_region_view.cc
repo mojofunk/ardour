@@ -63,11 +63,14 @@
 #include "audio_time_axis.h"
 #include "rgb_macros.h"
 #include "gui_thread.h"
+#include "logging.h"
 #include "ui_config.h"
 
 #include "pbd/i18n.h"
 
 #define MUTED_ALPHA 48
+
+A_DEFINE_CLASS_AS_MEMBERS (AudioRegionView, "GUI::AudioRegionView");
 
 using namespace std;
 using namespace ARDOUR;
@@ -126,6 +129,8 @@ AudioRegionView::AudioRegionView (ArdourCanvas::Container *parent, RouteTimeAxis
 	, trim_fade_in_drag_active(false)
 	, trim_fade_out_drag_active(false)
 {
+	A_CLASS_CALL ();
+
 	UIConfiguration::instance().ParameterChanged.connect (sigc::mem_fun (*this, &AudioRegionView::parameter_changed));
 }
 
@@ -148,6 +153,8 @@ AudioRegionView::AudioRegionView (ArdourCanvas::Container *parent, RouteTimeAxis
 	, trim_fade_in_drag_active(false)
 	, trim_fade_out_drag_active(false)
 {
+	A_CLASS_CALL ();
+
 	UIConfiguration::instance().ParameterChanged.connect (sigc::mem_fun (*this, &AudioRegionView::parameter_changed));
 }
 
@@ -176,6 +183,8 @@ AudioRegionView::AudioRegionView (const AudioRegionView& other, boost::shared_pt
 void
 AudioRegionView::init (bool wfd)
 {
+	A_CLASS_CALL ();
+
 	// FIXME: Some redundancy here with RegionView::init.  Need to figure out
 	// where order is important and where it isn't...
 
@@ -283,6 +292,8 @@ AudioRegionView::init (bool wfd)
 
 AudioRegionView::~AudioRegionView ()
 {
+	A_CLASS_CALL ();
+
 	in_destructor = true;
 
 	RegionViewGoingAway (this); /* EMIT_SIGNAL */
@@ -1029,6 +1040,8 @@ AudioRegionView::show_end_xfade ()
 void
 AudioRegionView::set_samples_per_pixel (gdouble fpp)
 {
+	A_CLASS_CALL ();
+
 	RegionView::set_samples_per_pixel (fpp);
 
 	if (UIConfiguration::instance().get_show_waveforms ()) {

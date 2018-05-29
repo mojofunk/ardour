@@ -20,6 +20,7 @@
 #include "control_point.h"
 #include "automation_line.h"
 #include "public_editor.h"
+#include "logging.h"
 #include "ui_config.h"
 
 #include "canvas/rectangle.h"
@@ -29,6 +30,8 @@
 using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
+
+A_DEFINE_CLASS_AS_MEMBERS (ControlPoint, "GUI::ControlPoint");
 
 PBD::Signal1<void, ControlPoint *> ControlPoint::CatchDeletion;
 
@@ -93,12 +96,14 @@ ControlPoint::event_handler (GdkEvent* event)
 void
 ControlPoint::hide ()
 {
+	A_CLASS_CALL ();
 	_item->hide();
 }
 
 void
 ControlPoint::show()
 {
+	A_CLASS_CALL ();
 	_item->show();
 }
 
@@ -111,6 +116,8 @@ ControlPoint::visible () const
 void
 ControlPoint::reset (double x, double y, AutomationList::iterator mi, uint32_t vi, ShapeType shape)
 {
+	A_CLASS_CALL ();
+
 	_model = mi;
 	_view_index = vi;
 	move_to (x, y, shape);
@@ -119,6 +126,8 @@ ControlPoint::reset (double x, double y, AutomationList::iterator mi, uint32_t v
 void
 ControlPoint::set_color ()
 {
+	A_CLASS_CALL ();
+
 	if (_selected) {
 		_item->set_outline_color(UIConfiguration::instance().color ("control point selected outline"));;
 		_item->set_fill_color(UIConfiguration::instance().color ("control point selected fill"));
@@ -138,6 +147,8 @@ ControlPoint::set_size (double sz)
 void
 ControlPoint::move_to (double x, double y, ShapeType shape)
 {
+	A_CLASS_CALL ();
+
 	double x1 = 0;
 	double x2 = 0;
 	double half_size = rint(_size/2.0);

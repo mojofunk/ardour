@@ -43,6 +43,7 @@
 #include "control_point.h"
 #include "editor_regions.h"
 #include "editor_cursors.h"
+#include "logging.h"
 #include "midi_region_view.h"
 #include "sfdb_ui.h"
 
@@ -66,6 +67,8 @@ struct TrackViewByPositionSorter
 bool
 Editor::extend_selection_to_track (TimeAxisView& view)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	if (selection->selected (&view)) {
 		/* already selected, do nothing */
 		return false;
@@ -187,6 +190,8 @@ Editor::select_all_tracks ()
 void
 Editor::set_selected_track_as_side_effect (Selection::Operation op)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	if (!clicked_axisview) {
 		return;
 	}
@@ -257,6 +262,8 @@ Editor::set_selected_track_as_side_effect (Selection::Operation op)
 void
 Editor::set_selected_track (TimeAxisView& view, Selection::Operation op, bool no_remove)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	begin_reversible_selection_op (X_("Set Selected Track"));
 
 	switch (op) {
@@ -289,6 +296,8 @@ Editor::set_selected_track (TimeAxisView& view, Selection::Operation op, bool no
 void
 Editor::set_selected_track_from_click (bool press, Selection::Operation op, bool no_remove)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	if (!clicked_routeview) {
 		return;
 	}
@@ -303,6 +312,8 @@ Editor::set_selected_track_from_click (bool press, Selection::Operation op, bool
 bool
 Editor::set_selected_control_point_from_click (bool press, Selection::Operation op)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	if (!clicked_control_point) {
 		return false;
 	}
@@ -388,6 +399,8 @@ Editor::get_onscreen_tracks (TrackViewList& tvl)
 void
 Editor::mapover_tracks (sigc::slot<void, RouteTimeAxisView&, uint32_t> sl, TimeAxisView* basis, PBD::PropertyID prop) const
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	RouteTimeAxisView* route_basis = dynamic_cast<RouteTimeAxisView*> (basis);
 
 	if (route_basis == 0) {
@@ -431,6 +444,8 @@ Editor::mapover_tracks (sigc::slot<void, RouteTimeAxisView&, uint32_t> sl, TimeA
 void
 Editor::mapover_tracks_with_unique_playlists (sigc::slot<void, RouteTimeAxisView&, uint32_t> sl, TimeAxisView* basis, PBD::PropertyID prop) const
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	RouteTimeAxisView* route_basis = dynamic_cast<RouteTimeAxisView*> (basis);
 	set<boost::shared_ptr<Playlist> > playlists;
 
@@ -480,6 +495,8 @@ Editor::mapover_tracks_with_unique_playlists (sigc::slot<void, RouteTimeAxisView
 void
 Editor::mapped_get_equivalent_regions (RouteTimeAxisView& tv, uint32_t, RegionView * basis, vector<RegionView*>* all_equivs) const
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	boost::shared_ptr<Playlist> pl;
 	vector<boost::shared_ptr<Region> > results;
 	RegionView* marv;
@@ -509,6 +526,8 @@ Editor::mapped_get_equivalent_regions (RouteTimeAxisView& tv, uint32_t, RegionVi
 void
 Editor::get_equivalent_regions (RegionView* basis, vector<RegionView*>& equivalent_regions, PBD::PropertyID property) const
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	mapover_tracks_with_unique_playlists (sigc::bind (sigc::mem_fun (*this, &Editor::mapped_get_equivalent_regions), basis, &equivalent_regions), &basis->get_time_axis_view(), property);
 
 	/* add clicked regionview since we skipped all other regions in the same track as the one it was in */
@@ -519,6 +538,8 @@ Editor::get_equivalent_regions (RegionView* basis, vector<RegionView*>& equivale
 RegionSelection
 Editor::get_equivalent_regions (RegionSelection & basis, PBD::PropertyID prop) const
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	RegionSelection equivalent;
 
 	for (RegionSelection::const_iterator i = basis.begin(); i != basis.end(); ++i) {
@@ -542,6 +563,8 @@ Editor::get_equivalent_regions (RegionSelection & basis, PBD::PropertyID prop) c
 int
 Editor::get_regionview_count_from_region_list (boost::shared_ptr<Region> region)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	int region_count = 0;
 
 	for (TrackViewList::iterator i = track_views.begin(); i != track_views.end(); ++i) {
@@ -580,6 +603,8 @@ Editor::get_regionview_count_from_region_list (boost::shared_ptr<Region> region)
 bool
 Editor::set_selected_regionview_from_click (bool press, Selection::Operation op)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	vector<RegionView*> all_equivalent_regions;
 	bool commit = false;
 
@@ -923,6 +948,8 @@ Editor::set_selection (std::list<Selectable*> s, Selection::Operation op)
 void
 Editor::set_selected_regionview_from_region_list (boost::shared_ptr<Region> region, Selection::Operation op)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	vector<RegionView*> all_equivalent_regions;
 
 	get_regions_corresponding_to (region, all_equivalent_regions, region->whole_file());
@@ -955,6 +982,8 @@ Editor::set_selected_regionview_from_region_list (boost::shared_ptr<Region> regi
 bool
 Editor::set_selected_regionview_from_map_event (GdkEventAny* /*ev*/, StreamView* sv, boost::weak_ptr<Region> weak_r)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	RegionView* rv;
 	boost::shared_ptr<Region> r (weak_r.lock());
 
@@ -1003,6 +1032,8 @@ struct SelectionOrderSorter {
 void
 Editor::presentation_info_changed (PropertyChange const & what_changed)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	uint32_t n_tracks = 0;
 	uint32_t n_busses = 0;
 	uint32_t n_vcas = 0;
@@ -1169,6 +1200,8 @@ Editor::track_selection_changed ()
 void
 Editor::time_selection_changed ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	/* XXX this is superficially inefficient. Hide the selection in all
 	 * tracks, then show it in all selected tracks.
 	 *
@@ -1228,6 +1261,8 @@ Editor::sensitize_all_region_actions (bool s)
 void
 Editor::sensitize_the_right_region_actions (bool because_canvas_crossing)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	bool have_selection = false;
 	bool have_entered = false;
 	bool have_edit_point = false;
@@ -1558,6 +1593,8 @@ Editor::sensitize_the_right_region_actions (bool because_canvas_crossing)
 void
 Editor::region_selection_changed ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	_regions->block_change_connection (true);
 	editor_regions_selection_changed_connection.block(true);
 
@@ -1603,6 +1640,8 @@ Editor::point_selection_changed ()
 void
 Editor::select_all_in_track (Selection::Operation op)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	list<Selectable *> touched;
 
 	if (!clicked_routeview) {
@@ -1634,6 +1673,8 @@ Editor::select_all_in_track (Selection::Operation op)
 bool
 Editor::select_all_internal_edit (Selection::Operation)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	bool selected = false;
 
 	for (RegionSelection::iterator i = selection->regions.begin(); i != selection->regions.end(); ++i) {
@@ -1656,6 +1697,8 @@ Editor::select_all_internal_edit (Selection::Operation)
 void
 Editor::select_all_objects (Selection::Operation op)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	list<Selectable *> touched;
 
 	if (internal_editing() && select_all_internal_edit(op)) {
@@ -1698,6 +1741,8 @@ Editor::select_all_objects (Selection::Operation op)
 void
 Editor::invert_selection_in_track ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	list<Selectable *> touched;
 
 	if (!clicked_routeview) {
@@ -1713,6 +1758,8 @@ Editor::invert_selection_in_track ()
 void
 Editor::invert_selection ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	list<Selectable *> touched;
 
 	if (internal_editing()) {
@@ -1747,6 +1794,8 @@ Editor::invert_selection ()
 void
 Editor::select_all_within (samplepos_t start, samplepos_t end, double top, double bot, const TrackViewList& tracklist, Selection::Operation op, bool preserve_if_selected)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	list<Selectable*> found;
 
 	for (TrackViewList::const_iterator iter = tracklist.begin(); iter != tracklist.end(); ++iter) {
@@ -1797,6 +1846,8 @@ Editor::select_all_within (samplepos_t start, samplepos_t end, double top, doubl
 void
 Editor::set_selection_from_region ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	if (selection->regions.empty()) {
 		return;
 	}
@@ -1851,6 +1902,8 @@ Editor::set_selection_from_loop()
 void
 Editor::set_selection_from_range (Location& loc)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	begin_reversible_selection_op (X_("set selection from range"));
 
 	selection->set (loc.start(), loc.end());
@@ -1871,6 +1924,8 @@ Editor::set_selection_from_range (Location& loc)
 void
 Editor::select_all_selectables_using_time_selection ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	list<Selectable *> touched;
 
 	if (selection->time.empty()) {
@@ -1908,6 +1963,8 @@ Editor::select_all_selectables_using_time_selection ()
 void
 Editor::select_all_selectables_using_punch()
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	Location* location = _session->locations()->auto_punch_location();
 	list<Selectable *> touched;
 
@@ -1939,6 +1996,8 @@ Editor::select_all_selectables_using_punch()
 void
 Editor::select_all_selectables_using_loop()
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	Location* location = _session->locations()->auto_loop_location();
 	list<Selectable *> touched;
 
@@ -1970,6 +2029,8 @@ Editor::select_all_selectables_using_loop()
 void
 Editor::select_all_selectables_using_cursor (EditorCursor *cursor, bool after)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	samplepos_t start;
 	samplepos_t end;
 	list<Selectable *> touched;
@@ -2023,6 +2084,8 @@ Editor::select_all_selectables_using_cursor (EditorCursor *cursor, bool after)
 void
 Editor::select_all_selectables_using_edit (bool after, bool from_context_menu)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	samplepos_t start;
 	samplepos_t end;
 	list<Selectable *> touched;
@@ -2074,6 +2137,8 @@ Editor::select_all_selectables_using_edit (bool after, bool from_context_menu)
 void
 Editor::select_all_selectables_between (bool within)
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	samplepos_t start;
 	samplepos_t end;
 	list<Selectable *> touched;
@@ -2113,6 +2178,8 @@ Editor::select_all_selectables_between (bool within)
 void
 Editor::select_range_between ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	samplepos_t start;
 	samplepos_t end;
 
@@ -2237,6 +2304,8 @@ Editor::get_edit_op_range (samplepos_t& start, samplepos_t& end) const
 void
 Editor::deselect_all ()
 {
+	A_LOG_CLASS_CALL (LOG::EditorSelection);
+
 	begin_reversible_selection_op (X_("Deselect All"));
 	selection->clear ();
 	commit_reversible_selection_op ();
@@ -2245,6 +2314,8 @@ Editor::deselect_all ()
 long
 Editor::select_range (samplepos_t s, samplepos_t e)
 {
+	A_LOG_CLASS_CALL2 (LOG::EditorSelection, s, e);
+
 	begin_reversible_selection_op (X_("Select Range"));
 	selection->add (clicked_axisview);
 	selection->time.clear ();

@@ -743,7 +743,7 @@ SessionTemplateManager::rename_template (TreeModel::iterator& item, const Glib::
 
 	if (g_rename (old_path.c_str(), new_path.c_str()) != 0) {
 		error << string_compose (_("Could not rename template directory from \"%1\" to \"%2\": %3"),
-					 old_path, new_path, strerror (errno)) << endmsg;
+					 old_path, new_path, g_strerror (errno)) << endmsg;
 		g_unlink (new_file_old_path.c_str());
 		return;
 	}
@@ -751,7 +751,7 @@ SessionTemplateManager::rename_template (TreeModel::iterator& item, const Glib::
 	const string old_file_new_path = Glib::build_filename (new_path, old_name+".template");
 	if (g_unlink (old_file_new_path.c_str())) {
 		error << string_compose (X_("Could not delete old template file \"%1\": %2"),
-					 old_file_new_path, strerror (errno)) << endmsg;
+					 old_file_new_path, g_strerror (errno)) << endmsg;
 	}
 
 	item->set_value (_template_columns.name, new_name);
@@ -835,7 +835,7 @@ RouteTemplateManager::rename_template (TreeModel::iterator& item, const Glib::us
 	if (adjusted) {
 		if (g_file_test (old_state_dir.c_str(), G_FILE_TEST_EXISTS)) {
 			if (g_rename (old_state_dir.c_str(), new_state_dir.c_str()) != 0) {
-				error << string_compose (_("Could not rename state dir \"%1\" to \"%22\": %3"), old_state_dir, new_state_dir, strerror (errno)) << endmsg;
+				error << string_compose (_("Could not rename state dir \"%1\" to \"%22\": %3"), old_state_dir, new_state_dir, g_strerror (errno)) << endmsg;
 				return;
 			}
 		}
@@ -852,7 +852,7 @@ RouteTemplateManager::rename_template (TreeModel::iterator& item, const Glib::us
 	}
 
 	if (g_unlink (old_filepath.c_str()) != 0) {
-		error << string_compose (_("Could not remove old template file \"%1\": %2"), old_filepath, strerror (errno)) << endmsg;
+		error << string_compose (_("Could not remove old template file \"%1\": %2"), old_filepath, g_strerror (errno)) << endmsg;
 	}
 
 	item->set_value (_template_columns.name, string (new_name));
@@ -869,7 +869,7 @@ RouteTemplateManager::delete_selected_template ()
 	const string file_path = _current_selection->get_value (_template_columns.path);
 
 	if (g_unlink (file_path.c_str()) != 0) {
-		error << string_compose(_("Could not delete template file \"%1\": %2"), file_path, strerror (errno)) << endmsg;
+		error << string_compose(_("Could not delete template file \"%1\": %2"), file_path, g_strerror (errno)) << endmsg;
 		return;
 	}
 	PBD::remove_directory (Glib::build_filename (user_route_template_directory (),

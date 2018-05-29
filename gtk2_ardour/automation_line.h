@@ -29,6 +29,7 @@
 
 #include "evoral/TimeConverter.hpp"
 
+#include "pbd/dev_tools.h"
 #include "pbd/undo.h"
 #include "pbd/statefuldestructible.h"
 #include "pbd/memento_command.h"
@@ -245,6 +246,8 @@ private:
 	const ARDOUR::ParameterDescriptor _desc;
 
 	friend class AudioRegionGainLine;
+
+	A_DECLARE_CLASS_MEMBERS (AutomationLine);
 };
 
 #endif /* __ardour_automation_line_h__ */

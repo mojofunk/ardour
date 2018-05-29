@@ -30,6 +30,8 @@
 #include <gtkmm/menu.h>
 #include <gtkmm/label.h>
 
+#include "pbd/dev_tools.h"
+
 #include "ardour/ardour.h"
 #include "ardour/session_handle.h"
 
@@ -264,6 +266,8 @@ class AudioClock : public CairoWidget, public ARDOUR::SessionHandlePtr
 
 	double xscale;
 	double yscale;
+
+	A_DECLARE_CLASS_MEMBERS (AudioClock);
 };
 
 #endif /* __audio_clock_h__ */

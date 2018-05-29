@@ -57,6 +57,7 @@
 #include "time_axis_view.h"
 #include "point_selection.h"
 #include "automation_time_axis.h"
+#include "logging.h"
 #include "ui_config.h"
 
 #include "ardour/event_type_map.h"
@@ -69,6 +70,8 @@ using namespace std;
 using namespace ARDOUR;
 using namespace PBD;
 using namespace Editing;
+
+A_DEFINE_CLASS_AS_MEMBERS (AutomationLine, "GUI::AutomationLine");
 
 /** @param converter A TimeConverter whose origin_b is the start time of the AutomationList in session samples.
  *  This will not be deleted by AutomationLine.
@@ -89,6 +92,8 @@ AutomationLine::AutomationLine (const string&                              name,
 	, _fill (false)
 	, _desc (desc)
 {
+	A_CLASS_CALL ();
+
 	if (converter) {
 		_our_time_converter = false;
 	} else {
@@ -148,6 +153,8 @@ AutomationLine::is_stepped() const
 void
 AutomationLine::update_visibility ()
 {
+	A_CLASS_CALL ();
+
 	if (_visible & Line) {
 		/* Only show the line when there are some points, otherwise we may show an out-of-date line
 		   when automation points have been removed (the line will still follow the shape of the
@@ -226,6 +233,8 @@ AutomationLine::control_point_box_size ()
 void
 AutomationLine::set_height (guint32 h)
 {
+	A_CLASS_CALL ();
+
 	if (h != _height) {
 		_height = h;
 
@@ -278,6 +287,8 @@ AutomationLine::nth (uint32_t n) const
 void
 AutomationLine::modify_point_y (ControlPoint& cp, double y)
 {
+	A_CLASS_CALL ();
+
 	/* clamp y-coord appropriately. y is supposed to be a normalized fraction (0.0-1.0),
 	   and needs to be converted to a canvas unit distance.
 	*/
@@ -407,6 +418,8 @@ AutomationLine::string_to_fraction (string const & s) const
 void
 AutomationLine::start_drag_single (ControlPoint* cp, double x, float fraction)
 {
+	A_CLASS_CALL ();
+
 	trackview.editor().session()->add_command (
 		new MementoCommand<AutomationList> (memento_command_binder(), &get_state(), 0));
 
@@ -432,6 +445,8 @@ AutomationLine::start_drag_single (ControlPoint* cp, double x, float fraction)
 void
 AutomationLine::start_drag_line (uint32_t i1, uint32_t i2, float fraction)
 {
+	A_CLASS_CALL ();
+
 	trackview.editor().session()->add_command (
 		new MementoCommand<AutomationList> (memento_command_binder (), &get_state(), 0));
 
@@ -451,6 +466,8 @@ AutomationLine::start_drag_line (uint32_t i1, uint32_t i2, float fraction)
 void
 AutomationLine::start_drag_multiple (list<ControlPoint*> cp, float fraction, XMLNode* state)
 {
+	A_CLASS_CALL ();
+
 	trackview.editor().session()->add_command (
 		new MementoCommand<AutomationList> (memento_command_binder(), state, 0));
 
@@ -585,6 +602,8 @@ AutomationLine::start_drag_common (double x, float fraction)
 pair<float, float>
 AutomationLine::drag_motion (double const x, float fraction, bool ignore_x, bool with_push, uint32_t& final_index)
 {
+	A_CLASS_CALL ();
+
 	if (_drag_points.empty()) {
 		return pair<double,float> (fraction, _desc.is_linear () ? 0 : 1);
 	}
@@ -722,6 +741,8 @@ AutomationLine::drag_motion (double const x, float fraction, bool ignore_x, bool
 void
 AutomationLine::end_drag (bool with_push, uint32_t final_index)
 {
+	A_CLASS_CALL ();
+
 	if (!_drag_had_movement) {
 		return;
 	}
@@ -760,6 +781,8 @@ AutomationLine::end_drag (bool with_push, uint32_t final_index)
 bool
 AutomationLine::sync_model_with_view_point (ControlPoint& cp)
 {
+	A_CLASS_CALL ();
+
 	/* find out where the visual control point is.
 	   initial results are in canvas units. ask the
 	   line to convert them to something relevant.
@@ -798,6 +821,8 @@ AutomationLine::sync_model_with_view_point (ControlPoint& cp)
 bool
 AutomationLine::control_points_adjacent (double xval, uint32_t & before, uint32_t& after)
 {
+	A_CLASS_CALL ();
+
 	ControlPoint *bcp = 0;
 	ControlPoint *acp = 0;
 	double unit_xval;
@@ -826,6 +851,8 @@ AutomationLine::control_points_adjacent (double xval, uint32_t & before, uint32_
 bool
 AutomationLine::is_last_point (ControlPoint& cp)
 {
+	A_CLASS_CALL ();
+
 	// If the list is not empty, and the point is the last point in the list
 
 	if (alist->empty()) {
@@ -858,6 +885,8 @@ AutomationLine::is_first_point (ControlPoint& cp)
 void
 AutomationLine::remove_point (ControlPoint& cp)
 {
+	A_CLASS_CALL ();
+
 	trackview.editor().begin_reversible_command (_("remove control point"));
 	XMLNode &before = alist->get_state();
 
@@ -881,6 +910,8 @@ AutomationLine::remove_point (ControlPoint& cp)
 void
 AutomationLine::get_selectables (samplepos_t start, samplepos_t end, double botfrac, double topfrac, list<Selectable*>& results)
 {
+	A_CLASS_CALL ();
+
 	/* convert fractions to display coordinates with 0 at the top of the track */
 	double const bot_track = (1 - topfrac) * trackview.current_height ();
 	double const top_track = (1 - botfrac) * trackview.current_height ();
@@ -909,6 +940,8 @@ AutomationLine::get_inverted_selectables (Selection&, list<Selectable*>& /*resul
 void
 AutomationLine::set_selected_points (PointSelection const & points)
 {
+	A_CLASS_CALL ();
+
 	for (vector<ControlPoint*>::iterator i = control_points.begin(); i != control_points.end(); ++i) {
 		(*i)->set_selected (false);
 	}
@@ -929,6 +962,8 @@ AutomationLine::set_selected_points (PointSelection const & points)
 void
 AutomationLine::set_colors ()
 {
+	A_CLASS_CALL ();
+
 	set_line_color (UIConfiguration::instance().color ("automation line"));
 	for (vector<ControlPoint*>::iterator i = control_points.begin(); i != control_points.end(); ++i) {
 		(*i)->set_color ();
@@ -938,7 +973,7 @@ AutomationLine::set_colors ()
 void
 AutomationLine::list_changed ()
 {
-	DEBUG_TRACE (DEBUG::Automation, string_compose ("\tline changed, existing update pending? %1\n", update_pending));
+	A_CLASS_CALL1 (update_pending);
 
 	if (!update_pending) {
 		update_pending = true;
@@ -949,6 +984,8 @@ AutomationLine::list_changed ()
 void
 AutomationLine::reset_callback (const Evoral::ControlList& events)
 {
+	A_CLASS_CALL ();
+
 	uint32_t vp = 0;
 	uint32_t pi = 0;
 	uint32_t np;
@@ -1048,7 +1085,8 @@ AutomationLine::reset_callback (const Evoral::ControlList& events)
 void
 AutomationLine::reset ()
 {
-	DEBUG_TRACE (DEBUG::Automation, "\t\tLINE RESET\n");
+	A_CLASS_CALL ();
+
 	update_pending = false;
 	have_timeout = false;
 

@@ -165,6 +165,9 @@ private:
 
 	void set_meter_type (ARDOUR::MeterType mode);
 	void set_label_height (uint32_t);
+
+private:
+	A_DECLARE_CLASS_MEMBERS (MeterStrip);
 };
 
 #endif /* __ardour_mixer_strip__ */
